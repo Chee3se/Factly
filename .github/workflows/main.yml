@@ -38,7 +38,7 @@ jobs:
           server: ${{ secrets.SERVER }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          server-dir: /home/web/Factly/
+          dry-run: true
           exclude: |
             **/.git/**
             **/.github/**
