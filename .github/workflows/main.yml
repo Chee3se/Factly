@@ -32,14 +32,6 @@ jobs:
             cp -r dist/* public/
           fi
 
-      - name: 🔍 List FTP root directory
-        uses: garygrossgarten/github-action-ftp@release
-        with:
-          server: ${{ secrets.SERVER }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          # This will connect and you can see the structure in logs
-
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -47,6 +39,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           server-dir: Factly/
+          log-level: verbose  # Add this for more detailed logs
           exclude: |
             **/.git/**
             **/.github/**
