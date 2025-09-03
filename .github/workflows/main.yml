@@ -38,7 +38,7 @@ jobs:
           server: ${{ secrets.SERVER }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          server-dir: Factly/
+          server-dir: /home/web/Factly/
           log-level: verbose  # Add this for more detailed logs
           exclude: |
             **/.git/**
