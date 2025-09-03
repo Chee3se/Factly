@@ -68,12 +68,6 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                                                     Profile
                                                 </Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem asChild>
-                                                <Link href="/settings" className="flex items-center">
-                                                    <Settings className="mr-2 h-4 w-4" />
-                                                    Settings
-                                                </Link>
-                                            </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem asChild>
                                                 <Link
@@ -90,11 +84,8 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                                     </DropdownMenu>
                                 ) : (
                                     <div className="flex items-center space-x-2">
-                                        <Button variant="ghost" asChild>
-                                            <Link href="/login">Login</Link>
-                                        </Button>
                                         <Button asChild>
-                                            <Link href="/register">Sign Up</Link>
+                                            <Link href="/login">Sign up</Link>
                                         </Button>
                                     </div>
                                 )}
