@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { Link, Head } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,19 +13,26 @@ import { User, LogOut, Settings } from 'lucide-react';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Factly';
 
-interface Auth {
-    user?: {
-        name: string;
-        email: string;
-    };
-}
-
 interface Props {
     title: string;
     auth: Auth;
 }
 
 export default function App({ title, auth, children }: PropsWithChildren<Props>) {
+    const getInitials = (name: string): string => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    const getAvatarUrl = (avatar?: string): string | undefined => {
+        if (!avatar) return undefined;
+        return `/storage/${avatar}`;
+    };
+
     return (
         <>
             <Head title={title} />
@@ -46,6 +53,10 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                                                 <Avatar className="h-10 w-10">
+                                                    <AvatarImage
+                                                        src={getAvatarUrl(auth.user.avatar)}
+                                                        alt={auth.user.name}
+                                                    />
                                                     <AvatarFallback className="bg-primary text-primary-foreground">
                                                         {auth.user.name.charAt(0).toUpperCase()}
                                                     </AvatarFallback>

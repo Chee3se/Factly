@@ -31,17 +31,32 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
+
+    // Profile management routes
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [AuthController::class, 'deleteAccount'])->name('profile.destroy');
+
+    // Avatar management routes
+    Route::post('/profile/avatar/upload', [AuthController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+
+    // Session management routes
+    Route::get('/profile/sessions', [AuthController::class, 'getSessions'])->name('profile.sessions');
+    Route::post('/profile/logout-other-sessions', [AuthController::class, 'logoutOtherSessions'])->name('profile.logout-other-sessions');
+    Route::delete('/profile/session/logout', [AuthController::class, 'logoutSession'])->name('profile.session.logout');
 });
 
 // Email verification
 Route::get('/email/verify', function () {
     return view('auth.verify-email');
 })->middleware('auth')->name('verification.notice');
+
 // Verify Email
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
     return redirect('/home');
 })->middleware(['auth', 'signed'])->name('verification.verify');
+
 // Resend email
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();

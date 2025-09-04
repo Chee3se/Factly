@@ -4,7 +4,11 @@ export interface User {
     id: number;
     name: string;
     email: string;
-    email_verified_at: string;
+    avatar?: string;
+    role?: string;
+    created_at: string;
+    updated_at: string;
+    email_verified_at?: string;
 }
 
 export type PageProps<
@@ -15,3 +19,7 @@ export type PageProps<
     };
     ziggy: Config & { location: string };
 };
+
+export interface AuthData {
+    user: User;
+}

@@ -8,10 +8,15 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Jenssegers\Agent\Agent;
+use Carbon\Carbon;
 
 class AuthController extends Controller
 {
@@ -87,16 +92,212 @@ class AuthController extends Controller
 
     public function profile(): Response
     {
-        return Inertia::render('Profile', []);
+        return Inertia::render('Profile', [
+            'sessions' => $this->getUserSessions(),
+        ]);
     }
 
     /**
-     * Display the password reset link request view.
+     * Get user's active sessions.
      */
-    public function forgotPassword(): Response
+    private function getUserSessions(): array
     {
-        return Inertia::render('Auth/ForgotPassword', [
-            'status' => session('status'),
+        if (config('session.driver') !== 'database') {
+            return [];
+        }
+
+        $agent = new Agent();
+        $currentSessionId = session()->getId();
+
+        return collect(
+            DB::table('sessions')
+                ->where('user_id', Auth::id())
+                ->orderBy('last_activity', 'desc')
+                ->get()
+        )->map(function ($session) use ($agent, $currentSessionId) {
+            $agent->setUserAgent($session->user_agent ?? '');
+
+            return [
+                'id' => $session->id,
+                'ip_address' => $session->ip_address,
+                'is_current' => $session->id === $currentSessionId,
+                'device' => $this->getDeviceType($agent),
+                'browser' => $agent->browser() ?: 'Unknown',
+                'platform' => $agent->platform() ?: 'Unknown',
+                'location' => $this->getLocationFromIp($session->ip_address),
+                'last_active' => Carbon::createFromTimestamp($session->last_activity)->diffForHumans(),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get device type from agent.
+     */
+    private function getDeviceType(Agent $agent): string
+    {
+        if ($agent->isTablet()) {
+            return 'Tablet';
+        } elseif ($agent->isMobile()) {
+            return 'Mobile Device';
+        } else {
+            return 'Desktop Computer';
+        }
+    }
+
+    /**
+     * Get location from IP address (you can integrate with a service like ipinfo.io).
+     */
+    private function getLocationFromIp(string $ip): ?string
+    {
+        // For local development
+        if ($ip === '127.0.0.1' || $ip === '::1') {
+            return 'Local Development';
+        }
+
+        // You can integrate with services like:
+        // - ipinfo.io
+        // - ipapi.com
+        // - freegeoip.app
+
+        // For now, return null or implement your preferred IP geolocation service
+        return null;
+    }
+
+    /**
+     * Update the user's profile information.
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
         ]);
+
+        $user->fill($validated);
+
+        // If email is changed, reset email verification
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Upload profile avatar.
+     */
+    public function uploadAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        // Delete old avatar if it exists and is not a preset
+        if ($user->avatar && !str_starts_with($user->avatar, '/avatars/preset-')) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // Store new avatar
+        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+
+        $user->update([
+            'avatar' => $avatarPath,
+        ]);
+
+        return back()->with('success', 'Profile picture updated successfully.');
+    }
+
+    /**
+     * Update the user's password.
+     */
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ]);
+
+        $request->user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return back()->with('success', 'Password updated successfully.');
+    }
+
+    /**
+     * Get user sessions.
+     */
+    public function getSessions(Request $request): Response
+    {
+        return Inertia::render('ProfileSessions', [
+            'sessions' => $this->getUserSessions(),
+        ]);
+    }
+
+    /**
+     * Logout from all other sessions.
+     */
+    public function logoutOtherSessions(Request $request): RedirectResponse
+    {
+        if (config('session.driver') !== 'database') {
+            return back()->with('error', 'Session management requires database session driver.');
+        }
+
+        // Delete all other sessions
+        DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->where('id', '!=', session()->getId())
+            ->delete();
+
+        return back()->with('success', 'Successfully logged out from all other sessions.');
+    }
+
+    /**
+     * Logout from a specific session.
+     */
+    public function logoutSession(Request $request): RedirectResponse
+    {
+        if (config('session.driver') !== 'database') {
+            return back()->with('error', 'Session management requires database session driver.');
+        }
+
+        $request->validate([
+            'session_id' => 'required|string',
+        ]);
+
+        DB::table('sessions')
+            ->where('user_id', Auth::id())
+            ->where('id', $request->session_id)
+            ->delete();
+
+        return back()->with('success', 'Session terminated successfully.');
+    }
+
+    /**
+     * Delete the user's account.
+     */
+    public function deleteAccount(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Delete user's avatar if it exists
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        Auth::logout();
+
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been deleted.');
     }
 }
