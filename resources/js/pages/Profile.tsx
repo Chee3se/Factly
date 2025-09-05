@@ -37,17 +37,7 @@ import {
 import type { Session, DeviceType } from '@/types/session';
 
 export interface Props {
-    auth: {
-        user: {
-            id: number;
-            name: string;
-            email: string;
-            avatar?: string;
-            role?: string;
-            created_at: string;
-            email_verified_at?: string;
-        };
-    };
+    auth: Auth;
     sessions: Session[];
 }
 

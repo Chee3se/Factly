@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('games', function (Blueprint $table) {
+        Schema::create('higher_lower_items', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('slug')->unique();
+            $table->string('image_url');
+            $table->bigInteger('value');
             $table->text('description')->nullable();
-            $table->string('thumbnail');
-            $table->boolean('multiplayer')->default(false);
-            $table->integer('min_players')->default(1);
-            $table->integer('max_players')->default(1);
             $table->timestamps();
+
+            $table->index('value');
         });
     }
 
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('games');
+        Schema::dropIfExists('higher_lower_items');
     }
 };

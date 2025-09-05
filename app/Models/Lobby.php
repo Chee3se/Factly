@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Game extends Model
+class Lobby extends Model
 {
     /**
      * The attributes that are mass assignable.
@@ -12,12 +12,9 @@ class Game extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'slug',
-        'description',
-        'thumbnail',
-        'multiplayer',
-        'min_players',
-        'max_players',
+        'game_id',
+        'host_user_id',
+        'lobby_code',
+        'password',
     ];
 }

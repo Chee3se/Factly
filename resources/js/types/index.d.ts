@@ -11,6 +11,25 @@ export interface User {
     email_verified_at?: string;
 }
 
+export interface Game {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    thumbnail: string;
+    multiplayer: boolean;
+    min_players: number;
+    max_players: number;
+}
+
+export interface HigherOrLowerItem {
+    id: number;
+    name: string;
+    image_url: string;
+    value: number;
+    description: string;
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {

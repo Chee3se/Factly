@@ -1,17 +1,20 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GameController;
 use App\Http\Controllers\GoogleAuthController;
+use App\Models\Game;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+
+Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('games.show');
+
 // Public routes
-Route::get('/', function () {
-    return Inertia::render('Home', []);
-})->name('home');
+Route::get('/', [GameController::class, 'index'])->name('home');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -62,3 +65,5 @@ Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+
