@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->text('description')->nullable();
             $table->string('thumbnail');
-            $table->boolean('multiplayer')->default(false);
             $table->integer('min_players')->default(1);
             $table->integer('max_players')->default(1);
             $table->timestamps();

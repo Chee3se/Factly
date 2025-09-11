@@ -48,12 +48,6 @@ export default function Home({auth, games}: Props) {
                                         <CardTitle className="text-lg font-semibold leading-tight">
                                             {game.name}
                                         </CardTitle>
-                                        {game.multiplayer && (
-                                            <Badge variant="secondary" className="shrink-0">
-                                                <Users className="w-3 h-3 mr-1" />
-                                                Multi
-                                            </Badge>
-                                        )}
                                     </div>
                                 </CardHeader>
 

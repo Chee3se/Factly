@@ -1,28 +1,31 @@
 import React, { useState, useEffect } from 'react';
-
 import { HigherOrLowerItem } from "@/types";
-
 import { TrendingUp, TrendingDown, Info } from 'lucide-react';
 import App from "@/layouts/App";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import axios from 'axios';
+import { route } from 'ziggy-js';
 
 interface Props {
     auth: Auth;
     items: HigherOrLowerItem[];
+    gameSlug: string;
+    bestScore?: number;
 }
 
 interface GameState {
     currentIndex: number;
     score: number;
-    gamePhase: 'guessing' | 'revealing' | 'result';
+    gamePhase: 'guessing' | 'revealing' | 'result' | 'game-over';
     guess: 'higher' | 'lower' | null;
     isCorrect: boolean | null;
     animatingValue: number;
     showCurrentDescription: boolean;
     showNextDescription: boolean;
+    bestScore: number;
 }
 
-export default function HigherOrLower({auth, items}: Props) {
+export default function HigherOrLower({ auth, items, gameSlug, bestScore = 0 }: Props) {
     const [gameState, setGameState] = useState<GameState>({
         currentIndex: 0,
         score: 0,
@@ -31,13 +34,46 @@ export default function HigherOrLower({auth, items}: Props) {
         isCorrect: null,
         animatingValue: 0,
         showCurrentDescription: false,
-        showNextDescription: false
+        showNextDescription: false,
+        bestScore: bestScore
     });
 
     const currentItem = items?.[gameState.currentIndex];
     const nextItem = items?.[gameState.currentIndex + 1];
 
-    // Handle guess
+    const formatEnergyValue = (kWh: number) => {
+        if (kWh >= 1000000000) {
+            return `${(kWh / 1000000000).toFixed(2)} TWh`;
+        } else if (kWh >= 1000000) {
+            return `${(kWh / 1000000).toFixed(2)} GWh`;
+        } else if (kWh >= 1000) {
+            return `${(kWh / 1000).toFixed(2)} MWh`;
+        } else {
+            return `${kWh.toLocaleString()} kWh`;
+        }
+    };
+
+    const saveScore = async (finalScore: number) => {
+        if (!auth?.user) return;
+
+        try {
+            const response = await axios.post(route('games.save-score'), {
+                game: gameSlug,
+                score: finalScore,
+                user_id: auth.user.id
+            });
+
+            if (response.data.success) {
+                setGameState(prev => ({
+                    ...prev,
+                    bestScore: Math.max(prev.bestScore, response.data.best_score)
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to save score:', error);
+        }
+    };
+
     const makeGuess = (guess: 'higher' | 'lower') => {
         if (!currentItem || !nextItem) return;
 
@@ -51,7 +87,6 @@ export default function HigherOrLower({auth, items}: Props) {
         }));
     };
 
-    // Toggle description visibility
     const toggleCurrentDescription = () => {
         setGameState(prev => ({
             ...prev,
@@ -66,7 +101,6 @@ export default function HigherOrLower({auth, items}: Props) {
         }));
     };
 
-    // Animate the number reveal
     useEffect(() => {
         if (gameState.gamePhase === 'revealing') {
             const targetValue = nextItem?.value || 0;
@@ -98,6 +132,16 @@ export default function HigherOrLower({auth, items}: Props) {
                         score: isCorrect ? prev.score + 1 : prev.score,
                         animatingValue: targetValue
                     }));
+
+                    if (!isCorrect) {
+                        saveScore(gameState.score);
+                        setTimeout(() => {
+                            setGameState(prev => ({
+                                ...prev,
+                                gamePhase: 'game-over'
+                            }));
+                        }, 1500);
+                    }
                 }
             }, duration / steps);
 
@@ -105,10 +149,9 @@ export default function HigherOrLower({auth, items}: Props) {
         }
     }, [gameState.gamePhase, gameState.guess, currentItem?.value, nextItem?.value]);
 
-    // Continue to next round
     const nextRound = () => {
         if (gameState.currentIndex + 1 >= items.length - 1) {
-            // Game over - reset to start
+            saveScore(gameState.score);
             setGameState({
                 currentIndex: 0,
                 score: 0,
@@ -117,7 +160,8 @@ export default function HigherOrLower({auth, items}: Props) {
                 isCorrect: null,
                 animatingValue: 0,
                 showCurrentDescription: false,
-                showNextDescription: false
+                showNextDescription: false,
+                bestScore: Math.max(gameState.bestScore, gameState.score)
             });
         } else {
             setGameState(prev => ({
@@ -133,8 +177,18 @@ export default function HigherOrLower({auth, items}: Props) {
         }
     };
 
-    const formatNumber = (num: number) => {
-        return num.toLocaleString();
+    const restartGame = () => {
+        setGameState(prev => ({
+            currentIndex: 0,
+            score: 0,
+            gamePhase: 'guessing',
+            guess: null,
+            isCorrect: null,
+            animatingValue: 0,
+            showCurrentDescription: false,
+            showNextDescription: false,
+            bestScore: prev.bestScore
+        }));
     };
 
     if (!items || items.length < 2) {
@@ -150,28 +204,68 @@ export default function HigherOrLower({auth, items}: Props) {
         );
     }
 
+    if (gameState.gamePhase === 'game-over') {
+        return (
+            <App title={'Higher or Lower - Game Over'} auth={auth}>
+                <div className="h-[80vh] flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+                    <div className="text-center text-white p-8 bg-black/50 rounded-2xl backdrop-blur-sm border border-white/20 max-w-md mx-auto">
+                        <h1 className="text-4xl font-bold mb-6 text-red-400">Game Over!</h1>
+
+                        <div className="space-y-4 mb-8">
+                            <div>
+                                <p className="text-lg text-gray-300">Your Score</p>
+                                <p className="text-3xl font-bold text-yellow-400">{gameState.score}</p>
+                            </div>
+
+                            {auth?.user && (
+                                <div>
+                                    <p className="text-lg text-gray-300">Best Score</p>
+                                    <p className="text-3xl font-bold text-green-400">{gameState.bestScore}</p>
+                                    {gameState.score > gameState.bestScore && (
+                                        <p className="text-sm text-yellow-300 animate-pulse">🎉 New Personal Best! 🎉</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {!auth?.user && (
+                                <p className="text-sm text-gray-400">Sign in to save your scores!</p>
+                            )}
+                        </div>
+
+                        <Button
+                            size="lg"
+                            onClick={restartGame}
+                            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-lg transform hover:scale-105 transition-all duration-200 font-bold text-lg"
+                        >
+                            Play Again
+                        </Button>
+                    </div>
+                </div>
+            </App>
+        );
+    }
+
     return (
         <App title={'Higher or Lower'} auth={auth}>
             <div className="h-[80vh] grid grid-cols-2 relative overflow-hidden">
-                {/* Current Item */}
                 <div className="relative flex flex-col items-center justify-center h-full">
-                    {/* Background image */}
                     <div
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                         style={{ backgroundImage: `url("${currentItem?.image_url}")` }}
                     ></div>
-
-                    {/* Overlay for better text readability */}
                     <div className="absolute inset-0 bg-black opacity-50"></div>
 
-                    {/* Score */}
                     <div className="absolute top-4 left-4 text-left z-20">
-                        <div className="text-2xl font-black text-yellow-400 drop-shadow-lg">
-                            SCORE: {gameState.score}
+                        <div className="text-2xl font-black text-yellow-400 drop-shadow-lg mb-1">
+                            STREAK: {gameState.score}
                         </div>
+                        {auth?.user && gameState.bestScore > 0 && (
+                            <div className="text-lg font-bold text-green-400 drop-shadow-lg">
+                                BEST: {gameState.bestScore}
+                            </div>
+                        )}
                     </div>
 
-                    {/* Info Button */}
                     <button
                         onClick={toggleCurrentDescription}
                         className="absolute top-4 right-4 z-20 bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-full p-2 transition-all duration-200 hover:scale-110"
@@ -182,10 +276,9 @@ export default function HigherOrLower({auth, items}: Props) {
                     <div className="relative z-10 text-center text-white p-4">
                         <h3 className="text-2xl font-bold mb-3 drop-shadow-lg">{currentItem?.name}</h3>
                         <div className="text-5xl font-black mb-2 text-yellow-400 drop-shadow-lg">
-                            {formatNumber(currentItem?.value || 0)} kWh
+                            {formatEnergyValue(currentItem?.value || 0)}
                         </div>
 
-                        {/* Manual description toggle */}
                         {gameState.showCurrentDescription && (
                             <div className="animate-fade-in transition-all duration-300 ease-in-out mt-4">
                                 <div className="bg-gradient-to-r from-blue-900/90 to-purple-900/90 backdrop-blur-sm border border-white/20 rounded-xl p-3 shadow-2xl max-w-md mx-auto">
@@ -198,16 +291,13 @@ export default function HigherOrLower({auth, items}: Props) {
                     </div>
                 </div>
 
-                {/* Next Item */}
                 <div className="relative flex flex-col items-center justify-center h-full overflow-hidden">
-                    {/* Background image */}
                     {nextItem?.image_url ? (
                         <img
                             src={nextItem.image_url}
                             alt={nextItem.name}
                             className="absolute inset-0 w-full h-full object-cover"
                             onError={(e) => {
-                                console.log('Failed to load next item image:', nextItem.image_url);
                                 e.currentTarget.style.display = 'none';
                             }}
                         />
@@ -215,10 +305,8 @@ export default function HigherOrLower({auth, items}: Props) {
                         <div className="absolute inset-0 bg-gray-800"></div>
                     )}
 
-                    {/* Overlay for better text readability */}
                     <div className="absolute inset-0 bg-black opacity-50"></div>
 
-                    {/* Info Button */}
                     {gameState.gamePhase !== 'guessing' && (
                         <button
                             onClick={toggleNextDescription}
@@ -233,11 +321,10 @@ export default function HigherOrLower({auth, items}: Props) {
                         <div className="text-5xl font-black mb-2 text-yellow-400 drop-shadow-lg">
                             {gameState.gamePhase === 'guessing'
                                 ? '???'
-                                : formatNumber(gameState.animatingValue)
-                            } kWh
+                                : formatEnergyValue(gameState.animatingValue)
+                            }
                         </div>
 
-                        {/* Manual description toggle only */}
                         {gameState.showNextDescription && gameState.gamePhase !== 'guessing' && (
                             <div className="animate-fade-in transition-all duration-300 ease-in-out mt-4 mb-6">
                                 <div className="bg-gradient-to-r from-green-900/90 to-teal-900/90 backdrop-blur-sm border border-white/20 rounded-xl p-3 shadow-2xl max-w-md mx-auto">
@@ -248,7 +335,6 @@ export default function HigherOrLower({auth, items}: Props) {
                             </div>
                         )}
 
-                        {/* Game Controls */}
                         {gameState.gamePhase === 'guessing' && (
                             <div className="flex flex-col space-y-4 mt-6">
                                 <p className="text-lg mb-3 font-semibold drop-shadow-lg">Is the energy consumption higher or lower?</p>
@@ -273,20 +359,32 @@ export default function HigherOrLower({auth, items}: Props) {
                             </div>
                         )}
 
-                        {gameState.gamePhase === 'result' && (
+                        {gameState.gamePhase === 'result' && gameState.isCorrect && (
                             <div className="flex flex-col space-y-3 mt-2">
-                                <div className={`text-2xl font-bold drop-shadow-lg rounded-full w-10 h-10 m-1 pt-1 mx-auto mb-4 ${
-                                    gameState.isCorrect ? 'bg-green-500' : 'bg-red-500'
-                                }`}>
-                                    {gameState.isCorrect ? '✓' : '×'}
+                                <div className="text-2xl font-bold drop-shadow-lg rounded-full w-10 h-10 m-1 pt-1 mx-auto mb-4 bg-green-500">
+                                    ✓
                                 </div>
                                 <Button
                                     size="lg"
                                     onClick={nextRound}
                                     className="px-6 w-fit mx-auto py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-0 shadow-lg transform hover:scale-105 transition-all duration-200 font-bold text-base"
                                 >
-                                    {gameState.currentIndex + 1 >= items.length - 1 ? 'Again ↺' : 'Next →'}
+                                    {gameState.currentIndex + 1 >= items.length - 1 ? 'Finish Game' : 'Next →'}
                                 </Button>
+                            </div>
+                        )}
+
+                        {gameState.gamePhase === 'result' && !gameState.isCorrect && (
+                            <div className="flex flex-col space-y-3 mt-2">
+                                <div className="text-2xl font-bold drop-shadow-lg rounded-full w-10 h-10 m-1 pt-1 mx-auto mb-4 bg-red-500">
+                                    ×
+                                </div>
+                                <p className="text-lg font-semibold text-red-300 drop-shadow-lg mb-2">
+                                    Wrong! Game Over
+                                </p>
+                                <p className="text-sm text-gray-300 mb-4">
+                                    Final Streak: {gameState.score}
+                                </p>
                             </div>
                         )}
                     </div>

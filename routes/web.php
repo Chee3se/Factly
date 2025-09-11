@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\LobbyController;
 use App\Models\Game;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Mail;
@@ -10,11 +11,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-
 Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('games.show');
 
 // Public routes
 Route::get('/', [GameController::class, 'index'])->name('home');
+
+// Score and leaderboard routes (public for leaderboards, auth required for saving)
+Route::get('/api/games/{gameSlug}/leaderboard', [GameController::class, 'getLeaderboard'])->name('games.leaderboard');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -47,6 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/sessions', [AuthController::class, 'getSessions'])->name('profile.sessions');
     Route::post('/profile/logout-other-sessions', [AuthController::class, 'logoutOtherSessions'])->name('profile.logout-other-sessions');
     Route::delete('/profile/session/logout', [AuthController::class, 'logoutSession'])->name('profile.session.logout');
+
+    // Game score routes (authenticated only)
+    Route::post('/api/save-score', [GameController::class, 'saveScore'])->name('games.save-score');
+    Route::get('/api/games/{gameSlug}/best-score', [GameController::class, 'getUserBestScore'])->name('games.user-best-score');
 });
 
 // Email verification
@@ -65,5 +72,3 @@ Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
-

@@ -10,6 +10,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings } from 'lucide-react';
+import { Toaster } from "@/components/ui/sonner"
 
 const appName = import.meta.env.VITE_APP_NAME || 'Factly';
 
@@ -108,6 +109,8 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                 <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {children}
                 </main>
+
+                <Toaster richColors />
 
                 <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2.5">

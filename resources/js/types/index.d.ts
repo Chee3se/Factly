@@ -17,7 +17,6 @@ export interface Game {
     slug: string;
     description: string;
     thumbnail: string;
-    multiplayer: boolean;
     min_players: number;
     max_players: number;
 }

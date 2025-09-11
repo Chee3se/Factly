@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('host_user_id')->constrained('users')->onDelete('cascade');
             $table->string('lobby_code', 8)->unique(); // Short join code like "ABCD1234"
             $table->string('password')->nullable();
+            $table->boolean('started')->default(false);
             $table->timestamps();
         });
     }
