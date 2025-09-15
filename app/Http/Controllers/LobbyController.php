@@ -19,12 +19,22 @@ class LobbyController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+
         $lobbies = Lobby::with(['game', 'host', 'players'])
             ->where('started', false)
             ->latest()
             ->get();
 
-        return response()->json($lobbies);
+        // Check if user is already in a lobby
+        $userLobby = $lobbies->first(function ($lobby) use ($user) {
+            return $lobby->players->contains('id', $user->id);
+        });
+
+        return response()->json([
+            'lobbies' => $lobbies,
+            'user_lobby' => $userLobby
+        ]);
     }
 
     public function store(Request $request)
@@ -52,7 +62,12 @@ class LobbyController extends Controller
 
     public function show($lobbyCode)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         return response()->json($lobby->load(['game', 'host', 'players']));
     }
 
@@ -103,7 +118,12 @@ class LobbyController extends Controller
 
     public function leave($lobbyCode)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $user = Auth::user();
 
         if (!$lobby->players()->where('user_id', $user->id)->exists()) {
@@ -130,7 +150,12 @@ class LobbyController extends Controller
 
     public function toggleReady($lobbyCode)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $user = Auth::user();
         $player = $lobby->players()->where('user_id', $user->id)->first();
 
@@ -148,7 +173,12 @@ class LobbyController extends Controller
 
     public function start($lobbyCode)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $user = Auth::user();
 
         if (!$lobby->isHost($user)) {
@@ -168,7 +198,12 @@ class LobbyController extends Controller
 
     public function kick($lobbyCode, Request $request)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $request->validate([
             'user_id' => 'required|exists:users,id'
         ]);
@@ -198,7 +233,12 @@ class LobbyController extends Controller
 
     public function sendMessage($lobbyCode, Request $request)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $user = Auth::user();
 
         // Check if user is in the lobby
@@ -225,7 +265,12 @@ class LobbyController extends Controller
 
     public function getMessages($lobbyCode)
     {
-        $lobby = Lobby::where('lobby_code', $lobbyCode)->firstOrFail();
+        $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
         $user = Auth::user();
 
         // Check if user is in the lobby
@@ -240,5 +285,46 @@ class LobbyController extends Controller
             ->get();
 
         return response()->json($messages);
+    }
+
+    // Add method to find lobby by code
+    public function findByCode(Request $request)
+    {
+        $request->validate([
+            'lobby_code' => 'required|string|size:8'
+        ]);
+
+        $lobby = Lobby::where('lobby_code', $request->lobby_code)
+            ->where('started', false)
+            ->with(['game', 'host', 'players'])
+            ->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'Lobby not found or already started'], 404);
+        }
+
+        return response()->json($lobby);
+    }
+
+    /**
+     * Get current user's active lobby
+     */
+    public function getCurrentUserLobby()
+    {
+        $user = Auth::user();
+
+        // Find any non-started lobby where the user is a player
+        $lobby = Lobby::with(['game', 'host', 'players'])
+            ->where('started', false)
+            ->whereHas('players', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->first();
+
+        if (!$lobby) {
+            return response()->json(['message' => 'No active lobby found'], 404);
+        }
+
+        return response()->json($lobby);
     }
 }

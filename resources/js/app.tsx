@@ -4,9 +4,6 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot, hydrateRoot } from 'react-dom/client';
-import LobbyManager from './lobby.js';
-
-const lobbyManager = new LobbyManager();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

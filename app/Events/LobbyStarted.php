@@ -19,7 +19,7 @@ class LobbyStarted implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PresenceChannel('lobby.' . $this->lobby->id),
+            new PresenceChannel('lobby.' . $this->lobby->lobby_code),
         ];
     }
 

@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('games.show');
-
 // Public routes
 Route::get('/', [GameController::class, 'index'])->name('home');
 
@@ -35,6 +33,8 @@ Route::middleware('guest')->group(function () {
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
+    Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('games.show');
+
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
 
@@ -54,6 +54,23 @@ Route::middleware('auth')->group(function () {
     // Game score routes (authenticated only)
     Route::post('/api/save-score', [GameController::class, 'saveScore'])->name('games.save-score');
     Route::get('/api/games/{gameSlug}/best-score', [GameController::class, 'getUserBestScore'])->name('games.user-best-score');
+
+    // Lobby routes - grouped with proper API prefix
+    Route::prefix('api')->group(function () {
+        Route::get('/lobbies', [LobbyController::class, 'index']);
+        Route::get('/lobbies/current', [LobbyController::class, 'getCurrentUserLobby']); // Add this line
+        Route::post('/lobbies', [LobbyController::class, 'store']);
+        Route::post('/lobbies/find', [LobbyController::class, 'findByCode']);
+        Route::get('/lobbies/{lobbyCode}', [LobbyController::class, 'show']);
+        Route::post('/lobbies/join', [LobbyController::class, 'join']);
+        Route::post('/lobbies/{lobbyCode}/leave', [LobbyController::class, 'leave']);
+        Route::post('/lobbies/{lobbyCode}/ready', [LobbyController::class, 'toggleReady']);
+        Route::post('/lobbies/{lobbyCode}/start', [LobbyController::class, 'start']);
+        Route::post('/lobbies/{lobbyCode}/kick', [LobbyController::class, 'kick']);
+        Route::post('/lobbies/{lobbyCode}/messages', [LobbyController::class, 'sendMessage']);
+        Route::get('/lobbies/{lobbyCode}/messages', [LobbyController::class, 'getMessages']);
+        Route::get('/lobbies/current', [LobbyController::class, 'getCurrentUserLobby']);
+    });
 });
 
 // Email verification
@@ -72,3 +89,11 @@ Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
     return back()->with('message', 'Verification link sent!');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// Broadcasting authentication route for Laravel Echo
+Route::middleware('auth')->post('/broadcasting/auth', function (Request $request) {
+    return response()->json([
+        'auth' => auth()->user()->id,
+        'user_id' => auth()->user()->id
+    ]);
+});
