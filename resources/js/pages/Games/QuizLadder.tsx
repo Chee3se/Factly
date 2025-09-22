@@ -11,13 +11,12 @@ import {GameScreen} from "@/components/QuizLadder/GameScreen";
 interface Props {
     auth: Auth;
     game: Game;
-    items: any[]; // Add items prop to receive database questions
+    items: any[];
 }
 
 const WINNING_CUBES = 100;
 const QUESTION_TIME = 30;
 
-// Helper function to transform database items to Question format
 const transformDatabaseQuestions = (items: any[]): Question[] => {
     return items.map((item, index) => ({
         id: item.id || index + 1,
@@ -48,7 +47,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         currentChannel
     } = lobbyHook;
 
-    // Transform database questions on component mount
     const [databaseQuestions] = useState<Question[]>(() => transformDatabaseQuestions(items));
 
     const [gameState, setGameState] = useState<GameState>({
@@ -59,7 +57,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
         selectedAnswer: null,
         hasAnswered: false,
         questionStartTime: Date.now(),
-        questions: databaseQuestions, // Use database questions instead of SAMPLE_QUESTIONS
+        questions: databaseQuestions,
         currentQuestionData: null,
         playerSelections: [],
         isGameOwner: false
@@ -72,7 +70,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
     const authUserIdRef = useRef(auth.user?.id);
     const currentLobbyRef = useRef(currentLobby);
 
-    // Update refs when values change
     useEffect(() => {
         gameStateRef.current = gameState;
     }, [gameState]);
@@ -104,7 +101,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
                 const points = prev.currentQuestionData.points;
                 const updatedStates = { ...prev.playerStates };
 
-                // Update current user's score
                 if (prev.selectedAnswer === correctAnswer && authUserIdRef.current) {
                     const currentUserState = updatedStates[authUserIdRef.current];
                     if (currentUserState) {
@@ -115,7 +111,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
                     }
                 }
 
-                // Update other players' scores
                 prev.playerSelections.forEach(selection => {
                     if (selection.answerIndex === correctAnswer) {
                         const playerState = updatedStates[selection.userId];
@@ -128,7 +123,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
                     }
                 });
 
-                // Only game owner broadcasts scores
                 if (prev.isGameOwner) {
                     sendWhisper('client-score-update', {
                         playerStates: updatedStates,
@@ -136,7 +130,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
                     });
                 }
 
-                setTimeout(resolve, 100); // Small delay to ensure state updates
+                setTimeout(resolve, 100);
                 return { ...prev, playerStates: updatedStates };
             });
         });
@@ -149,7 +143,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
             if (winner) {
                 const winnerPlayer = currentLobbyRef.current?.players?.find(p => p.id === winner.userId);
 
-                // Only game owner sends game-ended whisper
                 if (prev.isGameOwner) {
                     sendWhisper('client-game-ended', {
                         winner: winnerPlayer,
@@ -167,15 +160,14 @@ export default function QuizLadder({ auth, game, items }: Props) {
                 const nextQuestionIndex = prev.currentQuestion + 1;
                 const nextQuestion = prev.questions[nextQuestionIndex];
 
-                // Only game owner sends next question
                 if (prev.isGameOwner) {
                     setTimeout(() => {
                         sendWhisper('client-question-start', {
                             questionIndex: nextQuestionIndex,
-                            questionData: nextQuestion, // Send the question data
+                            questionData: nextQuestion,
                             initiatorId: authUserIdRef.current
                         });
-                    }, 500); // Slight delay to ensure all clients are ready
+                    }, 500);
                 }
 
                 return {
@@ -194,7 +186,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
                     .reduce((prev, current) => (prev.cubes > current.cubes) ? prev : current);
                 const topPlayerData = currentLobbyRef.current?.players?.find(p => p.id === topPlayer.userId);
 
-                // Only game owner sends game-ended whisper
                 if (prev.isGameOwner) {
                     sendWhisper('client-game-ended', {
                         winner: topPlayerData,
@@ -229,13 +220,12 @@ export default function QuizLadder({ auth, game, items }: Props) {
                         onWhisper(event, (e: any) => {
                             if (e.initiatorId === authUserIdRef.current) return;
 
-                            // Use the questions sent by the game owner
                             const gameQuestions = e.questions || databaseQuestions;
                             const firstQuestion = gameQuestions[0];
 
                             setGameState(prev => ({
                                 ...prev,
-                                questions: gameQuestions, // Use the same questions as game owner
+                                questions: gameQuestions,
                                 phase: 'question',
                                 currentQuestionData: firstQuestion,
                                 questionStartTime: Date.now(),
@@ -291,7 +281,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
                         onWhisper(event, (e: any) => {
                             if (e.initiatorId === authUserIdRef.current) return;
 
-                            // Use the question data sent with the event (ensures synchronization)
                             const questionData = e.questionData;
                             setGameState(prev => ({
                                 ...prev,
@@ -333,7 +322,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         if (gameInitializedRef.current || databaseQuestions.length === 0) return;
         gameInitializedRef.current = true;
 
-        // Game owner selects and shuffles questions for everyone
         const shuffledQuestions = [...databaseQuestions].sort(() => Math.random() - 0.5);
         const gameQuestions = shuffledQuestions.slice(0, Math.min(10, shuffledQuestions.length));
 
@@ -341,7 +329,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
 
         setGameState(prev => ({
             ...prev,
-            questions: gameQuestions, // Update with selected questions
+            questions: gameQuestions,
             phase: 'question',
             currentQuestionData: firstQuestion,
             questionStartTime: Date.now(),
@@ -351,10 +339,9 @@ export default function QuizLadder({ auth, game, items }: Props) {
             playerSelections: []
         }));
 
-        // Send game start signal with the selected questions to all players
         setTimeout(() => {
             sendWhisper('client-game-start', {
-                questions: gameQuestions, // Send the same questions to all players
+                questions: gameQuestions,
                 initiatorId: authUserIdRef.current
             });
         }, 100);
@@ -387,7 +374,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
 
     const endQuestion = useCallback(async () => {
         setGameState(prev => {
-            // Only game owner sends question-ended whisper
             if (prev.isGameOwner) {
                 sendWhisper('client-question-ended', {
                     initiatorId: authUserIdRef.current
@@ -397,12 +383,9 @@ export default function QuizLadder({ auth, game, items }: Props) {
             return { ...prev, phase: 'results' };
         });
 
-        // Only the game owner manages the full flow
         if (gameStateRef.current.isGameOwner) {
-            // Update scores
             await updateScoresBasedOnSelections();
 
-            // Wait a bit for UI to show results
             setTimeout(() => {
                 checkForWinnerOrContinue();
             }, 2000);
@@ -418,7 +401,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         window.location.href = '/lobbies';
     }, [cleanupWhisperListeners, leaveLobby]);
 
-    // Setup whisper listeners when channel is ready
     useEffect(() => {
         if (currentChannel && currentChannel.isReady) {
             setupWhisperListeners();
@@ -429,7 +411,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         };
     }, [currentChannel?.isReady, setupWhisperListeners]);
 
-    // Initialize player states when lobby players change
     useEffect(() => {
         if (currentLobby?.players && auth.user?.id) {
             const initialStates: { [userId: number]: PlayerGameState } = {};
@@ -457,14 +438,13 @@ export default function QuizLadder({ auth, game, items }: Props) {
         }
     }, [currentLobby?.players, currentLobby?.owner_id, currentLobby?.host?.id, auth.user?.id]);
 
-    // Start game after delay for game owner
     useEffect(() => {
         if (currentLobby &&
             gameState.phase === 'waiting' &&
             currentChannel?.isReady &&
             gameState.isGameOwner &&
             !gameInitializedRef.current &&
-            databaseQuestions.length > 0) { // Ensure we have questions
+            databaseQuestions.length > 0) {
 
             timerRef.current = setTimeout(() => {
                 startQuizGame();
@@ -478,14 +458,12 @@ export default function QuizLadder({ auth, game, items }: Props) {
         }
     }, [currentLobby, gameState.phase, currentChannel?.isReady, gameState.isGameOwner, startQuizGame, databaseQuestions.length]);
 
-    // Handle question timer - Only game owner manages the timer
     useEffect(() => {
         if (gameState.phase === 'question' && gameState.timeLeft > 0 && gameState.isGameOwner) {
             const timer = setTimeout(() => {
                 setGameState(prev => {
                     const newTimeLeft = prev.timeLeft - 1;
 
-                    // Sync timer periodically
                     if (newTimeLeft % 3 === 0) {
                         sendWhisper('client-timer-sync', {
                             timeLeft: newTimeLeft,
@@ -503,7 +481,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         }
     }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner, sendWhisper, endQuestion]);
 
-    // Non-game owner timer sync
     useEffect(() => {
         if (gameState.phase === 'question' && !gameState.isGameOwner) {
             const timer = setTimeout(() => {
@@ -517,7 +494,6 @@ export default function QuizLadder({ auth, game, items }: Props) {
         }
     }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner]);
 
-    // Add safety check for no questions
     if (databaseQuestions.length === 0) {
         return (
             <LoadingScreen auth={auth}>

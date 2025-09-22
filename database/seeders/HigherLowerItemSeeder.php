@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Game;
-use App\Models\HigherLowerItem;
+use App\Models\GameItem;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -28,13 +28,13 @@ class HigherLowerItemSeeder extends Seeder
                 'name' => 'Iceland person',
                 'image_url' => 'https://iceland24blog.com/wp-content/uploads/2018/06/icelandic-man-lopapeysa-sweater-waterfall.jpg',
                 'value' => 50083,
-                'description' => 'Iceland has the world’s highest per capita electricity use, largely due to energy-intensive industries like aluminum smelting and widespread electric heating.'
+                'description' => "Iceland has the world's highest per capita electricity use, largely due to energy-intensive industries like aluminum smelting and widespread electric heating."
             ],
             [
                 'name' => 'Latvian person',
                 'image_url' => 'https://static.lsm.lv/media/2025/05/large/1/qbs0.jpg',
                 'value' => 3629,
-                'description' => 'Latvia’s per capita electricity use is much lower than Northern Europe, reflecting a smaller industrial base and greater reliance on district heating and efficiency.'
+                'description' => "Latvia's per capita electricity use is much lower than Northern Europe, reflecting a smaller industrial base and greater reliance on district heating and efficiency."
             ],
             [
                 'name' => 'Air Conditioner',
@@ -88,7 +88,7 @@ class HigherLowerItemSeeder extends Seeder
                 'name' => 'Russia',
                 'image_url' => 'https://storage.united24media.com/thumbs/x/3/d1/c9b5496be23228d4f1071d8d6c071d13.jpg',
                 'value' => 900000000000,
-                'description' => 'Russia’s electricity use is influenced by heavy industry and cold climate. Per capita consumption is ~6,400 kWh/year.'
+                'description' => "Russia's electricity use is influenced by heavy industry and cold climate. Per capita consumption is ~6,400 kWh/year."
             ],
             [
                 'name' => 'Norway',
@@ -106,13 +106,13 @@ class HigherLowerItemSeeder extends Seeder
                 'name' => 'Finnish person',
                 'image_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRm2gneoa7TS44tRy-rFOxMiP_4ac7MOKSSHw&s',
                 'value' => 14747,
-                'description' => 'Finland’s per capita consumption is high, reflecting heating needs in cold winters and an advanced industrial economy.'
+                'description' => "Finland's per capita consumption is high, reflecting heating needs in cold winters and an advanced industrial economy."
             ],
             [
                 'name' => 'Albanian person',
                 'image_url' => 'https://upload.wikimedia.org/wikipedia/commons/9/9a/Sofra_Dardane_-_Bajram_Curr.JPG',
                 'value' => 2507,
-                'description' => 'Albania’s per capita electricity use is low, reflecting a smaller economy and more limited industrial consumption.'
+                'description' => "Albania's per capita electricity use is low, reflecting a smaller economy and more limited industrial consumption."
             ],
             [
                 'name' => 'Kettle',
@@ -146,9 +146,11 @@ class HigherLowerItemSeeder extends Seeder
             ]
         ];
 
-
         foreach ($items as $item) {
-            HigherLowerItem::create($item);
+            GameItem::create([
+                'game_id' => $hol->id,
+                'value' => $item
+            ]);
         }
     }
 }

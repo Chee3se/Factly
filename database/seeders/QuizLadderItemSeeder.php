@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Game;
-use App\Models\QuizLadderItem;
+use App\Models\GameItem;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -27,35 +27,35 @@ class QuizLadderItemSeeder extends Seeder
             // Easy Questions (1-2 points)
             [
                 'question' => 'What is the capital of France?',
-                'options' => json_encode(['Paris', 'London', 'Berlin', 'Madrid']),
+                'options' => ['Paris', 'London', 'Berlin', 'Madrid'],
                 'correct_answer' => 'Paris',
                 'difficulty' => 'easy',
                 'points' => 1,
             ],
             [
                 'question' => 'How many legs does a spider have?',
-                'options' => json_encode(['6', '8', '10', '12']),
+                'options' => ['6', '8', '10', '12'],
                 'correct_answer' => '8',
                 'difficulty' => 'easy',
                 'points' => 1,
             ],
             [
                 'question' => 'What color do you get when you mix red and white?',
-                'options' => json_encode(['Orange', 'Purple', 'Pink', 'Yellow']),
+                'options' => ['Orange', 'Purple', 'Pink', 'Yellow'],
                 'correct_answer' => 'Pink',
                 'difficulty' => 'easy',
                 'points' => 1,
             ],
             [
                 'question' => 'Which planet is known as the Red Planet?',
-                'options' => json_encode(['Venus', 'Mars', 'Jupiter', 'Saturn']),
+                'options' => ['Venus', 'Mars', 'Jupiter', 'Saturn'],
                 'correct_answer' => 'Mars',
                 'difficulty' => 'easy',
                 'points' => 2,
             ],
             [
                 'question' => 'What is the largest mammal in the world?',
-                'options' => json_encode(['African Elephant', 'Blue Whale', 'Giraffe', 'Hippopotamus']),
+                'options' => ['African Elephant', 'Blue Whale', 'Giraffe', 'Hippopotamus'],
                 'correct_answer' => 'Blue Whale',
                 'difficulty' => 'easy',
                 'points' => 2,
@@ -64,42 +64,42 @@ class QuizLadderItemSeeder extends Seeder
             // Medium Questions (3-4 points)
             [
                 'question' => 'Who painted the Mona Lisa?',
-                'options' => json_encode(['Vincent van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Michelangelo']),
+                'options' => ['Vincent van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Michelangelo'],
                 'correct_answer' => 'Leonardo da Vinci',
                 'difficulty' => 'medium',
                 'points' => 3,
             ],
             [
                 'question' => 'What is the chemical symbol for gold?',
-                'options' => json_encode(['Go', 'Gd', 'Au', 'Ag']),
+                'options' => ['Go', 'Gd', 'Au', 'Ag'],
                 'correct_answer' => 'Au',
                 'difficulty' => 'medium',
                 'points' => 3,
             ],
             [
                 'question' => 'Which country gifted the Statue of Liberty to the United States?',
-                'options' => json_encode(['United Kingdom', 'France', 'Spain', 'Italy']),
+                'options' => ['United Kingdom', 'France', 'Spain', 'Italy'],
                 'correct_answer' => 'France',
                 'difficulty' => 'medium',
                 'points' => 3,
             ],
             [
                 'question' => 'What is the smallest country in the world?',
-                'options' => json_encode(['Monaco', 'San Marino', 'Vatican City', 'Liechtenstein']),
+                'options' => ['Monaco', 'San Marino', 'Vatican City', 'Liechtenstein'],
                 'correct_answer' => 'Vatican City',
                 'difficulty' => 'medium',
                 'points' => 4,
             ],
             [
                 'question' => 'In which year did the Berlin Wall fall?',
-                'options' => json_encode(['1987', '1989', '1991', '1993']),
+                'options' => ['1987', '1989', '1991', '1993'],
                 'correct_answer' => '1989',
                 'difficulty' => 'medium',
                 'points' => 4,
             ],
             [
                 'question' => 'What is the hardest natural substance on Earth?',
-                'options' => json_encode(['Gold', 'Iron', 'Diamond', 'Platinum']),
+                'options' => ['Gold', 'Iron', 'Diamond', 'Platinum'],
                 'correct_answer' => 'Diamond',
                 'difficulty' => 'medium',
                 'points' => 4,
@@ -108,42 +108,42 @@ class QuizLadderItemSeeder extends Seeder
             // Hard Questions (5-6 points)
             [
                 'question' => 'Who wrote the novel "1984"?',
-                'options' => json_encode(['Aldous Huxley', 'George Orwell', 'Ray Bradbury', 'H.G. Wells']),
+                'options' => ['Aldous Huxley', 'George Orwell', 'Ray Bradbury', 'H.G. Wells'],
                 'correct_answer' => 'George Orwell',
                 'difficulty' => 'hard',
                 'points' => 5,
             ],
             [
                 'question' => 'What is the longest river in the world?',
-                'options' => json_encode(['Amazon River', 'Nile River', 'Mississippi River', 'Yangtze River']),
+                'options' => ['Amazon River', 'Nile River', 'Mississippi River', 'Yangtze River'],
                 'correct_answer' => 'Nile River',
                 'difficulty' => 'hard',
                 'points' => 5,
             ],
             [
                 'question' => 'Which element has the atomic number 1?',
-                'options' => json_encode(['Helium', 'Hydrogen', 'Lithium', 'Carbon']),
+                'options' => ['Helium', 'Hydrogen', 'Lithium', 'Carbon'],
                 'correct_answer' => 'Hydrogen',
                 'difficulty' => 'hard',
                 'points' => 5,
             ],
             [
                 'question' => 'In Greek mythology, who is the king of the gods?',
-                'options' => json_encode(['Apollo', 'Poseidon', 'Hades', 'Zeus']),
+                'options' => ['Apollo', 'Poseidon', 'Hades', 'Zeus'],
                 'correct_answer' => 'Zeus',
                 'difficulty' => 'hard',
                 'points' => 5,
             ],
             [
                 'question' => 'What is the currency of Japan?',
-                'options' => json_encode(['Won', 'Yuan', 'Yen', 'Ringgit']),
+                'options' => ['Won', 'Yuan', 'Yen', 'Ringgit'],
                 'correct_answer' => 'Yen',
                 'difficulty' => 'hard',
                 'points' => 6,
             ],
             [
                 'question' => 'Which composer wrote "The Four Seasons"?',
-                'options' => json_encode(['Johann Sebastian Bach', 'Wolfgang Amadeus Mozart', 'Antonio Vivaldi', 'Ludwig van Beethoven']),
+                'options' => ['Johann Sebastian Bach', 'Wolfgang Amadeus Mozart', 'Antonio Vivaldi', 'Ludwig van Beethoven'],
                 'correct_answer' => 'Antonio Vivaldi',
                 'difficulty' => 'hard',
                 'points' => 6,
@@ -152,28 +152,28 @@ class QuizLadderItemSeeder extends Seeder
             // Very Hard Questions (7-10 points)
             [
                 'question' => 'What is the capital of Bhutan?',
-                'options' => json_encode(['Thimphu', 'Paro', 'Punakha', 'Jakar']),
+                'options' => ['Thimphu', 'Paro', 'Punakha', 'Jakar'],
                 'correct_answer' => 'Thimphu',
                 'difficulty' => 'hard',
                 'points' => 7,
             ],
             [
                 'question' => 'Which scientist developed the theory of continental drift?',
-                'options' => json_encode(['Charles Darwin', 'Alfred Wegener', 'Gregor Mendel', 'Marie Curie']),
+                'options' => ['Charles Darwin', 'Alfred Wegener', 'Gregor Mendel', 'Marie Curie'],
                 'correct_answer' => 'Alfred Wegener',
                 'difficulty' => 'hard',
                 'points' => 8,
             ],
             [
                 'question' => 'What is the rarest blood type?',
-                'options' => json_encode(['AB-negative', 'O-negative', 'Rh-null', 'B-negative']),
+                'options' => ['AB-negative', 'O-negative', 'Rh-null', 'B-negative'],
                 'correct_answer' => 'Rh-null',
                 'difficulty' => 'hard',
                 'points' => 9,
             ],
             [
                 'question' => 'In which year was the first computer bug actually found?',
-                'options' => json_encode(['1943', '1945', '1947', '1949']),
+                'options' => ['1943', '1945', '1947', '1949'],
                 'correct_answer' => '1947',
                 'difficulty' => 'hard',
                 'points' => 10,
@@ -181,7 +181,10 @@ class QuizLadderItemSeeder extends Seeder
         ];
 
         foreach ($items as $item) {
-            QuizLadderItem::create($item);
+            GameItem::create([
+                'game_id' => $qui->id,
+                'value' => $item
+            ]);
         }
     }
 }

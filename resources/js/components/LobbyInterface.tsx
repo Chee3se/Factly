@@ -21,12 +21,12 @@ import {
 
 interface Props {
     auth: Auth;
-    lobbyHook: any; // Replace with proper type
+    lobbyHook: any;
 }
 
 export default function LobbyInterface({ auth, lobbyHook }: Props) {
     const [lobbyCode, setLobbyCode] = useState("");
-    const [selectedGameId, setSelectedGameId] = useState(2); // Default to Math Challenge
+    const [selectedGameId, setSelectedGameId] = useState(2);
 
     const handleCreateLobby = () => {
         lobbyHook.createLobby(selectedGameId);

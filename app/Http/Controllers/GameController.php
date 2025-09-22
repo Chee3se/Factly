@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Game;
-use App\Models\HigherLowerItem;
-use App\Models\QuizLadderItem;
+use App\Models\GameItem;
 use App\Models\Score;
 use Exception;
 use Illuminate\Http\Request;
@@ -163,8 +162,19 @@ class GameController extends Controller
     }
 
     public function higher_or_lower(Game $game) {
-        $items = HigherLowerItem::inRandomOrder()->get();
-        $gameItems = $items->take(max(10, $items->count()));
+        $gameItems = GameItem::where('game_id', $game->id)
+            ->inRandomOrder()
+            ->get();
+
+        // Transform the items to extract the value data and maintain the same structure
+        $items = $gameItems->map(function ($gameItem) {
+            $itemData = $gameItem->value; // Already decoded due to JSON casting
+            $itemData['id'] = $gameItem->id; // Add the GameItem ID if needed
+            return $itemData;
+        });
+
+        // Take at least 10 items, or all available items if less than 10
+        $items = $items->take(max(10, $items->count()));
 
         $bestScore = 0;
         if (auth()->check()) {
@@ -174,17 +184,31 @@ class GameController extends Controller
         }
 
         return Inertia::render('Games/HigherOrLower', [
-            'items' => $gameItems,
+            'items' => $items,
             'bestScore' => $bestScore,
             'gameSlug' => $game->slug
         ]);
     }
 
     public function quiz_ladder(Game $game) {
-        $items = QuizLadderItem::orderBy('difficulty')
-            ->orderBy('points')
-            ->orderBy('id')
+        $gameItems = GameItem::where('game_id', $game->id)
             ->get();
+
+        $items = $gameItems->map(function ($gameItem) {
+            $itemData = $gameItem->value; // Already decoded due to JSON casting
+            $itemData['id'] = $gameItem->id; // Add the GameItem ID if needed
+            return $itemData;
+        });
+
+        // Sort quiz items by difficulty and points
+        $items = $items->sortBy(function ($item) {
+            $difficultyOrder = ['easy' => 1, 'medium' => 2, 'hard' => 3];
+            return [
+                $difficultyOrder[$item['difficulty']] ?? 4,
+                $item['points'] ?? 0,
+                $item['id'] ?? 0
+            ];
+        })->values();
 
         $bestScore = 0;
         if (auth()->check()) {
