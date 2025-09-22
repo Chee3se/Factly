@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('games', function (Blueprint $table) {
+        Schema::create('quiz_ladder_items', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('thumbnail');
-            $table->integer('min_players')->default(1);
-            $table->integer('max_players')->default(1);
+            $table->string('question');
+            $table->json('options');
+            $table->string('correct_answer');
+            $table->enum('difficulty', ['easy', 'medium', 'hard']);
+            $table->integer('points');
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('games');
+        Schema::dropIfExists('quiz_ladder_items');
     }
 };

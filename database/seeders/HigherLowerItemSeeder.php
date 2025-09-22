@@ -23,15 +23,6 @@ class HigherLowerItemSeeder extends Seeder
             'max_players' => 1,
         ]);
 
-        $qui = Game::create([
-            'name' => 'Quiz Ladder',
-            'slug' => 'quiz-ladder',
-            'description' => 'Put your general knowledge to the test',
-            'thumbnail' => '/images/higher-lower.png',
-            'min_players' => 2,
-            'max_players' => 6,
-        ]);
-
         $items = [
             [
                 'name' => 'Iceland person',

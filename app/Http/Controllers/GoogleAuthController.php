@@ -36,11 +36,14 @@ class GoogleAuthController extends Controller
             Auth::login($existingUser);
         } else {
             $newUser = User::updateOrCreate([
-                'email' => $user->email
+                'email' => $user->email,
+                'email_verified_at' => now(),
+                'type' => 'google'
             ], [
                 'name' => $user->name,
                 'password' => bcrypt(Str::random(16)),
-                'email_verified_at' => now()
+                'email_verified_at' => now(),
+                'type' => 'google'
             ]);
             Auth::login($newUser);
         }

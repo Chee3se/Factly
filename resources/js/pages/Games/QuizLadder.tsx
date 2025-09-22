@@ -1,257 +1,558 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import App from "@/layouts/App";
-import { useLobby } from "@/hooks/useLobby";
-import LobbyChat from "@/components/LobbyChat";
-import LobbyPlayers from "@/components/LobbyPlayers";
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { useLobby } from '@/hooks/useLobby';
 import { toast } from 'sonner';
-import {
-    Users,
-    MessageSquare,
-    Copy,
-    Crown,
-    Play,
-    LogOut,
-    Hash,
-    CheckCircle,
-    Trash2,
-} from "lucide-react";
-import background_image from "../../../images/grassy_background.png"
+import background_image from "../../../images/grassy_background.png";
+import {GameState, PlayerGameState, Question} from "@/types/quizladder";
+import {LoadingScreen} from "@/components/QuizLadder/LoadingScreen";
+import {GameOverScreen} from "@/components/QuizLadder/GameOver";
+import {GameScreen} from "@/components/QuizLadder/GameScreen";
 
 interface Props {
     auth: Auth;
-    games?: Game[];
+    game: Game;
+    items: any[]; // Add items prop to receive database questions
 }
 
-export default function QuizLadder({ auth, games = [] }: Props) {
-    const lobbyHook = useLobby(auth.user.id);
-    const [lobbyCode, setLobbyCode] = useState("");
+const WINNING_CUBES = 100;
+const QUESTION_TIME = 30;
 
-    const handleCreateLobby = () => {
-        lobbyHook.createLobby(2); // Math Challenge game ID
-    };
+// Helper function to transform database items to Question format
+const transformDatabaseQuestions = (items: any[]): Question[] => {
+    return items.map((item, index) => ({
+        id: item.id || index + 1,
+        question: item.question,
+        options: typeof item.options === 'string' ? JSON.parse(item.options) : item.options,
+        correctAnswer: typeof item.options === 'string'
+            ? JSON.parse(item.options).indexOf(item.correct_answer)
+            : item.options.indexOf(item.correct_answer),
+        difficulty: item.difficulty,
+        points: item.points
+    }));
+};
 
-    const handleJoinLobby = () => {
-        if (lobbyCode.trim()) {
-            lobbyHook.joinLobby(lobbyCode.trim().toUpperCase());
-        }
-    };
+export default function QuizLadder({ auth, game, items }: Props) {
+    const lobbyHook = useLobby(auth.user?.id);
+    const {
+        currentLobby,
+        onlineUsers,
+        messages,
+        loading,
+        leaveLobby,
+        sendMessage,
+        toggleReady,
+        startGame,
+        onWhisper,
+        sendWhisper,
+        offWhisper,
+        currentChannel
+    } = lobbyHook;
 
-    const handleLeaveLobby = () => {
-        if (lobbyHook.currentLobby) {
-            lobbyHook.leaveLobby();
-        }
-    };
+    // Transform database questions on component mount
+    const [databaseQuestions] = useState<Question[]>(() => transformDatabaseQuestions(items));
 
-    const handleStartGame = () => {
-        if (lobbyHook.currentLobby) {
-            lobbyHook.startGame();
-        }
-    };
+    const [gameState, setGameState] = useState<GameState>({
+        currentQuestion: 0,
+        timeLeft: QUESTION_TIME,
+        phase: 'waiting',
+        playerStates: {},
+        selectedAnswer: null,
+        hasAnswered: false,
+        questionStartTime: Date.now(),
+        questions: databaseQuestions, // Use database questions instead of SAMPLE_QUESTIONS
+        currentQuestionData: null,
+        playerSelections: [],
+        isGameOwner: false
+    });
 
-    const copyLobbyCode = async () => {
-        if (lobbyHook.currentLobby?.lobby_code) {
-            try {
-                await navigator.clipboard.writeText(lobbyHook.currentLobby.lobby_code);
-                toast.success("Lobby code copied to clipboard!");
-            } catch (error) {
-                toast.error("Failed to copy lobby code");
+    const whisperListenersRef = useRef<Set<string>>(new Set());
+    const gameInitializedRef = useRef(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const gameStateRef = useRef(gameState);
+    const authUserIdRef = useRef(auth.user?.id);
+    const currentLobbyRef = useRef(currentLobby);
+
+    // Update refs when values change
+    useEffect(() => {
+        gameStateRef.current = gameState;
+    }, [gameState]);
+
+    useEffect(() => {
+        authUserIdRef.current = auth.user?.id;
+    }, [auth.user?.id]);
+
+    useEffect(() => {
+        currentLobbyRef.current = currentLobby;
+    }, [currentLobby]);
+
+    const cleanupWhisperListeners = useCallback(() => {
+        whisperListenersRef.current.forEach(event => {
+            offWhisper(event);
+        });
+        whisperListenersRef.current.clear();
+    }, [offWhisper]);
+
+    const updateScoresBasedOnSelections = useCallback(() => {
+        return new Promise<void>((resolve) => {
+            setGameState(prev => {
+                if (!prev.currentQuestionData) {
+                    resolve();
+                    return prev;
+                }
+
+                const correctAnswer = prev.currentQuestionData.correctAnswer;
+                const points = prev.currentQuestionData.points;
+                const updatedStates = { ...prev.playerStates };
+
+                // Update current user's score
+                if (prev.selectedAnswer === correctAnswer && authUserIdRef.current) {
+                    const currentUserState = updatedStates[authUserIdRef.current];
+                    if (currentUserState) {
+                        updatedStates[authUserIdRef.current] = {
+                            ...currentUserState,
+                            cubes: Math.min(WINNING_CUBES, currentUserState.cubes + points)
+                        };
+                    }
+                }
+
+                // Update other players' scores
+                prev.playerSelections.forEach(selection => {
+                    if (selection.answerIndex === correctAnswer) {
+                        const playerState = updatedStates[selection.userId];
+                        if (playerState) {
+                            updatedStates[selection.userId] = {
+                                ...playerState,
+                                cubes: Math.min(WINNING_CUBES, playerState.cubes + points)
+                            };
+                        }
+                    }
+                });
+
+                // Only game owner broadcasts scores
+                if (prev.isGameOwner) {
+                    sendWhisper('client-score-update', {
+                        playerStates: updatedStates,
+                        initiatorId: authUserIdRef.current
+                    });
+                }
+
+                setTimeout(resolve, 100); // Small delay to ensure state updates
+                return { ...prev, playerStates: updatedStates };
+            });
+        });
+    }, [sendWhisper]);
+
+    const checkForWinnerOrContinue = useCallback(() => {
+        setGameState(prev => {
+            const winner = Object.values(prev.playerStates).find(state => state.cubes >= WINNING_CUBES);
+
+            if (winner) {
+                const winnerPlayer = currentLobbyRef.current?.players?.find(p => p.id === winner.userId);
+
+                // Only game owner sends game-ended whisper
+                if (prev.isGameOwner) {
+                    sendWhisper('client-game-ended', {
+                        winner: winnerPlayer,
+                        initiatorId: authUserIdRef.current
+                    });
+                }
+
+                if (winner.userId === authUserIdRef.current) {
+                    toast.success("You won the Quiz Ladder!");
+                }
+                return { ...prev, phase: 'finished' };
             }
-        }
-    };
 
-    const isHost = lobbyHook.currentLobby?.host?.id === auth.user.id;
-    const allPlayersReady = lobbyHook.currentLobby?.players?.every(player => player.pivot?.ready);
-    const canStartGame = isHost && allPlayersReady && (lobbyHook.currentLobby?.players?.length || 0) >= 1;
-    const readyCount = lobbyHook.currentLobby?.players?.filter(p => p.pivot?.ready).length || 0;
-    const totalPlayers = lobbyHook.currentLobby?.players?.length || 0;
-    const isOnlyPlayer = totalPlayers === 1 && isHost;
+            if (prev.currentQuestion < prev.questions.length - 1) {
+                const nextQuestionIndex = prev.currentQuestion + 1;
+                const nextQuestion = prev.questions[nextQuestionIndex];
 
-    const handleDeleteLobby = () => {
-        if (isOnlyPlayer) {
-            handleLeaveLobby(); // This will delete the lobby since host is leaving and no other players
+                // Only game owner sends next question
+                if (prev.isGameOwner) {
+                    setTimeout(() => {
+                        sendWhisper('client-question-start', {
+                            questionIndex: nextQuestionIndex,
+                            questionData: nextQuestion, // Send the question data
+                            initiatorId: authUserIdRef.current
+                        });
+                    }, 500); // Slight delay to ensure all clients are ready
+                }
+
+                return {
+                    ...prev,
+                    currentQuestion: nextQuestionIndex,
+                    currentQuestionData: nextQuestion,
+                    timeLeft: QUESTION_TIME,
+                    phase: 'question',
+                    selectedAnswer: null,
+                    hasAnswered: false,
+                    questionStartTime: Date.now(),
+                    playerSelections: []
+                };
+            } else {
+                const topPlayer = Object.values(prev.playerStates)
+                    .reduce((prev, current) => (prev.cubes > current.cubes) ? prev : current);
+                const topPlayerData = currentLobbyRef.current?.players?.find(p => p.id === topPlayer.userId);
+
+                // Only game owner sends game-ended whisper
+                if (prev.isGameOwner) {
+                    sendWhisper('client-game-ended', {
+                        winner: topPlayerData,
+                        initiatorId: authUserIdRef.current
+                    });
+                }
+
+                return { ...prev, phase: 'finished' };
+            }
+        });
+    }, [sendWhisper]);
+
+    const setupWhisperListeners = useCallback(() => {
+        if (!currentChannel || !currentChannel.isReady) return;
+
+        const events = [
+            'client-player-answered',
+            'client-timer-sync',
+            'client-question-start',
+            'client-question-ended',
+            'client-game-ended',
+            'client-game-start',
+            'client-score-update'
+        ];
+
+        events.forEach(event => {
+            if (!whisperListenersRef.current.has(event)) {
+                whisperListenersRef.current.add(event);
+
+                switch(event) {
+                    case 'client-game-start':
+                        onWhisper(event, (e: any) => {
+                            if (e.initiatorId === authUserIdRef.current) return;
+
+                            // Use the questions sent by the game owner
+                            const gameQuestions = e.questions || databaseQuestions;
+                            const firstQuestion = gameQuestions[0];
+
+                            setGameState(prev => ({
+                                ...prev,
+                                questions: gameQuestions, // Use the same questions as game owner
+                                phase: 'question',
+                                currentQuestionData: firstQuestion,
+                                questionStartTime: Date.now(),
+                                timeLeft: QUESTION_TIME,
+                                hasAnswered: false,
+                                selectedAnswer: null,
+                                playerSelections: []
+                            }));
+
+                            toast.success("Quiz started! Answer as many questions correctly as you can!");
+                        });
+                        break;
+
+                    case 'client-player-answered':
+                        onWhisper(event, (e: any) => {
+                            if (e.userId === authUserIdRef.current) return;
+
+                            setGameState(prev => ({
+                                ...prev,
+                                playerSelections: [
+                                    ...prev.playerSelections.filter(s => s.userId !== e.userId),
+                                    { userId: e.userId, answerIndex: e.answerIndex, userName: e.userName }
+                                ]
+                            }));
+                        });
+                        break;
+
+                    case 'client-timer-sync':
+                        onWhisper(event, (e: any) => {
+                            if (e.initiatorId !== authUserIdRef.current) {
+                                setGameState(prev => {
+                                    if (!prev.isGameOwner && prev.phase === 'question') {
+                                        return { ...prev, timeLeft: e.timeLeft };
+                                    }
+                                    return prev;
+                                });
+                            }
+                        });
+                        break;
+
+                    case 'client-score-update':
+                        onWhisper(event, (e: any) => {
+                            if (e.initiatorId === authUserIdRef.current) return;
+
+                            setGameState(prev => ({
+                                ...prev,
+                                playerStates: e.playerStates
+                            }));
+                        });
+                        break;
+
+                    case 'client-question-start':
+                        onWhisper(event, (e: any) => {
+                            if (e.initiatorId === authUserIdRef.current) return;
+
+                            // Use the question data sent with the event (ensures synchronization)
+                            const questionData = e.questionData;
+                            setGameState(prev => ({
+                                ...prev,
+                                phase: 'question',
+                                currentQuestion: e.questionIndex,
+                                currentQuestionData: questionData,
+                                timeLeft: QUESTION_TIME,
+                                questionStartTime: Date.now(),
+                                selectedAnswer: null,
+                                hasAnswered: false,
+                                playerSelections: []
+                            }));
+                            toast.info(`Question ${e.questionIndex + 1} started!`);
+                        });
+                        break;
+
+                    case 'client-question-ended':
+                        onWhisper(event, (e: any) => {
+                            if (e.initiatorId === authUserIdRef.current) return;
+
+                            setGameState(prev => ({ ...prev, phase: 'results' }));
+                        });
+                        break;
+
+                    case 'client-game-ended':
+                        onWhisper(event, (e: any) => {
+                            setGameState(prev => ({ ...prev, phase: 'finished' }));
+                            if (e.winner && e.winner.id !== authUserIdRef.current) {
+                                toast.success(`${e.winner.name} won the Quiz Ladder!`);
+                            }
+                        });
+                        break;
+                }
+            }
+        });
+    }, [currentChannel, onWhisper, databaseQuestions]);
+
+    const startQuizGame = useCallback(() => {
+        if (gameInitializedRef.current || databaseQuestions.length === 0) return;
+        gameInitializedRef.current = true;
+
+        // Game owner selects and shuffles questions for everyone
+        const shuffledQuestions = [...databaseQuestions].sort(() => Math.random() - 0.5);
+        const gameQuestions = shuffledQuestions.slice(0, Math.min(10, shuffledQuestions.length));
+
+        const firstQuestion = gameQuestions[0];
+
+        setGameState(prev => ({
+            ...prev,
+            questions: gameQuestions, // Update with selected questions
+            phase: 'question',
+            currentQuestionData: firstQuestion,
+            questionStartTime: Date.now(),
+            timeLeft: QUESTION_TIME,
+            hasAnswered: false,
+            selectedAnswer: null,
+            playerSelections: []
+        }));
+
+        // Send game start signal with the selected questions to all players
+        setTimeout(() => {
+            sendWhisper('client-game-start', {
+                questions: gameQuestions, // Send the same questions to all players
+                initiatorId: authUserIdRef.current
+            });
+        }, 100);
+
+        toast.success("Quiz started! Answer as many questions correctly as you can!");
+    }, [sendWhisper, databaseQuestions]);
+
+    const selectAnswer = useCallback((answerIndex: number) => {
+        setGameState(prev => {
+            if (prev.hasAnswered || prev.phase !== 'question') return prev;
+
+            if (authUserIdRef.current) {
+                const user = auth.user;
+                if (user) {
+                    sendWhisper('client-player-answered', {
+                        userId: user.id,
+                        userName: user.name,
+                        answerIndex: answerIndex
+                    });
+                }
+            }
+
+            return {
+                ...prev,
+                selectedAnswer: answerIndex,
+                hasAnswered: true
+            };
+        });
+    }, [sendWhisper, auth.user]);
+
+    const endQuestion = useCallback(async () => {
+        setGameState(prev => {
+            // Only game owner sends question-ended whisper
+            if (prev.isGameOwner) {
+                sendWhisper('client-question-ended', {
+                    initiatorId: authUserIdRef.current
+                });
+            }
+
+            return { ...prev, phase: 'results' };
+        });
+
+        // Only the game owner manages the full flow
+        if (gameStateRef.current.isGameOwner) {
+            // Update scores
+            await updateScoresBasedOnSelections();
+
+            // Wait a bit for UI to show results
+            setTimeout(() => {
+                checkForWinnerOrContinue();
+            }, 2000);
         }
-    };
+    }, [sendWhisper, updateScoresBasedOnSelections, checkForWinnerOrContinue]);
+
+    const handleLeaveLobby = useCallback(async () => {
+        cleanupWhisperListeners();
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        }
+        await leaveLobby();
+        window.location.href = '/lobbies';
+    }, [cleanupWhisperListeners, leaveLobby]);
+
+    // Setup whisper listeners when channel is ready
+    useEffect(() => {
+        if (currentChannel && currentChannel.isReady) {
+            setupWhisperListeners();
+        }
+
+        return () => {
+            cleanupWhisperListeners();
+        };
+    }, [currentChannel?.isReady, setupWhisperListeners]);
+
+    // Initialize player states when lobby players change
+    useEffect(() => {
+        if (currentLobby?.players && auth.user?.id) {
+            const initialStates: { [userId: number]: PlayerGameState } = {};
+            currentLobby.players.forEach(player => {
+                initialStates[player.id] = {
+                    userId: player.id,
+                    cubes: 0,
+                    position: 0,
+                    hasAnswered: false,
+                    selectedAnswer: null,
+                    isReady: player.pivot?.ready || false
+                };
+            });
+
+            const isOwner = currentLobby.owner_id === auth.user.id || currentLobby.host?.id === auth.user.id;
+
+            setGameState(prev => ({
+                ...prev,
+                playerStates: initialStates,
+                isGameOwner: isOwner,
+                phase: prev.phase === 'waiting' ? 'waiting' : prev.phase
+            }));
+
+            gameInitializedRef.current = false;
+        }
+    }, [currentLobby?.players, currentLobby?.owner_id, currentLobby?.host?.id, auth.user?.id]);
+
+    // Start game after delay for game owner
+    useEffect(() => {
+        if (currentLobby &&
+            gameState.phase === 'waiting' &&
+            currentChannel?.isReady &&
+            gameState.isGameOwner &&
+            !gameInitializedRef.current &&
+            databaseQuestions.length > 0) { // Ensure we have questions
+
+            timerRef.current = setTimeout(() => {
+                startQuizGame();
+            }, 2000);
+
+            return () => {
+                if (timerRef.current) {
+                    clearTimeout(timerRef.current);
+                }
+            };
+        }
+    }, [currentLobby, gameState.phase, currentChannel?.isReady, gameState.isGameOwner, startQuizGame, databaseQuestions.length]);
+
+    // Handle question timer - Only game owner manages the timer
+    useEffect(() => {
+        if (gameState.phase === 'question' && gameState.timeLeft > 0 && gameState.isGameOwner) {
+            const timer = setTimeout(() => {
+                setGameState(prev => {
+                    const newTimeLeft = prev.timeLeft - 1;
+
+                    // Sync timer periodically
+                    if (newTimeLeft % 3 === 0) {
+                        sendWhisper('client-timer-sync', {
+                            timeLeft: newTimeLeft,
+                            initiatorId: authUserIdRef.current
+                        });
+                    }
+
+                    return { ...prev, timeLeft: newTimeLeft };
+                });
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        } else if (gameState.timeLeft === 0 && gameState.phase === 'question' && gameState.isGameOwner) {
+            endQuestion();
+        }
+    }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner, sendWhisper, endQuestion]);
+
+    // Non-game owner timer sync
+    useEffect(() => {
+        if (gameState.phase === 'question' && !gameState.isGameOwner) {
+            const timer = setTimeout(() => {
+                setGameState(prev => ({
+                    ...prev,
+                    timeLeft: Math.max(0, prev.timeLeft - 1)
+                }));
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner]);
+
+    // Add safety check for no questions
+    if (databaseQuestions.length === 0) {
+        return (
+            <LoadingScreen auth={auth}>
+                <div className="text-center text-red-500">
+                    <p>No quiz questions available. Please contact an administrator.</p>
+                </div>
+            </LoadingScreen>
+        );
+    }
+
+    if (loading || !currentLobby) {
+        return <LoadingScreen auth={auth} />;
+    }
+
+    if (gameState.phase === 'finished') {
+        return (
+            <GameOverScreen
+                auth={auth}
+                currentLobby={currentLobby}
+                gameState={gameState}
+                onLeaveLobby={handleLeaveLobby}
+            />
+        );
+    }
 
     return (
-        <App title="Quiz Ladder" auth={auth}>
-            <div
-                className="min-h-screen bg-cover bg-center bg-no-repeat relative"
-                style={{ backgroundImage: `url(${background_image})` }}
-            >
-                <div className="absolute inset-0 bg-white/40"></div>
-
-                <div className="container mx-auto py-6 px-4 max-w-6xl relative z-10">
-                    {!lobbyHook.currentLobby ? (
-                        /* Join/Create Lobby Section */
-                        <div className="min-h-[80vh] flex items-center justify-center">
-                            <Card className="w-full max-w-md backdrop-blur-sm bg-white/95">
-                                <CardHeader className="text-center">
-                                    <CardTitle className="text-2xl">Join a Game</CardTitle>
-                                    <CardDescription>
-                                        Enter a lobby code to join or create a new lobby
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    {/* Join Lobby Section */}
-                                    <div className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="lobbyCode" className="flex items-center gap-2">
-                                                <Hash className="h-4 w-4" />
-                                                Lobby Code
-                                            </Label>
-                                            <Input
-                                                id="lobbyCode"
-                                                type="text"
-                                                value={lobbyCode}
-                                                onChange={(e) => setLobbyCode(e.target.value.toUpperCase())}
-                                                placeholder="Enter lobby code"
-                                                className="text-center text-lg font-mono tracking-wider"
-                                                onKeyPress={(e) => e.key === 'Enter' && handleJoinLobby()}
-                                                disabled={lobbyHook.loading}
-                                                maxLength={8}
-                                            />
-                                        </div>
-                                        <Button
-                                            onClick={handleJoinLobby}
-                                            disabled={!lobbyCode.trim() || lobbyHook.loading}
-                                            className="w-full"
-                                            size="lg"
-                                        >
-                                            {lobbyHook.loading ? 'Joining...' : 'Join Lobby'}
-                                        </Button>
-                                    </div>
-
-                                    {/* Divider */}
-                                    <div className="relative">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <div className="w-full border-t" />
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-background px-2 text-muted-foreground">or</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Create Lobby Section */}
-                                    <Button
-                                        onClick={handleCreateLobby}
-                                        disabled={lobbyHook.loading}
-                                        variant="outline"
-                                        className="w-full"
-                                        size="lg"
-                                    >
-                                        {lobbyHook.loading ? 'Creating...' : 'Create New Lobby'}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    ) : (
-                        /* Lobby Interface */
-                        <div className="space-y-6">
-                            {/* Lobby Header */}
-                            <Card className="backdrop-blur-sm bg-white/95">
-                                <CardHeader>
-                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <CardTitle className="text-2xl">
-                                                    {lobbyHook.currentLobby.game?.name || "Game Lobby"}
-                                                </CardTitle>
-                                                <Badge variant={lobbyHook.currentLobby.started ? "default" : "secondary"}>
-                                                    {lobbyHook.currentLobby.started ? 'In Progress' : 'Waiting'}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                                                {/* Lobby Code - Click to Copy */}
-                                                <div className="flex items-center gap-2">
-                                                    <Hash className="h-4 w-4 text-muted-foreground" />
-                                                    <Button
-                                                        variant="ghost"
-                                                        onClick={copyLobbyCode}
-                                                        className="font-mono font-bold text-lg text-primary hover:bg-primary/10 p-2 h-auto"
-                                                    >
-                                                        {lobbyHook.currentLobby.lobby_code}
-                                                        <Copy className="h-4 w-4 ml-2" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            {isHost && !lobbyHook.currentLobby.started && (
-                                                <Button
-                                                    onClick={handleStartGame}
-                                                    disabled={!canStartGame || lobbyHook.loading}
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <Play className="h-4 w-4" />
-                                                    {lobbyHook.loading ? 'Starting...' : 'Start Game'}
-                                                </Button>
-                                            )}
-
-                                            {isOnlyPlayer ? (
-                                                <Button
-                                                    onClick={handleDeleteLobby}
-                                                    disabled={lobbyHook.loading}
-                                                    variant="destructive"
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete Lobby
-                                                </Button>
-                                            ) : (
-                                                <Button
-                                                    onClick={handleLeaveLobby}
-                                                    disabled={lobbyHook.loading}
-                                                    variant="destructive"
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <LogOut className="h-4 w-4" />
-                                                    Leave
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                            </Card>
-
-                            {/* Main Lobby Content */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Players Section */}
-                                <Card className="backdrop-blur-sm bg-white/95">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Users className="h-5 w-5" />
-                                            Players
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <LobbyPlayers auth={auth} lobbyHook={lobbyHook} />
-                                    </CardContent>
-                                </Card>
-
-                                {/* Chat Section */}
-                                <Card className="backdrop-blur-sm bg-white/95">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <MessageSquare className="h-5 w-5" />
-                                            Chat
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <LobbyChat auth={auth} lobbyHook={lobbyHook} />
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </App>
+        <GameScreen
+            auth={auth}
+            currentLobby={currentLobby}
+            gameState={gameState}
+            messages={messages}
+            lobbyHook={lobbyHook}
+            onSelectAnswer={selectAnswer}
+            onLeaveLobby={handleLeaveLobby}
+            winningCubes={WINNING_CUBES}
+        />
     );
 }

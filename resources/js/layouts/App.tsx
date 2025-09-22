@@ -48,6 +48,17 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                                 <span className="font-semibold text-lg">{appName}</span>
                             </Link>
 
+                            {auth.user?.role == 'admin' && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => window.location.href = '/admin/suggestions'}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                    Admin
+                                </Button>
+                            )}
+
                             <div className="flex items-center space-x-4">
                                 {auth.user ? (
                                     <DropdownMenu>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Game;
 use App\Models\HigherLowerItem;
+use App\Models\QuizLadderItem;
 use App\Models\Score;
 use Exception;
 use Illuminate\Http\Request;
@@ -12,6 +13,54 @@ use Inertia\Inertia;
 
 class GameController extends Controller
 {
+    public function storeSuggestion(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:100|min:3',
+                'description' => 'required|string|max:500|min:10'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
+
+        try {
+            $suggestion = \App\Models\Suggestion::create([
+                'user_id' => auth()->id(),
+                'title' => $validated['title'],
+                'description' => $validated['description']
+            ]);
+
+            Log::info('Game suggestion submitted', [
+                'suggestion_id' => $suggestion->id,
+                'user_id' => auth()->id(),
+                'title' => $validated['title']
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your suggestion has been submitted successfully!',
+                'suggestion_id' => $suggestion->id
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to save game suggestion', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'title' => $validated['title'] ?? null
+            ]);
+
+            return response()->json(['error' => 'Failed to save suggestion'], 500);
+        }
+    }
+
     public function index() {
         $games = Game::all();
         return Inertia::render('Home', [
@@ -132,8 +181,22 @@ class GameController extends Controller
     }
 
     public function quiz_ladder(Game $game) {
+        $items = QuizLadderItem::orderBy('difficulty')
+            ->orderBy('points')
+            ->orderBy('id')
+            ->get();
+
+        $bestScore = 0;
+        if (auth()->check()) {
+            $bestScore = Score::where('user_id', auth()->id())
+                ->where('game_id', $game->id)
+                ->max('score') ?? 0;
+        }
 
         return Inertia::render('Games/QuizLadder', [
+            'game' => $game,
+            'items' => $items,
+            'bestScore' => $bestScore
         ]);
     }
 }

@@ -55,26 +55,32 @@ class AuthController extends Controller
     /**
      * Handle an incoming registration request.
      */
+    /**
+     * Apstrādā ienākošu reģistrācijas pieprasījumu.
+     */
     public function register(Request $request): RedirectResponse
     {
+        // Validē lietotāja ievadītos datus
         $request->validate([
             'name' => 'required|string|max:255|unique:users',
             'email' => 'required|string|lowercase|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Izveido jaunu lietotāju datubāzē ar ievadītajiem datiem
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
-
+        // Automātiski ielogojas kā jaunizveidotais lietotājs
         Auth::login($user);
 
+        // Pāradresē lietotāju uz mājaslapas sākumlapu
         return redirect('/');
     }
+
 
     /**
      * Destroy an authenticated session (logout).
@@ -149,17 +155,9 @@ class AuthController extends Controller
      */
     private function getLocationFromIp(string $ip): ?string
     {
-        // For local development
         if ($ip === '127.0.0.1' || $ip === '::1') {
             return 'Local Development';
         }
-
-        // You can integrate with services like:
-        // - ipinfo.io
-        // - ipapi.com
-        // - freegeoip.app
-
-        // For now, return null or implement your preferred IP geolocation service
         return null;
     }
 
@@ -175,14 +173,17 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
         ]);
 
-        $user->fill($validated);
+        if ($user->type === 'google') {
+            $user->update(['name' => $validated['name']]);
+        } else {
+            $user->fill($validated);
 
-        // If email is changed, reset email verification
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+            if ($user->isDirty('email')) {
+                $user->email_verified_at = null;
+            }
+
+            $user->save();
         }
-
-        $user->save();
 
         return back()->with('success', 'Profile updated successfully.');
     }
@@ -198,12 +199,10 @@ class AuthController extends Controller
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        // Delete old avatar if it exists and is not a preset
         if ($user->avatar && !str_starts_with($user->avatar, '/avatars/preset-')) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        // Store new avatar
         $avatarPath = $request->file('avatar')->store('avatars', 'public');
 
         $user->update([
@@ -218,12 +217,20 @@ class AuthController extends Controller
      */
     public function updatePassword(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user->type === 'google') {
+            return back()->withErrors([
+                'password' => 'Google account users cannot change their password. Please manage your password through your Google account.',
+            ]);
+        }
+
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $request->user()->update([
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -249,7 +256,6 @@ class AuthController extends Controller
             return back()->with('error', 'Session management requires database session driver.');
         }
 
-        // Delete all other sessions
         DB::table('sessions')
             ->where('user_id', Auth::id())
             ->where('id', '!=', session()->getId())
@@ -286,7 +292,6 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // Delete user's avatar if it exists
         if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
         }

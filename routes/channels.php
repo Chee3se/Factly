@@ -8,6 +8,15 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 Broadcast::channel('lobby.{lobbyCode}', function ($user, $lobbyCode) {
     $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)->first();
-    return $lobby && $lobby->players()->where('user_id', $user->id)->exists()
-        ? $user : null;
+
+    if (!$lobby || !$lobby->players()->where('user_id', $user->id)->exists()) {
+        return false;
+    }
+
+    // For presence channels, return user data array
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'avatar' => $user->avatar ?? null
+    ];
 });

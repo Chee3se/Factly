@@ -1,4 +1,5 @@
 import { Config } from 'ziggy-js';
+import {Type} from "@/types/enums";
 
 export interface User {
     id: number;
@@ -6,9 +7,24 @@ export interface User {
     email: string;
     avatar?: string;
     role?: string;
+    type: Type;
     created_at: string;
     updated_at: string;
     email_verified_at?: string;
+}
+
+interface Suggestion {
+    id: number;
+    title: string;
+    description: string;
+    status: 'pending' | 'reviewing' | 'approved' | 'rejected' | 'implemented';
+    created_at: string;
+    admin_notes?: string;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    };
 }
 
 export interface Game {

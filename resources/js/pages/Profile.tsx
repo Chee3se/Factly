@@ -33,8 +33,8 @@ import {
     LogOut,
     X
 } from "lucide-react";
-
-import type { Session, DeviceType } from '@/types/session';
+import {DeviceType, Session} from "@/types/session";
+import {Type} from "@/types/enums";
 
 export interface Props {
     auth: Auth;
@@ -136,11 +136,15 @@ export default function Profile({ auth, sessions = [] }: Props) {
     };
 
     const handleDeleteAccount = (): void => {
-        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            router.delete(route('profile.destroy'), {
-                onBefore: () => confirm('This will permanently delete your account and all associated data. Are you absolutely sure?')
-            });
-        }
+        setIsLoading(true);
+        router.delete(route('profile.destroy'), {
+            onSuccess: () => {
+                setIsLoading(false);
+            },
+            onError: () => {
+                setIsLoading(false);
+            }
+        });
     };
 
     const handleLogoutOtherSessions = (): void => {
@@ -191,6 +195,9 @@ export default function Profile({ auth, sessions = [] }: Props) {
         if (!avatar) return null;
         return `/storage/${avatar}`;
     };
+
+    // Check if user is a Google user
+    const isGoogleUser = auth.user.type === Type.Google;
 
     return (
         <App title="Profile" auth={auth}>
@@ -271,6 +278,11 @@ export default function Profile({ auth, sessions = [] }: Props) {
                                             <Badge variant="secondary">
                                                 {auth.user.role || 'User'}
                                             </Badge>
+                                            {isGoogleUser && (
+                                                <Badge variant="outline" className="text-blue-600 border-blue-200">
+                                                    Google Account
+                                                </Badge>
+                                            )}
                                             <span className="text-sm text-muted-foreground">
                                                 Member since {new Date(auth.user.created_at || Date.now()).getFullYear()}
                                             </span>
@@ -310,8 +322,13 @@ export default function Profile({ auth, sessions = [] }: Props) {
                                             type="email"
                                             value={formData.email}
                                             onChange={(e) => handleInputChange('email', e.target.value)}
-                                            disabled={isLoading}
+                                            disabled={isLoading || isGoogleUser}
                                         />
+                                        {isGoogleUser && (
+                                            <p className="text-sm text-muted-foreground">
+                                                Email cannot be changed for Google accounts
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -338,51 +355,64 @@ export default function Profile({ auth, sessions = [] }: Props) {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="space-y-4">
-                                    <h4 className="text-lg font-medium">Change Password</h4>
-                                    <div className="grid gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="current_password">Current Password</Label>
-                                            <Input
-                                                id="current_password"
-                                                type="password"
-                                                value={passwordData.current_password}
-                                                onChange={(e) => handlePasswordChange('current_password', e.target.value)}
-                                                disabled={isLoading}
-                                            />
-                                        </div>
+                                {/* Only show password change section for non-Google users */}
+                                {!isGoogleUser && (
+                                    <div className="space-y-4">
+                                        <h4 className="text-lg font-medium">Change Password</h4>
+                                        <div className="grid gap-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="current_password">Current Password</Label>
+                                                <Input
+                                                    id="current_password"
+                                                    type="password"
+                                                    value={passwordData.current_password}
+                                                    onChange={(e) => handlePasswordChange('current_password', e.target.value)}
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="new_password">New Password</Label>
-                                            <Input
-                                                id="new_password"
-                                                type="password"
-                                                value={passwordData.password}
-                                                onChange={(e) => handlePasswordChange('password', e.target.value)}
-                                                disabled={isLoading}
-                                            />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="new_password">New Password</Label>
+                                                <Input
+                                                    id="new_password"
+                                                    type="password"
+                                                    value={passwordData.password}
+                                                    onChange={(e) => handlePasswordChange('password', e.target.value)}
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="confirm_password">Confirm New Password</Label>
-                                            <Input
-                                                id="confirm_password"
-                                                type="password"
-                                                value={passwordData.password_confirmation}
-                                                onChange={(e) => handlePasswordChange('password_confirmation', e.target.value)}
-                                                disabled={isLoading}
-                                            />
-                                        </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="confirm_password">Confirm New Password</Label>
+                                                <Input
+                                                    id="confirm_password"
+                                                    type="password"
+                                                    value={passwordData.password_confirmation}
+                                                    onChange={(e) => handlePasswordChange('password_confirmation', e.target.value)}
+                                                    disabled={isLoading}
+                                                />
+                                            </div>
 
-                                        <Button
-                                            onClick={handlePasswordUpdate}
-                                            className="w-fit"
-                                            disabled={isLoading || !passwordData.current_password || !passwordData.password || !passwordData.password_confirmation}
-                                        >
-                                            {isLoading ? 'Updating...' : 'Update Password'}
-                                        </Button>
+                                            <Button
+                                                onClick={handlePasswordUpdate}
+                                                className="w-fit"
+                                                disabled={isLoading || !passwordData.current_password || !passwordData.password || !passwordData.password_confirmation}
+                                            >
+                                                {isLoading ? 'Updating...' : 'Update Password'}
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {isGoogleUser && (
+                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <h4 className="font-medium text-blue-900 mb-1">Google Account Security</h4>
+                                        <p className="text-sm text-blue-700">
+                                            Your account is managed through Google. To change your password or security settings,
+                                            please visit your Google Account settings.
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-4 border rounded-lg">

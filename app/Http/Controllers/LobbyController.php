@@ -14,10 +14,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class LobbyController extends Controller
 {
+    /**
+     * Display the lobbies page
+     */
     public function index()
+    {
+        return Inertia::render('Lobbies', [
+            'auth' => [
+                'user' => Auth::user()
+            ]
+        ]);
+    }
+
+    /**
+     * Get lobbies list for API
+     */
+    public function apiIndex()
     {
         $user = Auth::user();
 
@@ -26,10 +42,12 @@ class LobbyController extends Controller
             ->latest()
             ->get();
 
-        // Check if user is already in a lobby
-        $userLobby = $lobbies->first(function ($lobby) use ($user) {
-            return $lobby->players->contains('id', $user->id);
-        });
+        // Check if user is already in a lobby (including started ones)
+        $userLobby = Lobby::with(['game', 'host', 'players'])
+            ->whereHas('players', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->first();
 
         return response()->json([
             'lobbies' => $lobbies,
@@ -138,6 +156,7 @@ class LobbyController extends Controller
             if ($newHost) {
                 $lobby->update(['host_user_id' => $newHost->id]);
             } else {
+                // Delete lobby if no players left
                 $lobby->delete();
                 return response()->json(['message' => 'Lobby deleted.']);
             }
@@ -191,9 +210,15 @@ class LobbyController extends Controller
 
         $lobby->update(['started' => true]);
 
+        $lobby->load(['game', 'host', 'players']);
+
+        // Broadcast the LobbyStarted event - this will reach ALL users in the presence channel
         broadcast(new LobbyStarted($lobby));
 
-        return response()->json(['message' => 'Game started!']);
+        return response()->json([
+            'message' => 'Game started!',
+            'lobby' => $lobby
+        ]);
     }
 
     public function kick($lobbyCode, Request $request)
@@ -241,7 +266,7 @@ class LobbyController extends Controller
 
         $user = Auth::user();
 
-        // Check if user is in the lobby
+        // Check if user is in the lobby (allow messages in started lobbies too)
         if (!$lobby->players()->where('user_id', $user->id)->exists()) {
             return response()->json(['message' => 'You are not in this lobby.'], 403);
         }
@@ -273,7 +298,7 @@ class LobbyController extends Controller
 
         $user = Auth::user();
 
-        // Check if user is in the lobby
+        // Check if user is in the lobby (allow access to started lobbies too)
         if (!$lobby->players()->where('user_id', $user->id)->exists()) {
             return response()->json(['message' => 'You are not in this lobby.'], 403);
         }
@@ -307,15 +332,14 @@ class LobbyController extends Controller
     }
 
     /**
-     * Get current user's active lobby
+     * Get current user's active lobby (including started ones)
      */
     public function getCurrentUserLobby()
     {
         $user = Auth::user();
 
-        // Find any non-started lobby where the user is a player
+        // Find any lobby where the user is a player (including started ones)
         $lobby = Lobby::with(['game', 'host', 'players'])
-            ->where('started', false)
             ->whereHas('players', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
