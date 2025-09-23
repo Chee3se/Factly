@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useState } from 'react';
 import { Link, Head } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User, LogOut, Settings } from 'lucide-react';
 import { Toaster } from "@/components/ui/sonner"
+import LobbyInvitationModal from '@/components/LobbyInvitationModal';
+import { useFriends } from '@/hooks/useFriends';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Factly';
 
@@ -20,6 +22,11 @@ interface Props {
 }
 
 export default function App({ title, auth, children }: PropsWithChildren<Props>) {
+    const [loading, setLoading] = useState(false);
+
+    // Only initialize friends hook if user is authenticated
+    const friendsHook = auth.user ? useFriends(auth.user.id) : null;
+
     const getInitials = (name: string): string => {
         return name
             .split(' ')
@@ -32,6 +39,21 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
     const getAvatarUrl = (avatar?: string): string | undefined => {
         if (!avatar) return undefined;
         return `/storage/${avatar}`;
+    };
+
+    const handleAcceptLobbyInvite = async (lobbyCode: string) => {
+        if (!friendsHook) return;
+        setLoading(true);
+        try {
+            await friendsHook.acceptLobbyInvitation(lobbyCode);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeclineLobbyInvite = () => {
+        if (!friendsHook) return;
+        friendsHook.declineLobbyInvitation();
     };
 
     return (
@@ -122,6 +144,16 @@ export default function App({ title, auth, children }: PropsWithChildren<Props>)
                 </main>
 
                 <Toaster richColors />
+
+                {/* Global Lobby Invitation Modal - only show for authenticated users */}
+                {auth.user && friendsHook && (
+                    <LobbyInvitationModal
+                        lobbyInvitation={friendsHook.lobbyInvitation}
+                        onAccept={handleAcceptLobbyInvite}
+                        onDecline={handleDeclineLobbyInvite}
+                        loading={loading}
+                    />
+                )}
 
                 <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2.5">

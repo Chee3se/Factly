@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             HigherLowerItemSeeder::class,
             QuizLadderItemSeeder::class,
+            ImpactAuctionItemSeeder::class,
         ]);
     }
 }

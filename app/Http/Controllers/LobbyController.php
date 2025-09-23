@@ -31,6 +31,30 @@ class LobbyController extends Controller
     }
 
     /**
+     * Display the lobbies page for a specific game
+     */
+    public function gameLobbies($gameSlug)
+    {
+        $game = Game::where('slug', $gameSlug)->first();
+
+        if (!$game) {
+            return redirect()->route('lobbies')->with('error', 'Game not found.');
+        }
+
+        return Inertia::render('Lobbies', [
+            'auth' => [
+                'user' => Auth::user()
+            ],
+            'game' => [
+                'id' => $game->id,
+                'name' => $game->name,
+                'slug' => $game->slug
+            ],
+            'hideGameSelection' => true
+        ]);
+    }
+
+    /**
      * Get lobbies list for API
      */
     public function apiIndex()
@@ -350,5 +374,61 @@ class LobbyController extends Controller
         }
 
         return response()->json($lobby);
+    }
+
+    /**
+     * Show a specific lobby page by code (for direct links/invitations)
+     */
+    public function showLobby($lobbyCode)
+    {
+        $lobby = Lobby::where('lobby_code', $lobbyCode)
+            ->with(['game', 'host', 'players'])
+            ->first();
+
+        if (!$lobby) {
+            return redirect()->route('lobbies')->with('error', 'Lobby not found.');
+        }
+
+        $user = Auth::user();
+
+        // Check if user is already in this lobby
+        $userInLobby = $lobby->players()->where('user_id', $user->id)->exists();
+
+        if (!$userInLobby) {
+            // Check if user is in ANY other lobby first and remove them
+            $existingLobby = Lobby::whereHas('players', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->first();
+
+            if ($existingLobby) {
+                $existingLobby->players()->detach($user->id);
+                broadcast(new PlayerLeftLobby($existingLobby, $user));
+            }
+
+            // If lobby is started, redirect to general lobbies
+            if ($lobby->started) {
+                return redirect()->route('lobbies')->with('error', 'This lobby has already started.');
+            }
+
+            // If lobby is full, redirect to general lobbies
+            if ($lobby->isFull()) {
+                return redirect()->route('lobbies')->with('error', 'This lobby is full.');
+            }
+
+            // Auto-join the user to the lobby
+            try {
+                $lobby->players()->attach($user->id, [
+                    'joined_at' => now(),
+                    'ready' => false
+                ]);
+
+                broadcast(new PlayerJoinedLobby($lobby, $user));
+            } catch (\Exception $e) {
+                return redirect()->route('lobbies')->with('error', 'Failed to join lobby.');
+            }
+        }
+
+        // Redirect to the game's lobby page
+        return redirect()->route('lobbies.game', ['game' => $lobby->game->slug]);
     }
 }

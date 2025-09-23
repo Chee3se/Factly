@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FriendsController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LobbyController;
@@ -60,13 +61,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/save-score', [GameController::class, 'saveScore'])->name('games.save-score');
     Route::get('/api/games/{gameSlug}/best-score', [GameController::class, 'getUserBestScore'])->name('games.user-best-score');
 
+    Route::get('/lobbies/{lobbyCode}', [LobbyController::class, 'showLobby'])
+        ->where('lobbyCode', '[A-Z0-9]{8}')
+        ->name('lobbies.show');
+
     // Lobby API routes - grouped with proper API prefix
     Route::prefix('api')->group(function () {
         Route::get('/lobbies', [LobbyController::class, 'apiIndex']); // Changed to apiIndex
+        Route::get('/lobbies/{game:slug}', [LobbyController::class, 'gameLobbies'])
+            ->middleware(['auth'])
+            ->name('lobbies.game');
         Route::get('/lobbies/current', [LobbyController::class, 'getCurrentUserLobby']);
         Route::post('/lobbies', [LobbyController::class, 'store']);
         Route::post('/lobbies/find', [LobbyController::class, 'findByCode']);
-        Route::get('/lobbies/{lobbyCode}', [LobbyController::class, 'show']);
         Route::post('/lobbies/join', [LobbyController::class, 'join']);
         Route::post('/lobbies/{lobbyCode}/leave', [LobbyController::class, 'leave']);
         Route::post('/lobbies/{lobbyCode}/ready', [LobbyController::class, 'toggleReady']);
@@ -102,4 +109,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/suggestions', [AdminController::class, 'suggestions'])->name('suggestions');
     Route::patch('/suggestions/{suggestion}/status', [AdminController::class, 'updateSuggestionStatus'])->name('suggestions.update-status');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/friends', [FriendsController::class, 'index'])->name('friends.index');
+    Route::get('/friends/search', [FriendsController::class, 'search'])->name('friends.search');
+    Route::post('/friends/send-request', [FriendsController::class, 'sendRequest'])->name('friends.send-request');
+    Route::post('/friends/accept-request', [FriendsController::class, 'acceptRequest'])->name('friends.accept-request');
+    Route::post('/friends/decline-request', [FriendsController::class, 'declineRequest'])->name('friends.decline-request');
+    Route::delete('/friends/remove', [FriendsController::class, 'removeFriend'])->name('friends.remove');
+    Route::delete('/friends/cancel-request', [FriendsController::class, 'cancelRequest'])->name('friends.cancel-request');
+    Route::post('/friends/invite-to-lobby', [FriendsController::class, 'inviteToLobby'])->name('friends.invite-to-lobby');
 });

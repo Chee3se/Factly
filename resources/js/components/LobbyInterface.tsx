@@ -17,16 +17,23 @@ import {
     Hash,
     CheckCircle,
     Trash2,
+    Gamepad2,
 } from "lucide-react";
 
 interface Props {
     auth: Auth;
     lobbyHook: any;
+    game?: {
+        id: number;
+        name: string;
+        slug: string;
+    };
 }
 
-export default function LobbyInterface({ auth, lobbyHook }: Props) {
+export default function LobbyInterface({ auth, lobbyHook, game }: Props) {
     const [lobbyCode, setLobbyCode] = useState("");
-    const [selectedGameId, setSelectedGameId] = useState(2);
+    // Use the passed game ID if available, otherwise default to 2
+    const [selectedGameId, setSelectedGameId] = useState(game?.id || 2);
 
     const handleCreateLobby = () => {
         lobbyHook.createLobby(selectedGameId);
@@ -83,7 +90,10 @@ export default function LobbyInterface({ auth, lobbyHook }: Props) {
                         <CardHeader className="text-center">
                             <CardTitle className="text-2xl">Join a Game</CardTitle>
                             <CardDescription>
-                                Enter a lobby code to join or create a new lobby
+                                {game
+                                    ? `Join or create a lobby for ${game.name}`
+                                    : "Enter a lobby code to join or create a new lobby"
+                                }
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -128,18 +138,33 @@ export default function LobbyInterface({ auth, lobbyHook }: Props) {
 
                             {/* Create Lobby Section */}
                             <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="gameSelect">Select Game</Label>
-                                    <select
-                                        id="gameSelect"
-                                        value={selectedGameId}
-                                        onChange={(e) => setSelectedGameId(Number(e.target.value))}
-                                        className="w-full p-2 border rounded-md"
-                                    >
-                                        <option value={2}>Quiz Ladder</option>
-                                        {/* Add more games as needed */}
-                                    </select>
-                                </div>
+                                {game ? (
+                                    /* Show selected game info */
+                                    <div className="space-y-2">
+                                        <Label className="flex items-center gap-2">
+                                            <Gamepad2 className="h-4 w-4" />
+                                            Selected Game
+                                        </Label>
+                                        <div className="p-3 border rounded-md bg-muted/50 flex items-center gap-2">
+                                            <Gamepad2 className="h-4 w-4 text-muted-foreground" />
+                                            <span className="font-medium">{game.name}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* Show game selector for general lobby page */
+                                    <div className="space-y-2">
+                                        <Label htmlFor="gameSelect">Select Game</Label>
+                                        <select
+                                            id="gameSelect"
+                                            value={selectedGameId}
+                                            onChange={(e) => setSelectedGameId(Number(e.target.value))}
+                                            className="w-full p-2 border rounded-md"
+                                        >
+                                            <option value={2}>Quiz Ladder</option>
+                                            {/* Add more games as needed */}
+                                        </select>
+                                    </div>
+                                )}
                                 <Button
                                     onClick={handleCreateLobby}
                                     disabled={lobbyHook.loading}
@@ -147,7 +172,9 @@ export default function LobbyInterface({ auth, lobbyHook }: Props) {
                                     className="w-full"
                                     size="lg"
                                 >
-                                    {lobbyHook.loading ? 'Creating...' : 'Create New Lobby'}
+                                    {lobbyHook.loading ? 'Creating...' :
+                                        `Create ${game ? game.name : 'New'} Lobby`
+                                    }
                                 </Button>
                             </div>
                         </CardContent>

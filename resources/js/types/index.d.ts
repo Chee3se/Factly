@@ -11,6 +11,7 @@ export interface User {
     created_at: string;
     updated_at: string;
     email_verified_at?: string;
+    friend_request_id?: number; // Add this
 }
 
 interface Suggestion {

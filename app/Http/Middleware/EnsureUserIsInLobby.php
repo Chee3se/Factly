@@ -19,7 +19,7 @@ class EnsureUserIsInLobby
     {
         $game = $request->route()->parameter('game');
         $user = auth()->user();
-
+        
         if ($game->max_players > 1) {
             $userLobby = LobbyPlayer::where('user_id', $user->id)->first();
 
@@ -27,12 +27,15 @@ class EnsureUserIsInLobby
                 $lobby = Lobby::find($userLobby->lobby_id);
 
                 if ($lobby && !$lobby->started) {
-                    return redirect('/lobbies');
+                    return redirect()->route('lobbies.game', ['game' => $game->slug]);
+                }
+
+                if ($lobby && $lobby->started && $lobby->game_id === $game->id) {
+                    return $next($request);
                 }
             }
-            else {
-                return redirect('/lobbies');
-            }
+
+            return redirect()->route('lobbies.game', ['game' => $game->slug]);
         }
 
         return $next($request);

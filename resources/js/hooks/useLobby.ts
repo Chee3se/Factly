@@ -33,7 +33,7 @@ export function useLobby(authUserId?: number) {
 
     const refreshLobby = useCallback(async (lobbyCode: string) => {
         try {
-            const res = await (window as any).axios.get(`/api/lobbies/${lobbyCode}`);
+            const res = await (window as any).axios.get(`/lobbies/${lobbyCode}`);
             setCurrentLobby(res.data);
         } catch (error) {
             // Silent fail
