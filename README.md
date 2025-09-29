@@ -1,61 +1,173 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.icons8.com/fluency/200/game-controller.png" width="200" alt="Factly Logo">
 </p>
 
-## About Laravel
+<h1 align="center">🎮 Factly</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <i>Your ultimate real-time minigame platform for playing with friends!</i>
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/status-active-success.svg" alt="Status"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
+  <a href="#"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🎯 About Factly
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Factly is a dynamic minigame hosting platform where fun meets competition! Whether you're looking to challenge your friends in real-time battles or discover new exciting games, Factly has got you covered. Our platform features:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- 🎲 **Real-Time Multiplayer** - Play with friends instantly with no lag
+- 💡 **Community-Driven** - Suggest and vote on new minigames
+- 🏆 **Competitive Gaming** - Track scores and climb leaderboards
+- 🎨 **Diverse Game Library** - From trivia to action-packed challenges
+- 👥 **Social Features** - Create rooms, invite friends, and chat while playing
+- 📱 **Cross-Platform** - Play on any device, anywhere
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## ✨ Features
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Current Features
+- ✅ Real-time multiplayer gameplay
+- ✅ User authentication and profiles
+- ✅ Game room creation and management
+- ✅ Live chat during gameplay
+- ✅ Score tracking and leaderboards
+- ✅ Game suggestion system
+- ✅ Responsive design for all devices
 
-### Premium Partners
+### Coming Soon
+- 🔜 Tournament mode
+- 🔜 Custom game rooms with settings
+- 🔜 Achievement system
+- 🔜 Friend lists and social features
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🚀 Getting Started
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Prerequisites
 
-## Code of Conduct
+Before you begin, ensure you have the following installed:
+- Node.js (v16 or higher)
+- npm or yarn
+- A modern web browser
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Installation
 
-## Security Vulnerabilities
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/factly.git
+cd factly
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+2. Install dependencies
+```bash
+npm install
+```
 
-## License
+3. Set up environment variables
+```bash
+cp .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+4. Start the development server
+```bash
+npm run dev
+```
+
+5. Open your browser and navigate to `http://localhost:3000`
+
+---
+
+## 🎮 How to Play
+
+1. **Create an Account** - Sign up to track your progress
+2. **Browse Games** - Explore our collection of minigames
+3. **Create or Join a Room** - Start a new game or join friends
+4. **Invite Friends** - Share the room code with your crew
+5. **Play & Compete** - Battle it out in real-time!
+6. **Check Leaderboards** - See how you stack up against others
+
+---
+
+## 🛠️ Tech Stack
+
+<p align="left">
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.io">
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
+  <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
+</p>
+
+---
+
+## 📋 Development Roadmap
+
+### ✅ Completed
+- [x] Initial project setup and architecture
+- [x] Real-time WebSocket integration
+- [x] User authentication system
+- [x] Basic game room functionality
+- [x] First set of minigames (Trivia, Quick Draw, Word Rush)
+- [x] Score tracking system
+- [x] Responsive UI design
+
+### 🚧 In Progress
+- [ ] Advanced matchmaking system
+- [ ] In-game power-ups and rewards
+- [ ] Mobile app optimization
+- [ ] Game suggestion voting system
+
+### 📅 Planned Features
+- [ ] Tournament bracket system
+- [ ] Custom avatar creation
+- [ ] Voice chat integration
+- [ ] Spectator mode
+- [ ] Game replay system
+- [ ] Season passes and rewards
+- [ ] Daily challenges
+- [ ] Team-based games (2v2, 4v4)
+- [ ] Game creator tools for community
+- [ ] Integration with Discord
+- [ ] Streaming integration (Twitch/YouTube)
+- [ ] AI-powered difficulty adjustment
+- [ ] Localization (multi-language support)
+
+### 🎯 Future Considerations
+- [ ] VR game support
+- [ ] NFT-based achievements
+- [ ] Cryptocurrency rewards
+- [ ] Educational game modes
+- [ ] Accessibility features (colorblind mode, screen reader support)
+
+---
+
+## 🤝 Contributing
+
+We love contributions! Whether it's:
+- 🐛 Bug reports
+- 💡 Feature suggestions
+- 🎨 UI/UX improvements
+- 📝 Documentation updates
+- 🎮 New minigame ideas
+
+Please feel free to open an issue or submit a pull request.
+
+### Contribution Guidelines
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📝 Game Suggestions

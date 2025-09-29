@@ -11,7 +11,7 @@ export default function HeroScreen({
   onComplete,
   websiteName = "Factly",
 }: HeroScreenProps) {
-  const [position, setPosition] = useState(0); // 0 = closed, 100 = fully open
+  const [position, setPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
