@@ -16,7 +16,7 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'total_admins' => User::where('role', 'admin')->count(),
-            'total_friends' => Friend::where('accepted', true)->count(),
+            'total_friends' => Friend::where('accepted', true)->whereRaw('user_id < friend_id')->count(),
             'pending_friend_requests' => Friend::where('accepted', false)->count(),
             'total_games' => Game::count(),
             'total_scores' => \App\Models\Score::count(),
@@ -38,7 +38,8 @@ class AdminController extends Controller
 
         // Add friends count to each user
         $users->getCollection()->transform(function ($user) {
-            $user->friends_count = $user->friendsTo->count() + $user->friendsFrom->count();
+            $allFriends = $user->friendsTo->merge($user->friendsFrom);
+            $user->friends_count = $allFriends->unique('id')->count();
             unset($user->friendsTo, $user->friendsFrom);
             return $user;
         });
@@ -46,6 +47,8 @@ class AdminController extends Controller
         $friends = Friend::with(['user:id,name,email', 'friendUser:id,name,email'])
             ->whereHas('user')
             ->whereHas('friendUser')
+            ->whereNotNull('user_id')
+            ->whereNotNull('friend_id')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

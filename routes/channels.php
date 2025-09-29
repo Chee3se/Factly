@@ -14,7 +14,6 @@ Broadcast::channel('lobby.{lobbyCode}', function ($user, $lobbyCode) {
         return false;
     }
 
-    // For presence channels, return user data array
     return [
         'id' => $user->id,
         'name' => $user->name,

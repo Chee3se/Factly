@@ -20,7 +20,6 @@ export function useLobby(authUserId?: number) {
   const isJoiningRef = useRef(false);
   const currentLobbyRef = useRef<Lobby | null>(null);
 
-  // Keep the ref in sync with the state
   useEffect(() => {
     currentLobbyRef.current = currentLobby;
   }, [currentLobby]);
@@ -48,7 +47,6 @@ export function useLobby(authUserId?: number) {
       console.log("Refreshed lobby data:", res.data);
 
       setCurrentLobby((prevLobby) => {
-        // Only update if we actually got new data
         if (res.data && res.data.lobby_code === lobbyCode) {
           console.log("Updating lobby state with fresh data");
           return {
@@ -116,7 +114,6 @@ export function useLobby(authUserId?: number) {
         return null;
       }
 
-      // Don't rejoin if we're already in the same channel
       if (
         channelRef.current &&
         channelRef.current.name === `lobby.${lobbyCode}`
@@ -140,7 +137,6 @@ export function useLobby(authUserId?: number) {
           .joining((user: any) => {
             console.log("User joining:", user);
             setOnlineUsers((prev) => {
-              // Prevent duplicates
               if (prev.find((u) => u.id === user.id)) {
                 return prev;
               }
@@ -165,7 +161,6 @@ export function useLobby(authUserId?: number) {
           .listen("PlayerJoinedLobby", (e: any) => {
             console.log("Player joined lobby event:", e);
 
-            // Only process if we're still in a lobby and it matches the event
             if (
               !currentLobbyRef.current ||
               currentLobbyRef.current.lobby_code !== lobbyCode
@@ -174,7 +169,6 @@ export function useLobby(authUserId?: number) {
               return;
             }
 
-            // Use the lobby data directly from the event since it's already loaded with relationships
             if (e.lobby && e.lobby.lobby_code === lobbyCode) {
               console.log("Updating lobby from PlayerJoinedLobby event data");
               setCurrentLobby(e.lobby);
@@ -186,7 +180,6 @@ export function useLobby(authUserId?: number) {
           .listen("PlayerLeftLobby", (e: any) => {
             console.log("Player left lobby event:", e);
 
-            // Only process if we're still in a lobby and it matches the event
             if (
               !currentLobbyRef.current ||
               currentLobbyRef.current.lobby_code !== lobbyCode
@@ -195,7 +188,6 @@ export function useLobby(authUserId?: number) {
               return;
             }
 
-            // Use the lobby data directly from the event since it's already loaded with relationships
             if (e.lobby && e.lobby.lobby_code === lobbyCode) {
               console.log("Updating lobby from PlayerLeftLobby event data");
               setCurrentLobby(e.lobby);
@@ -226,10 +218,8 @@ export function useLobby(authUserId?: number) {
             const gameSlug = lobbyData?.game?.slug;
 
             if (gameSlug) {
-              // Include lobby code in URL for reconnection
               const gameUrl = `/games/${gameSlug}?lobby=${lobbyData.lobby_code}`;
               setTimeout(() => {
-                // Don't leave lobby channel for games that need it
                 window.location.replace(gameUrl);
               }, 1000);
             } else {
@@ -273,7 +263,6 @@ export function useLobby(authUserId?: number) {
 
         channel.name = channelName;
 
-        // Set channel as ready immediately after setup
         setTimeout(() => {
           channel.isReady = true;
           channelRef.current = channel;
@@ -293,7 +282,6 @@ export function useLobby(authUserId?: number) {
     [leaveLobbyChannel, authUserId, handleNewMessage, refreshLobby],
   );
 
-  // Reconnect to lobby by code (for game pages) - Updated to handle started lobbies
   const reconnectToLobbyByCode = useCallback(
     async (lobbyCode: string) => {
       if (!lobbyCode || currentLobby?.lobby_code === lobbyCode) {
@@ -304,7 +292,6 @@ export function useLobby(authUserId?: number) {
       setLoading(true);
 
       try {
-        // First get the lobby data
         const res = await (window as any).axios.get(
           `/api/lobbies/${lobbyCode}`,
         );
@@ -317,13 +304,11 @@ export function useLobby(authUserId?: number) {
         console.log("Successfully fetched lobby for reconnection:", lobby);
         setCurrentLobby(lobby);
 
-        // Join the channel
         const channel = joinLobbyChannel(lobby.lobby_code);
         if (channel) {
           await loadMessages(lobby.lobby_code);
         }
 
-        // Different toast messages based on lobby state
         if (lobby.started) {
           toast.success(`Reconnected to active game ${lobby.lobby_code}`, {
             icon: "🎮",
@@ -359,7 +344,6 @@ export function useLobby(authUserId?: number) {
     try {
       console.log("Checking for existing lobby for user:", authUserId);
 
-      // First try to get current lobby
       try {
         const userLobbyRes = await (window as any).axios.get(
           "/api/lobbies/current",
@@ -370,7 +354,6 @@ export function useLobby(authUserId?: number) {
           console.log("Found current lobby:", userLobby);
           setCurrentLobby(userLobby);
 
-          // Join channel and load messages with proper sequencing
           const channel = joinLobbyChannel(userLobby.lobby_code);
           if (channel) {
             await loadMessages(userLobby.lobby_code);
@@ -386,17 +369,14 @@ export function useLobby(authUserId?: number) {
         console.log("No current lobby found, checking all lobbies");
       }
 
-      // Fallback: search all lobbies
       const res = await (window as any).axios.get("/api/lobbies");
       const responseData = res.data;
 
-      // Check for user_lobby first (direct user's current lobby)
       if (responseData.user_lobby && responseData.user_lobby.lobby_code) {
         const userLobby = responseData.user_lobby;
         console.log("Found user lobby in user_lobby field:", userLobby);
         setCurrentLobby(userLobby);
 
-        // Join channel and load messages with proper sequencing
         const channel = joinLobbyChannel(userLobby.lobby_code);
         if (channel) {
           await loadMessages(userLobby.lobby_code);
@@ -409,7 +389,6 @@ export function useLobby(authUserId?: number) {
         return;
       }
 
-      // Then check the lobbies array as fallback
       const lobbies = Array.isArray(responseData)
         ? responseData
         : responseData.lobbies
@@ -431,7 +410,6 @@ export function useLobby(authUserId?: number) {
         console.log("Found user lobby in lobbies array:", userLobby);
         setCurrentLobby(userLobby);
 
-        // Join channel and load messages with proper sequencing
         const channel = joinLobbyChannel(userLobby.lobby_code);
         if (channel) {
           await loadMessages(userLobby.lobby_code);
@@ -489,47 +467,43 @@ export function useLobby(authUserId?: number) {
     [currentLobby, authUserId],
   );
 
-  const createLobby = useCallback(
-    async (gameId: number, password?: string) => {
-      setLoading(true);
-      const loadingToast = toast.loading("Creating lobby...");
+  const createLobby = useCallback(async (gameId: number, password?: string) => {
+    setLoading(true);
+    const loadingToast = toast.loading("Creating lobby...");
 
-      try {
-        const res = await (window as any).axios.post("/api/lobbies", {
-          game_id: gameId,
-          password: password || null,
-        });
+    try {
+      const res = await (window as any).axios.post("/api/lobbies", {
+        game_id: gameId,
+        password: password || null,
+      });
 
-        const lobby = res.data;
+      const lobby = res.data;
 
-        if (!lobby.lobby_code) {
-          throw new Error("Lobby created but no lobby code received");
-        }
-
-        console.log("Lobby created:", lobby);
-        setCurrentLobby(lobby);
-
-        // Join channel and load messages with proper sequencing
-        const channel = joinLobbyChannel(lobby.lobby_code);
-        if (channel) {
-          await loadMessages(lobby.lobby_code);
-        }
-
-        toast.dismiss(loadingToast);
-        toast.success("Lobby created!", { icon: "🎉" });
-
-        return lobby;
-      } catch (error: any) {
-        toast.dismiss(loadingToast);
-        console.error("Create lobby error:", error);
-        toast.error(error.response?.data?.message || "Failed to create lobby");
-        throw error;
-      } finally {
-        setLoading(false);
+      if (!lobby.lobby_code) {
+        throw new Error("Lobby created but no lobby code received");
       }
-    },
-    [joinLobbyChannel, loadMessages],
-  );
+
+      console.log("Lobby created:", lobby);
+      setCurrentLobby(lobby);
+
+      const channel = joinLobbyChannel(lobby.lobby_code);
+      if (channel) {
+        await loadMessages(lobby.lobby_code);
+      }
+
+      toast.dismiss(loadingToast);
+      toast.success("Lobby created!", { icon: "🎉" });
+
+      return lobby;
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      console.error("Create lobby error:", error);
+      toast.error(error.response?.data?.message || "Failed to create lobby");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  });
 
   const joinLobby = useCallback(
     async (lobbyCode: string, password?: string) => {
@@ -556,7 +530,6 @@ export function useLobby(authUserId?: number) {
         console.log("Joined lobby:", lobby);
         setCurrentLobby(lobby);
 
-        // Join channel and load messages with proper sequencing
         const channel = joinLobbyChannel(lobby.lobby_code);
         if (channel) {
           await loadMessages(lobby.lobby_code);
@@ -586,15 +559,12 @@ export function useLobby(authUserId?: number) {
     const lobbyCodeToLeave = currentLobby.lobby_code;
 
     try {
-      // Leave the channel FIRST to stop receiving events
       leaveLobbyChannel();
 
-      // Clear state immediately
       setCurrentLobby(null);
       setMessages([]);
       setOnlineUsers([]);
 
-      // Then make the API call
       await (window as any).axios.post(
         `/api/lobbies/${lobbyCodeToLeave}/leave`,
       );
@@ -603,9 +573,6 @@ export function useLobby(authUserId?: number) {
     } catch (error: any) {
       console.error("Leave lobby error:", error);
       toast.error(error.response?.data?.message || "Failed to leave lobby");
-
-      // Even if API call fails, we've already left the channel and cleared state
-      // Don't try to restore the lobby state
     }
   }, [currentLobby, leaveLobbyChannel]);
 
@@ -616,14 +583,12 @@ export function useLobby(authUserId?: number) {
       }
 
       try {
-        // Try direct API call first
         const res = await (window as any).axios.get(
           `/api/lobbies/${lobbyCode.trim()}`,
         );
         const lobby = res.data;
 
         if (lobby && lobby.lobby_code) {
-          // If we successfully found the lobby, connect to it
           await reconnectToLobbyByCode(lobby.lobby_code);
           return lobby;
         }
@@ -632,7 +597,6 @@ export function useLobby(authUserId?: number) {
       } catch (error: any) {
         console.error("Find lobby error:", error);
 
-        // Fallback to the find endpoint
         try {
           const res = await (window as any).axios.post("/api/lobbies/find", {
             lobby_code: lobbyCode.trim(),
@@ -658,7 +622,6 @@ export function useLobby(authUserId?: number) {
 
     const newReadyStatus = !currentPlayer.pivot?.ready;
 
-    // Optimistic update
     setCurrentLobby((prevLobby) => {
       if (!prevLobby) return prevLobby;
 
@@ -689,7 +652,6 @@ export function useLobby(authUserId?: number) {
       );
 
       if (res.data.ready !== newReadyStatus) {
-        // Server state mismatch, revert optimistic update
         setCurrentLobby((prevLobby) => {
           if (!prevLobby) return prevLobby;
 
@@ -715,7 +677,6 @@ export function useLobby(authUserId?: number) {
         });
       }
     } catch (error: any) {
-      // Revert optimistic update on error
       setCurrentLobby((prevLobby) => {
         if (!prevLobby) return prevLobby;
 
@@ -818,7 +779,6 @@ export function useLobby(authUserId?: number) {
     [whisperHandlers],
   );
 
-  // Initialize on mount if user is authenticated
   useEffect(() => {
     console.log("useLobby initialization check:", {
       authUserId,
@@ -835,7 +795,6 @@ export function useLobby(authUserId?: number) {
     }
   }, [authUserId, currentLobby?.lobby_code]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       leaveLobbyChannel();
