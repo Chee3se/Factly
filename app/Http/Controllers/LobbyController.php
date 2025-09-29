@@ -55,18 +55,19 @@ class LobbyController extends Controller
     }
 
     /**
-     * Get lobbies list for API
+     * Get lobbies list for API - only show non-started lobbies for joining
      */
     public function apiIndex()
     {
         $user = Auth::user();
 
+        // Only show non-started lobbies for the main lobby list
         $lobbies = Lobby::with(['game', 'host', 'players'])
             ->where('started', false)
             ->latest()
             ->get();
 
-        // Check if user is already in a lobby (including started ones)
+        // Check if user is already in ANY lobby (including started ones)
         $userLobby = Lobby::with(['game', 'host', 'players'])
             ->whereHas('players', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -81,10 +82,31 @@ class LobbyController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'game_id' => 'required|exists:games,id',
             'password' => 'nullable|string|min:4|max:20',
         ]);
+
+        // Check if user is already in ANY lobby
+        $existingLobby = Lobby::whereHas('players', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->first();
+
+        if ($existingLobby) {
+            throw ValidationException::withMessages([
+                'game_id' => ['You are already in a lobby. Please leave your current lobby first.']
+            ]);
+        }
+
+        // Check if user is already hosting a lobby
+        $hostingLobby = Lobby::where('host_user_id', $user->id)->first();
+        if ($hostingLobby) {
+            throw ValidationException::withMessages([
+                'game_id' => ['You are already hosting a lobby. Please close it first.']
+            ]);
+        }
 
         $lobby = Lobby::create([
             'game_id' => $request->game_id,
@@ -110,18 +132,51 @@ class LobbyController extends Controller
             return response()->json(['message' => 'Lobby not found'], 404);
         }
 
+        // Check if the requesting user is actually in this lobby
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
+        $userInLobby = $lobby->players()->where('user_id', $user->id)->exists();
+
+        if (!$userInLobby) {
+            // Log for debugging
+            \Log::warning('User not in lobby', [
+                'user_id' => $user->id,
+                'lobby_code' => $lobbyCode,
+                'lobby_players' => $lobby->players()->pluck('user_id')->toArray()
+            ]);
+
+            return response()->json(['message' => 'You are not in this lobby'], 403);
+        }
+
         return response()->json($lobby->load(['game', 'host', 'players']));
     }
 
     public function join(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'lobby_code' => 'required|string|size:8',
             'password' => 'nullable|string',
         ]);
 
+        // Check if user is already in ANY lobby
+        $existingLobby = Lobby::whereHas('players', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->first();
+
+        if ($existingLobby) {
+            throw ValidationException::withMessages([
+                'lobby_code' => ['You are already in a lobby. Please leave your current lobby first.']
+            ]);
+        }
+
         $lobby = Lobby::where('lobby_code', $request->lobby_code)
-            ->where('started', false)
+            ->where('started', false) // Only allow joining non-started lobbies
             ->first();
 
         if (!$lobby) {
@@ -139,12 +194,6 @@ class LobbyController extends Controller
         if ($lobby->password && !Hash::check($request->password, $lobby->password)) {
             throw ValidationException::withMessages([
                 'password' => ['Incorrect password.']
-            ]);
-        }
-
-        if ($lobby->players()->where('user_id', Auth::id())->exists()) {
-            throw ValidationException::withMessages([
-                'lobby_code' => ['You are already in this lobby.']
             ]);
         }
 
@@ -336,20 +385,28 @@ class LobbyController extends Controller
         return response()->json($messages);
     }
 
-    // Add method to find lobby by code
+    // Updated to include started lobbies for users already in them
     public function findByCode(Request $request)
     {
         $request->validate([
             'lobby_code' => 'required|string|size:8'
         ]);
 
+        $user = Auth::user();
+
         $lobby = Lobby::where('lobby_code', $request->lobby_code)
-            ->where('started', false)
             ->with(['game', 'host', 'players'])
             ->first();
 
         if (!$lobby) {
-            return response()->json(['message' => 'Lobby not found or already started'], 404);
+            return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
+        // Check if the requesting user is actually in this lobby
+        $userInLobby = $lobby->players()->where('user_id', $user->id)->exists();
+
+        if (!$userInLobby) {
+            return response()->json(['message' => 'You are not in this lobby'], 403);
         }
 
         return response()->json($lobby);
@@ -395,12 +452,13 @@ class LobbyController extends Controller
         $userInLobby = $lobby->players()->where('user_id', $user->id)->exists();
 
         if (!$userInLobby) {
-            // Check if user is in ANY other lobby first and remove them
+            // Check if user is in ANY other lobby first
             $existingLobby = Lobby::whereHas('players', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->first();
 
             if ($existingLobby) {
+                // If they're in a different lobby, remove them from it first
                 $existingLobby->players()->detach($user->id);
                 broadcast(new PlayerLeftLobby($existingLobby, $user));
             }
@@ -426,6 +484,12 @@ class LobbyController extends Controller
             } catch (\Exception $e) {
                 return redirect()->route('lobbies')->with('error', 'Failed to join lobby.');
             }
+        }
+
+        // If user is in this lobby and it's started, redirect to the game
+        if ($userInLobby && $lobby->started) {
+            return redirect()->route('games.show', ['game' => $lobby->game->slug])
+                ->with('lobby_code', $lobby->lobby_code);
         }
 
         // Redirect to the game's lobby page

@@ -195,12 +195,11 @@ class GameController extends Controller
             ->get();
 
         $items = $gameItems->map(function ($gameItem) {
-            $itemData = $gameItem->value; // Already decoded due to JSON casting
-            $itemData['id'] = $gameItem->id; // Add the GameItem ID if needed
+            $itemData = $gameItem->value;
+            $itemData['id'] = $gameItem->id;
             return $itemData;
         });
 
-        // Sort quiz items by difficulty and points
         $items = $items->sortBy(function ($item) {
             $difficultyOrder = ['easy' => 1, 'medium' => 2, 'hard' => 3];
             return [
@@ -217,8 +216,24 @@ class GameController extends Controller
                 ->max('score') ?? 0;
         }
 
+        // Check if user is coming from a lobby (via URL parameter)
+        $lobbyCode = request()->get('lobby');
+        $lobby = null;
+
+        if ($lobbyCode && auth()->check()) {
+            $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)
+                ->with(['game', 'host', 'players'])
+                ->whereHas('players', function ($query) {
+                    $query->where('user_id', auth()->id());
+                })
+                ->first();
+        }
+
         return Inertia::render('Games/QuizLadder', [
-            'game' => $game,
+            'game' => array_merge($game->toArray(), [
+                'lobby_code' => $lobbyCode,
+                'lobby' => $lobby
+            ]),
             'items' => $items,
             'bestScore' => $bestScore
         ]);

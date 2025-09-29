@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import {DeviceType, Session} from "@/types/session";
 import {Type} from "@/types/enums";
+import {ImageCropper} from "@/components/Profile/ImageCropper";
 
 export interface Props {
     auth: Auth;
@@ -59,8 +60,10 @@ export default function Profile({ auth, sessions = [] }: Props) {
         email: auth.user.email || ''
     });
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+    const [showCropDialog, setShowCropDialog] = useState<boolean>(false);
     const [showAvatarDialog, setShowAvatarDialog] = useState<boolean>(false);
     const [showSessionsDialog, setShowSessionsDialog] = useState<boolean>(false);
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [passwordData, setPasswordData] = useState<PasswordData>({
@@ -100,20 +103,27 @@ export default function Profile({ auth, sessions = [] }: Props) {
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const file = event.target.files?.[0];
         if (file) {
-            setIsLoading(true);
-            const formData = new FormData();
-            formData.append('avatar', file);
-
-            router.post(route('profile.avatar.upload'), formData, {
-                onSuccess: () => {
-                    setIsLoading(false);
-                    setShowAvatarDialog(false);
-                },
-                onError: () => {
-                    setIsLoading(false);
-                }
-            });
+            setSelectedImageFile(file);
+            setShowAvatarDialog(false);
+            setShowCropDialog(true);
         }
+    };
+
+    const handleCropComplete = (croppedFile: File): void => {
+        setIsLoading(true);
+        const formData = new FormData();
+        formData.append('avatar', croppedFile);
+
+        router.post(route('profile.avatar.upload'), formData, {
+            onSuccess: () => {
+                setIsLoading(false);
+                setSelectedImageFile(null);
+            },
+            onError: () => {
+                setIsLoading(false);
+                setSelectedImageFile(null);
+            }
+        });
     };
 
     const handlePasswordUpdate = (): void => {
@@ -231,7 +241,7 @@ export default function Profile({ auth, sessions = [] }: Props) {
                                                 <Button
                                                     size="sm"
                                                     variant="secondary"
-                                                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                                                    className="absolute -bottom-2 cursor-pointer -right-2 h-8 w-8 rounded-full p-0"
                                                 >
                                                     <Camera className="h-4 w-4" />
                                                 </Button>
@@ -574,6 +584,14 @@ export default function Profile({ auth, sessions = [] }: Props) {
                         </Card>
                     </TabsContent>
                 </Tabs>
+
+                {/* Image Cropper Modal */}
+                <ImageCropper
+                    open={showCropDialog}
+                    onOpenChange={setShowCropDialog}
+                    imageFile={selectedImageFile}
+                    onCropComplete={handleCropComplete}
+                />
             </div>
         </App>
     );

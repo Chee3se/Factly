@@ -107,7 +107,9 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/suggestions', [AdminController::class, 'suggestions'])->name('suggestions');
+    Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::patch('/friends/{friend}/approve', [AdminController::class, 'approveFriendRequest'])->name('friends.approve');
     Route::patch('/suggestions/{suggestion}/status', [AdminController::class, 'updateSuggestionStatus'])->name('suggestions.update-status');
 });
 

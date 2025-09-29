@@ -225,7 +225,7 @@ export default function Register({ compact = false }: Props) {
                         <CardFooter>
                             <p className="text-center text-sm text-muted-foreground w-full">
                                 Already have an account?{' '}
-                                <Link href="/login" className="text-primary hover:underline font-medium">
+                                <Link href="/Users/emilspetersons/PhpstormProjects/factly/resources/js/components/Auth/Login" className="text-primary hover:underline font-medium">
                                     Sign in
                                 </Link>
                             </p>

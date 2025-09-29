@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import google from '../../images/google.svg'
+import google from '../../../images/google.svg'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Factly';
 
@@ -193,7 +193,7 @@ export default function Login({ canResetPassword, status, compact = false }: Pro
                         <CardFooter>
                             <p className="text-center text-sm text-muted-foreground w-full">
                                 Don't have an account?{' '}
-                                <Link href="/register" className="text-primary hover:underline font-medium">
+                                <Link href="/Users/emilspetersons/PhpstormProjects/factly/resources/js/components/Auth/Register" className="text-primary hover:underline font-medium">
                                     Sign up
                                 </Link>
                             </p>

@@ -58,7 +58,7 @@ class User extends Authenticatable
      */
     public function scores(): HasMany
     {
-        return $this->hasMany(Score::class, 'player_id');
+        return $this->hasMany(Score::class, 'user_id');
     }
 
     /**

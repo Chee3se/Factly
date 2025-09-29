@@ -36,7 +36,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     const getPlayersWhoSelectedAnswer = (answerIndex: number) => {
         const selections = gameState.playerSelections.filter(selection => selection.answerIndex === answerIndex);
 
-        // Add current user if they selected this answer
         if (gameState.selectedAnswer === answerIndex && auth.user) {
             selections.push({
                 userId: auth.user.id,
