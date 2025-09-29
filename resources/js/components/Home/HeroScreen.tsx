@@ -3,9 +3,7 @@ import { ChevronUp, Gamepad2, Users, Sparkles, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroScreenProps {
-  /** Callback when the hero screen is dismissed */
   onComplete: () => void;
-  /** Optional name of the website to display in the heading */
   websiteName?: string;
 }
 
