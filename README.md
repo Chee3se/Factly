@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.icons8.com/fluency/200/game-controller.png" width="200" alt="Factly Logo">
+  <img src="./public/factly-logo-v2-black.png" width="400" alt="Factly Logo">
 </p>
 
 <h1 align="center">🎮 Factly</h1>
@@ -171,3 +171,36 @@ Please feel free to open an issue or submit a pull request.
 ---
 
 ## 📝 Game Suggestions
+
+Have an idea for a new minigame? We'd love to hear it! 
+
+Submit your suggestions through:
+- GitHub Issues with the `game-suggestion` label
+- Our in-app suggestion form
+- Join our Discord community
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📞 Contact & Support
+
+- 🌐 Website: [factly.io](https://factly.io)
+- 📧 Email: support@factly.io
+- 💬 Discord: [Join our community](https://discord.gg/factly)
+- 🐦 Twitter: [@FactlyGames](https://twitter.com/FactlyGames)
+
+---
+
+## 🙏 Acknowledgments
+
+Special thanks to all our contributors and the amazing gaming community that makes Factly possible!
+
+---
+
+<p align="center">Made with ❤️ by the Factly Team</p>
+<p align="center">⭐ Star us on GitHub if you find this project interesting!</p>
