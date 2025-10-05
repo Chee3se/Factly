@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class GameController extends Controller
 {
@@ -60,14 +61,16 @@ class GameController extends Controller
         }
     }
 
-    public function index() {
+    public function index()
+    {
         $games = Game::all();
         return Inertia::render('Home', [
             'games' => $games
         ]);
     }
 
-    public function saveScore(Request $request) {
+    public function saveScore(Request $request)
+    {
         if (!auth()->check()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
@@ -117,7 +120,8 @@ class GameController extends Controller
         }
     }
 
-    public function getUserBestScore(Request $request, $gameSlug) {
+    public function getUserBestScore(Request $request, $gameSlug)
+    {
         if (!auth()->check()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
@@ -134,7 +138,8 @@ class GameController extends Controller
         return response()->json(['best_score' => $bestScore]);
     }
 
-    public function getLeaderboard(Request $request, $gameSlug) {
+    public function getLeaderboard(Request $request, $gameSlug)
+    {
         $game = Game::where('slug', $gameSlug)->first();
         if (!$game) {
             return response()->json(['error' => 'Game not found'], 404);
@@ -151,7 +156,8 @@ class GameController extends Controller
         return response()->json(['leaderboard' => $leaderboard]);
     }
 
-    public function show(Game $game) {
+    public function show(Game $game)
+    {
         $methodName = str_replace('-', '_', $game->slug);
 
         if (method_exists($this, $methodName)) {
@@ -161,7 +167,8 @@ class GameController extends Controller
         return redirect('/');
     }
 
-    public function higher_or_lower(Game $game) {
+    public function higher_or_lower(Game $game)
+    {
         $gameItems = GameItem::where('game_id', $game->id)
             ->inRandomOrder()
             ->get();
@@ -190,7 +197,8 @@ class GameController extends Controller
         ]);
     }
 
-    public function quiz_ladder(Game $game) {
+    public function quiz_ladder(Game $game)
+    {
         $gameItems = GameItem::where('game_id', $game->id)
             ->get();
 
@@ -238,4 +246,38 @@ class GameController extends Controller
             'bestScore' => $bestScore
         ]);
     }
+
+    public function impact_auction(Game $game): Response
+    {
+        return Inertia::render('Games/ImpactAuction', []);
+    }
+
+    public function factually(Game $game)
+    {
+        $gameItems = GameItem::where('game_id', $game->id)
+            ->inRandomOrder()
+            ->get();
+
+        $items = $gameItems->map(function ($gameItem) {
+            $itemData = $gameItem->value;
+            $itemData['id'] = $gameItem->id;
+            return $itemData;
+        });
+
+        $items = $items->take(max(10, $items->count()));
+
+        $bestScore = 0;
+        if (auth()->check()) {
+            $bestScore = Score::where('user_id', auth()->id())
+                ->where('game_id', $game->id)
+                ->max('score') ?? 0;
+        }
+
+        return Inertia::render('Games/Factually', [
+            'items' => $items,
+            'bestScore' => $bestScore,
+            'gameSlug' => $game->slug
+        ]);
+    }
+
 }

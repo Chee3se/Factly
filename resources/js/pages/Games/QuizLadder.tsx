@@ -16,6 +16,8 @@ interface Props {
 
 const WINNING_CUBES = 100;
 const QUESTION_TIME = 30;
+const GAME_START_DELAY = 3000;
+const SYNC_INTERVAL = 3;
 
 const transformDatabaseQuestions = (items: any[]): Question[] => {
   return items.map((item, index) => ({
@@ -75,6 +77,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
   const gameStateRef = useRef(gameState);
   const authUserIdRef = useRef(auth.user?.id);
   const currentLobbyRef = useRef(currentLobby);
+  const questionSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -176,6 +179,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
               questionIndex: nextQuestionIndex,
               questionData: nextQuestion,
               initiatorId: authUserIdRef.current,
+              timestamp: Date.now(),
             });
           }, 500);
         }
@@ -222,6 +226,8 @@ export default function QuizLadder({ auth, game, items }: Props) {
       "client-game-ended",
       "client-game-start",
       "client-score-update",
+      "client-request-sync",
+      "client-sync-response",
     ];
 
     events.forEach((event) => {
@@ -233,7 +239,16 @@ export default function QuizLadder({ auth, game, items }: Props) {
             onWhisper(event, (e: any) => {
               if (e.initiatorId === authUserIdRef.current) return;
 
-              const gameQuestions = e.questions || databaseQuestions;
+              if (
+                !e.questions ||
+                !Array.isArray(e.questions) ||
+                e.questions.length === 0
+              ) {
+                console.error("Invalid game start data received");
+                return;
+              }
+
+              const gameQuestions = e.questions;
               const firstQuestion = gameQuestions[0];
 
               setGameState((prev) => ({
@@ -246,6 +261,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
                 hasAnswered: false,
                 selectedAnswer: null,
                 playerSelections: [],
+                currentQuestion: 0,
               }));
 
               toast.success(
@@ -274,14 +290,14 @@ export default function QuizLadder({ auth, game, items }: Props) {
 
           case "client-timer-sync":
             onWhisper(event, (e: any) => {
-              if (e.initiatorId !== authUserIdRef.current) {
-                setGameState((prev) => {
-                  if (!prev.isGameOwner && prev.phase === "question") {
-                    return { ...prev, timeLeft: e.timeLeft };
-                  }
-                  return prev;
-                });
-              }
+              if (e.initiatorId === authUserIdRef.current) return;
+
+              setGameState((prev) => {
+                if (!prev.isGameOwner && prev.phase === "question") {
+                  return { ...prev, timeLeft: Math.max(0, e.timeLeft) };
+                }
+                return prev;
+              });
             });
             break;
 
@@ -289,16 +305,23 @@ export default function QuizLadder({ auth, game, items }: Props) {
             onWhisper(event, (e: any) => {
               if (e.initiatorId === authUserIdRef.current) return;
 
-              setGameState((prev) => ({
-                ...prev,
-                playerStates: e.playerStates,
-              }));
+              if (e.playerStates && typeof e.playerStates === "object") {
+                setGameState((prev) => ({
+                  ...prev,
+                  playerStates: e.playerStates,
+                }));
+              }
             });
             break;
 
           case "client-question-start":
             onWhisper(event, (e: any) => {
               if (e.initiatorId === authUserIdRef.current) return;
+
+              if (!e.questionData || typeof e.questionIndex !== "number") {
+                console.error("Invalid question start data received");
+                return;
+              }
 
               const questionData = e.questionData;
               setGameState((prev) => ({
@@ -332,10 +355,59 @@ export default function QuizLadder({ auth, game, items }: Props) {
               }
             });
             break;
+
+          case "client-request-sync":
+            onWhisper(event, (e: any) => {
+              if (e.requesterId === authUserIdRef.current) return;
+
+              const currentState = gameStateRef.current;
+              if (
+                currentState.isGameOwner &&
+                currentState.phase !== "waiting"
+              ) {
+                sendWhisper("client-sync-response", {
+                  questions: currentState.questions,
+                  currentQuestion: currentState.currentQuestion,
+                  currentQuestionData: currentState.currentQuestionData,
+                  phase: currentState.phase,
+                  timeLeft: currentState.timeLeft,
+                  playerStates: currentState.playerStates,
+                  requesterId: e.requesterId,
+                  initiatorId: authUserIdRef.current,
+                });
+              }
+            });
+            break;
+
+          case "client-sync-response":
+            onWhisper(event, (e: any) => {
+              if (e.requesterId !== authUserIdRef.current) return;
+
+              if (!e.questions || !e.currentQuestionData) {
+                console.error("Invalid sync response received");
+                return;
+              }
+
+              setGameState((prev) => ({
+                ...prev,
+                questions: e.questions,
+                currentQuestion: e.currentQuestion,
+                currentQuestionData: e.currentQuestionData,
+                phase: e.phase,
+                timeLeft: Math.max(0, e.timeLeft),
+                playerStates: e.playerStates || prev.playerStates,
+              }));
+
+              if (questionSyncTimeoutRef.current) {
+                clearTimeout(questionSyncTimeoutRef.current);
+                questionSyncTimeoutRef.current = null;
+              }
+            });
+            break;
         }
       }
     });
-  }, [currentChannel, onWhisper, databaseQuestions]);
+  }, [currentChannel, onWhisper, databaseQuestions, sendWhisper]);
 
   const startQuizGame = useCallback(() => {
     if (gameInitializedRef.current || databaseQuestions.length === 0) return;
@@ -361,14 +433,16 @@ export default function QuizLadder({ auth, game, items }: Props) {
       hasAnswered: false,
       selectedAnswer: null,
       playerSelections: [],
+      currentQuestion: 0,
     }));
 
     setTimeout(() => {
       sendWhisper("client-game-start", {
         questions: gameQuestions,
         initiatorId: authUserIdRef.current,
+        timestamp: Date.now(),
       });
-    }, 100);
+    }, 200);
 
     toast.success(
       "Quiz started! Answer as many questions correctly as you can!",
@@ -425,6 +499,9 @@ export default function QuizLadder({ auth, game, items }: Props) {
     cleanupWhisperListeners();
     if (timerRef.current) {
       clearTimeout(timerRef.current);
+    }
+    if (questionSyncTimeoutRef.current) {
+      clearTimeout(questionSyncTimeoutRef.current);
     }
     await leaveLobby();
     window.location.href = "/lobbies";
@@ -485,7 +562,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
     ) {
       timerRef.current = setTimeout(() => {
         startQuizGame();
-      }, 2000);
+      }, GAME_START_DELAY);
 
       return () => {
         if (timerRef.current) {
@@ -504,6 +581,33 @@ export default function QuizLadder({ auth, game, items }: Props) {
 
   useEffect(() => {
     if (
+      !gameState.isGameOwner &&
+      gameState.phase === "waiting" &&
+      currentChannel?.isReady &&
+      !questionSyncTimeoutRef.current
+    ) {
+      questionSyncTimeoutRef.current = setTimeout(() => {
+        sendWhisper("client-request-sync", {
+          requesterId: authUserIdRef.current,
+        });
+      }, GAME_START_DELAY + 1000);
+
+      return () => {
+        if (questionSyncTimeoutRef.current) {
+          clearTimeout(questionSyncTimeoutRef.current);
+          questionSyncTimeoutRef.current = null;
+        }
+      };
+    }
+  }, [
+    gameState.phase,
+    gameState.isGameOwner,
+    currentChannel?.isReady,
+    sendWhisper,
+  ]);
+
+  useEffect(() => {
+    if (
       gameState.phase === "question" &&
       gameState.timeLeft > 0 &&
       gameState.isGameOwner
@@ -512,7 +616,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
         setGameState((prev) => {
           const newTimeLeft = prev.timeLeft - 1;
 
-          if (newTimeLeft % 3 === 0) {
+          if (newTimeLeft % SYNC_INTERVAL === 0 || newTimeLeft <= 5) {
             sendWhisper("client-timer-sync", {
               timeLeft: newTimeLeft,
               initiatorId: authUserIdRef.current,

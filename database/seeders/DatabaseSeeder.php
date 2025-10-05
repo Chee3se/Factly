@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             HigherLowerItemSeeder::class,
             QuizLadderItemSeeder::class,
             ImpactAuctionItemSeeder::class,
+            FactuallySeeder::class,
         ]);
 
         // Delete Laravel storage files

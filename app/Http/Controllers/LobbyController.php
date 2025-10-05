@@ -23,11 +23,7 @@ class LobbyController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Lobbies', [
-            'auth' => [
-                'user' => Auth::user()
-            ]
-        ]);
+        return Inertia::render('Lobbies', []);
     }
 
     /**
@@ -285,7 +281,6 @@ class LobbyController extends Controller
 
         $lobby->load(['game', 'host', 'players']);
 
-        // Broadcast the LobbyStarted event - this will reach ALL users in the presence channel
         broadcast(new LobbyStarted($lobby));
 
         return response()->json([

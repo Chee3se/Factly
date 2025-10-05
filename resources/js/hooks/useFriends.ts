@@ -62,7 +62,6 @@ export function useFriends(authUserId?: number) {
 
   const joinPrivateChannel = useCallback(() => {
     if (!window.Echo || !authUserId) {
-      console.log("Echo not available or no auth user");
       return null;
     }
 
@@ -72,7 +71,6 @@ export function useFriends(authUserId?: number) {
 
     try {
       const channelName = `user.${authUserId}`;
-      console.log("Attempting to join channel:", channelName);
 
       const channel = window.Echo.private(channelName)
         .listen("FriendRequestSent", (e: any) => {
@@ -100,7 +98,6 @@ export function useFriends(authUserId?: number) {
           }
         })
         .listen("FriendRequestAccepted", (e: any) => {
-          console.log("FriendRequestAccepted event received:", e);
           const friend = e.friend;
           if (friend && friend.id && friend.name) {
             setFriends((prev) => {
@@ -133,14 +130,12 @@ export function useFriends(authUserId?: number) {
           }
         })
         .listen("FriendRequestDeclined", (e: any) => {
-          console.log("FriendRequestDeclined event received:", e);
           toast.info(e.message || "Your friend request was declined", {
             icon: "❌",
           });
           refreshSentRequests();
         })
         .listen("FriendRemoved", (e: any) => {
-          console.log("FriendRemoved event received:", e);
           if (e.removed_by_id && e.removed_user_id) {
             setFriends((prev) =>
               prev.filter((friend) => friend.id !== e.removed_by_id),
@@ -152,7 +147,6 @@ export function useFriends(authUserId?: number) {
           }
         })
         .listen("FriendRequestCancelled", (e: any) => {
-          console.log("FriendRequestCancelled event received:", e);
           if (e.sender_id) {
             setFriendRequests((prev) =>
               prev.filter((req) => req.id !== e.sender_id),
@@ -161,7 +155,6 @@ export function useFriends(authUserId?: number) {
           }
         })
         .listen("LobbyInvitationSent", (e: any) => {
-          console.log("LobbyInvitationSent event received:", e);
           if (e.inviter && e.lobby_code && e.game_name) {
             setLobbyInvitation({
               inviter: e.inviter,
@@ -197,7 +190,6 @@ export function useFriends(authUserId?: number) {
           }
         });
 
-      console.log("Successfully joined channel:", channelName);
       channelRef.current = channel;
       setPrivateChannel(channel);
       return channel;

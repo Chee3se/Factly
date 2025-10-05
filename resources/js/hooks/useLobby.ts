@@ -14,6 +14,10 @@ export function useLobby(authUserId?: number) {
   const [currentChannel, setCurrentChannel] = useState<any>(null);
   const [initializing, setInitializing] = useState(true);
   const [whisperHandlers, setWhisperHandlers] = useState<WhisperHandlers>({});
+  const [userReady, setUserReady] = useState<Map<number, boolean>>(new Map());
+  const [whisperQueue, setWhisperQueue] = useState<
+    Map<number, Array<{ event: string; data: any }>>
+  >(new Map());
 
   const channelRef = useRef<any>(null);
   const initializingRef = useRef(false);
@@ -27,7 +31,6 @@ export function useLobby(authUserId?: number) {
   const leaveLobbyChannel = useCallback(() => {
     if (channelRef.current && window.Echo) {
       try {
-        console.log("Leaving channel:", channelRef.current.name);
         window.Echo.leave(channelRef.current.name);
       } catch (error) {
         console.warn("Error leaving channel:", error);
@@ -35,26 +38,23 @@ export function useLobby(authUserId?: number) {
       channelRef.current = null;
       setCurrentChannel(null);
       setWhisperHandlers({});
+      setUserReady(new Map());
+      setWhisperQueue(new Map());
     }
   }, []);
 
   const refreshLobby = useCallback(async (lobbyCode: string) => {
     if (!lobbyCode) return;
     try {
-      console.log("Refreshing lobby:", lobbyCode);
       const res = await (window as any).axios.get(`/api/lobbies/${lobbyCode}`);
-
-      console.log("Refreshed lobby data:", res.data);
 
       setCurrentLobby((prevLobby) => {
         if (res.data && res.data.lobby_code === lobbyCode) {
-          console.log("Updating lobby state with fresh data");
           return {
             ...prevLobby,
             ...res.data,
           };
         }
-        console.log("No valid lobby data received, keeping current state");
         return prevLobby;
       });
     } catch (error) {
@@ -95,7 +95,6 @@ export function useLobby(authUserId?: number) {
     }
 
     try {
-      console.log("Loading messages for lobby:", lobbyCode);
       const res = await (window as any).axios.get(
         `/api/lobbies/${lobbyCode}/messages`,
       );
@@ -107,10 +106,45 @@ export function useLobby(authUserId?: number) {
     }
   }, []);
 
+  const sendWhisper = useCallback(
+    (event: string, data: any, targetUserId?: number) => {
+      if (!channelRef.current || !channelRef.current.isReady) {
+        console.warn("Cannot send whisper - channel not ready");
+        return;
+      }
+
+      const whisperData = targetUserId ? { ...data, targetUserId } : data;
+
+      if (targetUserId && !userReady.get(targetUserId)) {
+        setWhisperQueue((prev) => {
+          const newQueue = new Map(prev);
+          if (!newQueue.has(targetUserId)) newQueue.set(targetUserId, []);
+          newQueue.get(targetUserId)!.push({ event, data: whisperData });
+          return newQueue;
+        });
+        return;
+      }
+
+      try {
+        const actualChannelName = `presence-${channelRef.current.name}`;
+        const pusherChannel = (window as any).Echo?.connector?.pusher?.channels
+          ?.channels?.[actualChannelName];
+
+        if (pusherChannel && pusherChannel.trigger) {
+          pusherChannel.trigger(`client-${event}`, whisperData);
+        } else {
+          console.warn("Pusher channel not ready for whisper");
+        }
+      } catch (error) {
+        console.warn("Whisper send error:", error);
+      }
+    },
+    [userReady],
+  );
+
   const joinLobbyChannel = useCallback(
     (lobbyCode: string) => {
       if (!window.Echo || !lobbyCode || isJoiningRef.current) {
-        console.log("Cannot join channel - Echo not ready or already joining");
         return null;
       }
 
@@ -118,7 +152,6 @@ export function useLobby(authUserId?: number) {
         channelRef.current &&
         channelRef.current.name === `lobby.${lobbyCode}`
       ) {
-        console.log("Already in channel:", channelRef.current.name);
         return channelRef.current;
       }
 
@@ -127,15 +160,12 @@ export function useLobby(authUserId?: number) {
 
       try {
         const channelName = `lobby.${lobbyCode}`;
-        console.log("Joining channel:", channelName);
 
         const channel = window.Echo.join(channelName)
           .here((users: any[]) => {
-            console.log("Channel here - users:", users);
             setOnlineUsers(users || []);
           })
           .joining((user: any) => {
-            console.log("User joining:", user);
             setOnlineUsers((prev) => {
               if (prev.find((u) => u.id === user.id)) {
                 return prev;
@@ -143,11 +173,26 @@ export function useLobby(authUserId?: number) {
               return [...prev, user];
             });
             toast.success(`${user.name} joined the lobby`, { icon: "👋" });
+            setUserReady((prev) => new Map(prev).set(user.id, false));
+            sendWhisper("ping", {}, user.id);
+            setTimeout(
+              () => setUserReady((prev) => new Map(prev).set(user.id, true)),
+              5000,
+            );
           })
           .leaving((user: any) => {
-            console.log("User leaving:", user);
             setOnlineUsers((prev) => prev.filter((u) => u.id !== user.id));
             toast.warning(`${user.name} left the lobby`, { icon: "👋" });
+            setUserReady((prev) => {
+              const m = new Map(prev);
+              m.delete(user.id);
+              return m;
+            });
+            setWhisperQueue((prev) => {
+              const m = new Map(prev);
+              m.delete(user.id);
+              return m;
+            });
           })
           .error((error: any) => {
             console.error("Channel error:", error);
@@ -155,49 +200,37 @@ export function useLobby(authUserId?: number) {
             isJoiningRef.current = false;
           })
           .listen("LobbyMessageSent", (e: any) => {
-            console.log("New message received:", e);
             handleNewMessage(e.message);
           })
           .listen("PlayerJoinedLobby", (e: any) => {
-            console.log("Player joined lobby event:", e);
-
             if (
               !currentLobbyRef.current ||
               currentLobbyRef.current.lobby_code !== lobbyCode
             ) {
-              console.log("Ignoring PlayerJoinedLobby - not in matching lobby");
               return;
             }
 
             if (e.lobby && e.lobby.lobby_code === lobbyCode) {
-              console.log("Updating lobby from PlayerJoinedLobby event data");
               setCurrentLobby(e.lobby);
             } else {
-              console.log("Event data invalid, refreshing lobby");
               refreshLobby(lobbyCode);
             }
           })
           .listen("PlayerLeftLobby", (e: any) => {
-            console.log("Player left lobby event:", e);
-
             if (
               !currentLobbyRef.current ||
               currentLobbyRef.current.lobby_code !== lobbyCode
             ) {
-              console.log("Ignoring PlayerLeftLobby - not in matching lobby");
               return;
             }
 
             if (e.lobby && e.lobby.lobby_code === lobbyCode) {
-              console.log("Updating lobby from PlayerLeftLobby event data");
               setCurrentLobby(e.lobby);
             } else {
-              console.log("Event data invalid, refreshing lobby");
               refreshLobby(lobbyCode);
             }
           })
           .listen("LobbyStarted", (e: any) => {
-            console.log("Lobby started event:", e);
             const lobbyData = e.lobby;
 
             if (!lobbyData || !lobbyData.id) {
@@ -227,7 +260,6 @@ export function useLobby(authUserId?: number) {
             }
           })
           .listen("PlayerReadyStatusChanged", (e: any) => {
-            console.log("Player ready status changed:", e);
             if (e.user && typeof e.ready !== "undefined") {
               setCurrentLobby((prevLobby) => {
                 if (!prevLobby) return prevLobby;
@@ -261,6 +293,29 @@ export function useLobby(authUserId?: number) {
             }
           });
 
+        channel.listenForWhisper("ping", (data: any) => {
+          if (data.targetUserId === authUserId) {
+            sendWhisper("pong", { fromUserId: authUserId });
+          }
+        });
+
+        channel.listenForWhisper("pong", (data: any) => {
+          if (data.fromUserId) {
+            setUserReady((prev) => new Map(prev).set(data.fromUserId, true));
+            setWhisperQueue((prev) => {
+              const queue = prev.get(data.fromUserId);
+              if (queue) {
+                queue.forEach(({ event, data: qdata }) =>
+                  sendWhisper(event, qdata),
+                );
+              }
+              const newQueue = new Map(prev);
+              newQueue.delete(data.fromUserId);
+              return newQueue;
+            });
+          }
+        });
+
         channel.name = channelName;
 
         setTimeout(() => {
@@ -268,8 +323,7 @@ export function useLobby(authUserId?: number) {
           channelRef.current = channel;
           setCurrentChannel(channel);
           isJoiningRef.current = false;
-          console.log("Channel ready and set");
-        }, 500);
+        }, 2000);
 
         return channel;
       } catch (error) {
@@ -288,7 +342,6 @@ export function useLobby(authUserId?: number) {
         return currentLobby;
       }
 
-      console.log("Reconnecting to lobby by code:", lobbyCode);
       setLoading(true);
 
       try {
@@ -301,7 +354,6 @@ export function useLobby(authUserId?: number) {
           throw new Error("Invalid lobby data received");
         }
 
-        console.log("Successfully fetched lobby for reconnection:", lobby);
         setCurrentLobby(lobby);
 
         const channel = joinLobbyChannel(lobby.lobby_code);
@@ -332,9 +384,6 @@ export function useLobby(authUserId?: number) {
 
   const checkExistingLobby = useCallback(async () => {
     if (!authUserId || initializingRef.current) {
-      console.log(
-        "Skipping existing lobby check - no user or already initializing",
-      );
       return;
     }
 
@@ -342,8 +391,6 @@ export function useLobby(authUserId?: number) {
     setInitializing(true);
 
     try {
-      console.log("Checking for existing lobby for user:", authUserId);
-
       try {
         const userLobbyRes = await (window as any).axios.get(
           "/api/lobbies/current",
@@ -351,7 +398,6 @@ export function useLobby(authUserId?: number) {
         const userLobby = userLobbyRes.data;
 
         if (userLobby && userLobby.lobby_code) {
-          console.log("Found current lobby:", userLobby);
           setCurrentLobby(userLobby);
 
           const channel = joinLobbyChannel(userLobby.lobby_code);
@@ -366,7 +412,7 @@ export function useLobby(authUserId?: number) {
           return;
         }
       } catch (currentError) {
-        console.log("No current lobby found, checking all lobbies");
+        // No current lobby found, checking all lobbies
       }
 
       const res = await (window as any).axios.get("/api/lobbies");
@@ -374,7 +420,6 @@ export function useLobby(authUserId?: number) {
 
       if (responseData.user_lobby && responseData.user_lobby.lobby_code) {
         const userLobby = responseData.user_lobby;
-        console.log("Found user lobby in user_lobby field:", userLobby);
         setCurrentLobby(userLobby);
 
         const channel = joinLobbyChannel(userLobby.lobby_code);
@@ -396,7 +441,6 @@ export function useLobby(authUserId?: number) {
           : [];
 
       if (!Array.isArray(lobbies)) {
-        console.log("No lobbies array found and no user_lobby");
         return;
       }
 
@@ -407,7 +451,6 @@ export function useLobby(authUserId?: number) {
       );
 
       if (userLobby && userLobby.lobby_code) {
-        console.log("Found user lobby in lobbies array:", userLobby);
         setCurrentLobby(userLobby);
 
         const channel = joinLobbyChannel(userLobby.lobby_code);
@@ -420,7 +463,7 @@ export function useLobby(authUserId?: number) {
           : `Reconnected to lobby ${userLobby.lobby_code}`;
         toast.success(toastMessage, { icon: "🔗" });
       } else {
-        console.log("No existing lobby found for user");
+        // No existing lobby found for user
       }
     } catch (error) {
       console.error("Error checking existing lobby:", error);
@@ -483,7 +526,6 @@ export function useLobby(authUserId?: number) {
         throw new Error("Lobby created but no lobby code received");
       }
 
-      console.log("Lobby created:", lobby);
       setCurrentLobby(lobby);
 
       const channel = joinLobbyChannel(lobby.lobby_code);
@@ -527,7 +569,6 @@ export function useLobby(authUserId?: number) {
           throw new Error("Joined lobby but no lobby code received");
         }
 
-        console.log("Joined lobby:", lobby);
         setCurrentLobby(lobby);
 
         const channel = joinLobbyChannel(lobby.lobby_code);
@@ -727,36 +768,20 @@ export function useLobby(authUserId?: number) {
         return;
       }
 
+      const wrappedHandler = (data: any) => {
+        if (data.targetUserId && data.targetUserId !== authUserId) return;
+        handler(data);
+      };
+
       try {
-        channelRef.current.listenForWhisper(event, handler);
-        setWhisperHandlers((prev) => ({ ...prev, [event]: handler }));
+        channelRef.current.listenForWhisper(event, wrappedHandler);
+        setWhisperHandlers((prev) => ({ ...prev, [event]: wrappedHandler }));
       } catch (error) {
         console.warn("Whisper listen error:", error);
       }
     },
-    [],
+    [authUserId],
   );
-
-  const sendWhisper = useCallback((event: string, data: any) => {
-    if (!channelRef.current || !channelRef.current.isReady) {
-      console.warn("Cannot send whisper - channel not ready");
-      return;
-    }
-
-    try {
-      const actualChannelName = `presence-${channelRef.current.name}`;
-      const pusherChannel = (window as any).Echo?.connector?.pusher?.channels
-        ?.channels?.[actualChannelName];
-
-      if (pusherChannel && pusherChannel.trigger) {
-        pusherChannel.trigger(`client-${event}`, data);
-      } else {
-        channelRef.current.whisper(event, data);
-      }
-    } catch (error) {
-      console.warn("Whisper send error:", error);
-    }
-  }, []);
 
   const offWhisper = useCallback(
     (event: string) => {
@@ -780,17 +805,9 @@ export function useLobby(authUserId?: number) {
   );
 
   useEffect(() => {
-    console.log("useLobby initialization check:", {
-      authUserId,
-      currentLobby: currentLobby?.lobby_code,
-      initializing: initializingRef.current,
-    });
-
     if (authUserId && !currentLobby && !initializingRef.current) {
-      console.log("Starting lobby initialization");
       checkExistingLobby();
     } else if (!authUserId) {
-      console.log("No auth user, setting initializing to false");
       setInitializing(false);
     }
   }, [authUserId, currentLobby?.lobby_code]);

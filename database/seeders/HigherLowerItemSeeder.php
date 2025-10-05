@@ -18,7 +18,7 @@ class HigherLowerItemSeeder extends Seeder
             'name' => 'Higher or Lower',
             'slug' => 'higher-or-lower',
             'description' => 'Put your electricity consumption knowledge to the test!',
-            'thumbnail' => '/images/higher-lower.png',
+            'thumbnail' => '/images/higher-lower.jpg',
             'min_players' => 1,
             'max_players' => 1,
         ]);

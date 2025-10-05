@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut, Settings } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
-import LobbyInvitationModal from "@/components/LobbyInvitationModal";
+import LobbyInvitationModal from "@/components/Lobby/LobbyInvitationModal";
 import { useFriends } from "@/hooks/useFriends";
 
 const appName = import.meta.env.VITE_APP_NAME || "Factly";

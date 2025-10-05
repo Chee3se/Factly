@@ -1,129 +1,128 @@
-import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {PlayerGameState} from "@/types/quizladder";
+import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlayerGameState } from "@/types/quizladder";
 
 interface StickFigureProps {
-    player: any;
-    playerState: PlayerGameState;
-    isCurrentUser: boolean;
-    winningCubes: number;
+  player: any;
+  playerState: PlayerGameState;
+  isCurrentUser: boolean;
+  winningCubes: number;
 }
 
 export const StickFigure: React.FC<StickFigureProps> = ({
-                                                            player,
-                                                            playerState,
-                                                            isCurrentUser,
-                                                            winningCubes
-                                                        }) => {
-    const cubeHeight = Math.max(1, Math.floor(playerState.cubes / 5));
-    const cubes = Array.from({ length: cubeHeight }, (_, i) => i);
-    const progressPercentage = (playerState.cubes / winningCubes) * 100;
+  player,
+  playerState,
+  isCurrentUser,
+  winningCubes,
+}) => {
+  const progressPercentage = Math.min(
+    100,
+    (playerState.cubes / winningCubes) * 100,
+  );
+  const ladderHeight = 140;
+  const numberOfRungs = 10;
+  const avatarPosition = (progressPercentage / 100) * ladderHeight;
 
-    // Get first letter of name for fallback
-    const getInitials = (name: string) => {
-        return name ? name.charAt(0).toUpperCase() : '?';
-    };
+  const getInitials = (name: string) => {
+    return name ? name.charAt(0).toUpperCase() : "?";
+  };
 
-    // Get avatar URL similar to other components
-    const getAvatarUrl = (avatar?: string): string | null => {
-        if (!avatar) return null;
-        return `/storage/${avatar}`;
-    };
+  const getAvatarUrl = (avatar?: string): string | null => {
+    if (!avatar) return null;
+    return `/storage/${avatar}`;
+  };
 
-    return (
-        <div className="flex flex-col items-center relative group">
-            {/* Profile Avatar */}
-            <div className="relative mb-4 p-1">
-                <div className={`w-16 h-16 rounded-full shadow-lg transition-all duration-300 ${
-                    isCurrentUser
-                        ? 'drop-shadow-lg scale-110'
-                        : 'group-hover:scale-105'
-                }`}>
-                    <Avatar className="w-full h-full">
-                        <AvatarImage
-                            src={getAvatarUrl(player?.avatar) || undefined}
-                            alt={player?.name || 'Player'}
-                            className="object-cover object-center"
-                        />
-                        <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center">
-                            {getInitials(player?.name)}
-                        </AvatarFallback>
-                    </Avatar>
-                </div>
+  return (
+    <div className="flex flex-col items-center relative">
+      <div
+        className={`mb-1 px-2 py-1 rounded text-xs ${
+          isCurrentUser
+            ? "bg-blue-100 border border-blue-300"
+            : "bg-gray-100 border border-gray-300"
+        }`}
+      >
+        <span
+          className={`font-semibold ${
+            isCurrentUser ? "text-blue-800" : "text-gray-600"
+          }`}
+        >
+          {player?.name || "Unknown"}
+        </span>
+      </div>
 
-                {/* Current user indicator - removed */}
-            </div>
+      <div
+        className="relative"
+        style={{ height: `${ladderHeight + 80}px`, width: "80px" }}
+      >
+        <div
+          className="absolute left-1/2 transform -translate-x-1/2 flex justify-between"
+          style={{ width: "40px", height: `${ladderHeight}px` }}
+        >
+          <div className="w-1 h-full bg-gray-600"></div>
+          <div className="w-1 h-full bg-gray-600"></div>
 
-            {/* Player Info Card */}
-            <div className={`bg-gradient-to-br ${isCurrentUser ? 'from-yellow-400/20 to-orange-500/20 border-yellow-400/50' : 'from-blue-500/20 to-purple-600/20 border-blue-400/50'} backdrop-blur-sm border rounded-lg p-3 min-w-[100px] transition-all duration-300 group-hover:scale-105 shadow-lg`}>
-                {/* Player Name */}
-                <div className={`text-sm font-bold text-center mb-3 px-3 py-2 rounded-md ${
-                    isCurrentUser
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black'
-                        : 'bg-white/10 text-white border border-white/20'
-                }`}>
-                    {player?.name || 'Unknown'}
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mb-3">
-                    <div className="w-full bg-black/30 rounded-full h-3 border border-white/20">
-                        <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                                isCurrentUser
-                                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
-                                    : 'bg-gradient-to-r from-blue-400 to-purple-500'
-                            }`}
-                            style={{ width: `${Math.min(100, progressPercentage)}%` }}
-                        />
-                    </div>
-                </div>
-
-                {/* Cubes Visualization - Modern blocks */}
-                <div className="flex justify-center mb-3">
-                    <div className="grid grid-cols-4 gap-1 max-h-10 overflow-hidden">
-                        {Array.from({ length: Math.min(16, Math.ceil(playerState.cubes / 2)) }).map((_, index) => (
-                            <div
-                                key={index}
-                                className={`w-2.5 h-2.5 rounded-sm ${
-                                    isCurrentUser
-                                        ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                                        : 'bg-gradient-to-br from-blue-400 to-purple-500'
-                                } shadow-sm animate-pulse`}
-                                style={{
-                                    animationDelay: `${index * 0.1}s`,
-                                    animationDuration: '2s'
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Cubes Count */}
-                <div className={`text-center text-sm font-bold px-3 py-2 rounded-md ${
-                    isCurrentUser
-                        ? 'bg-black/20 text-yellow-300 border border-yellow-400/30'
-                        : 'bg-black/20 text-blue-300 border border-blue-400/30'
-                }`}>
-                    {playerState.cubes}/{winningCubes}
-                </div>
-            </div>
-
-            {/* Classic Cubes Stack */}
-            <div className="flex flex-col-reverse items-center min-h-[20px] mt-3">
-                {cubes.map((_, index) => (
-                    <div
-                        key={index}
-                        className={`w-10 h-4 border border-white/30 mb-0.5 shadow-sm transition-all duration-300 rounded-sm ${
-                            isCurrentUser ? 'bg-yellow-400/80 hover:bg-yellow-300 border-yellow-400/50' : 'bg-blue-400/80 hover:bg-blue-300 border-blue-400/50'
-                        }`}
-                        style={{
-                            transform: `translateY(${index * -0.5}px)`,
-                            animationDelay: `${index * 0.1}s`
-                        }}
-                    />
-                ))}
-            </div>
+          {Array.from({ length: numberOfRungs }).map((_, index) => {
+            const rungPosition =
+              (index / (numberOfRungs - 1)) * (ladderHeight - 4);
+            return (
+              <div
+                key={index}
+                className="absolute left-1/2 transform -translate-x-1/2 w-10 h-1 bg-gray-600"
+                style={{ top: `${rungPosition}px` }}
+              />
+            );
+          })}
         </div>
-    );
+
+        <div
+          className="absolute left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out"
+          style={{
+            bottom: `${avatarPosition}px`,
+            width: "42px",
+            height: "42px",
+          }}
+        >
+          <div
+            className={`w-10 h-10 rounded-full ${
+              isCurrentUser
+                ? "ring-2 ring-blue-400 shadow-lg"
+                : "ring-1 ring-gray-400"
+            }`}
+          >
+            <Avatar className="w-full h-full">
+              <AvatarImage
+                src={getAvatarUrl(player?.avatar) || undefined}
+                alt={player?.name || "Player"}
+                className="object-cover object-center"
+              />
+              <AvatarFallback className="text-sm font-bold bg-gray-200 text-gray-700">
+                {getInitials(player?.name)}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`mt-1 px-2 py-1 rounded border text-xs ${
+          isCurrentUser
+            ? "bg-blue-50 border-blue-300"
+            : "bg-gray-50 border-gray-300"
+        }`}
+      >
+        <div className="text-center">
+          <div
+            className={`font-bold ${
+              isCurrentUser ? "text-blue-800" : "text-gray-600"
+            }`}
+          >
+            {playerState.cubes}/{winningCubes}
+          </div>
+          <div className="text-xs text-gray-500">
+            {progressPercentage.toFixed(0)}%
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };

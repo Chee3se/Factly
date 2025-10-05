@@ -7,6 +7,8 @@ use App\Models\Game;
 use App\Models\Suggestion;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -74,6 +76,10 @@ class AdminController extends Controller
             'role' => 'required|in:user,admin',
         ]);
 
+        if ($user->id == auth()->id() && $validated['role'] != $user->role) {
+            return response()->json(['error' => 'You cannot change your own role.'], 403);
+        }
+
         $user->update($validated);
 
         return response()->json(['success' => true, 'message' => 'User updated successfully!']);
@@ -81,6 +87,10 @@ class AdminController extends Controller
 
     public function deleteUser(User $user)
     {
+        if ($user->id == auth()->id()) {
+            return response()->json(['error' => 'You cannot delete your own account.'], 403);
+        }
+
         // Prevent deleting the last admin
         if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
             return response()->json(['error' => 'Cannot delete the last admin user.'], 400);
