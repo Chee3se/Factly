@@ -8,6 +8,7 @@ use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LobbyController;
 use App\Models\Game;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // Authenticated routes
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Lobby page route
     Route::get('/lobbies', [LobbyController::class, 'index'])->name('lobbies');
 
@@ -81,24 +82,41 @@ Route::middleware('auth')->group(function () {
         Route::post('/lobbies/{lobbyCode}/kick', [LobbyController::class, 'kick']);
         Route::post('/lobbies/{lobbyCode}/messages', [LobbyController::class, 'sendMessage']);
         Route::get('/lobbies/{lobbyCode}/messages', [LobbyController::class, 'getMessages']);
+        Route::get('/send-email', function () {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            try {
+                Mail::raw('This is a test email sent from your Laravel application!', function ($mail) use ($user) {
+                    $mail->to($user->email)->subject('Test Email');
+                });
+
+                return response()->json(['success' => true, 'message' => 'Test email sent successfully!']);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Failed to send email: ' . $e->getMessage()], 500);
+            }
+        });
     });
 });
 
 // Email verification
 Route::get('/email/verify', function () {
-    return view('auth.verify-email');
+    return Inertia::render('EmailVerification', []);
 })->middleware('auth')->name('verification.notice');
 
 // Verify Email
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
-    return redirect('/home');
-})->middleware(['auth', 'signed'])->name('verification.verify');
+    return redirect('/');
+})->middleware(['auth'])->name('verification.verify');
 
 // Resend email
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
-    return back()->with('message', 'Verification link sent!');
+    return redirect()->route('verification.notice')->with('resent', true);
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 Route::middleware(['auth'])->group(function () {

@@ -1,0 +1,816 @@
+[
+  {
+    "name": "Sentry",
+    "weapons": {
+      "primary": [
+        {
+          "name": "FMG-9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Smoke",
+    "weapons": {
+      "primary": [
+        {
+          "name": "FMG-9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P226 MK 25",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Mute",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP5K",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P226 MK 25",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Castle",
+    "weapons": {
+      "primary": [
+        {
+          "name": "UMP45",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Pulse",
+    "weapons": {
+      "primary": [
+        {
+          "name": "UMP45",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "M45 MEUSOC",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Doc",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP5",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Rook",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP5",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Kapkan",
+    "weapons": {
+      "primary": [
+        {
+          "name": "9x19VSN",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Tachanka",
+    "weapons": {
+      "primary": [
+        {
+          "name": "9x19VSN",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Jäger",
+    "weapons": {
+      "primary": [
+        {
+          "name": "M870",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P12",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Bandit",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP7",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P12",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Frost",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Super 90",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "MK1 9mm",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Valkyrie",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MPX",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "D-50",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Caveira",
+    "weapons": {
+      "primary": [
+        {
+          "name": "M12",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Luison",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Echo",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP5SD",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": ".44 Mag Semi-Auto",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Mira",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Vector .45 ACP",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "USP40",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Lesion",
+    "weapons": {
+      "primary": [
+        {
+          "name": "T-5 SMG",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Q-929",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Ela",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Scorpion EVO 3 A1",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "RG15",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Vigil",
+    "weapons": {
+      "primary": [
+        {
+          "name": "K1A",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "C75 Auto",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Maestro",
+    "weapons": {
+      "primary": [
+        {
+          "name": "ALDA 5.56",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Bailiff 410",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Alibi",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Mx4 Storm",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Bailiff 410",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Clash",
+    "weapons": {
+      "primary": [
+        {
+          "name": "CCE Shield",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P-10C",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Kaid",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AUG A3",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": ".44 Mag Semi-Auto",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Mozzie",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Commando 9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P226 MK 25",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Warden",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MPX",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P-10C",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Goyo",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Vector .45 ACP",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P229",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Wamai",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AUG A2",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "D-50",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Oryx",
+    "weapons": {
+      "primary": [
+        {
+          "name": "SPAS-12",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "USP40",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Melusi",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP5",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "RG15",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Aruni",
+    "weapons": {
+      "primary": [
+        {
+          "name": "P10 RONI",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PRB92",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Thunderbird",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Spear .308",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Bearing 9",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Thorn",
+    "weapons": {
+      "primary": [
+        {
+          "name": "UZK50GI",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "1911 TACOPS",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Azami",
+    "weapons": {
+      "primary": [
+        {
+          "name": "9x19VSN",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "D-50",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Solis",
+    "weapons": {
+      "primary": [
+        {
+          "name": "P90",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "SMG-12",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Fenrir",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MP7",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Tubarão",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MPX",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P226 MK 25",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Skopós",
+    "weapons": {
+      "primary": [
+        {
+          "name": "PDW9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P90",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  }
+]

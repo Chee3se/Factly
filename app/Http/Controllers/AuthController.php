@@ -74,6 +74,9 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Nosūta e-pasta verifikācijas notifikāciju
+        event(new Registered($user));
+
         // Automātiski ielogojas kā jaunizveidotais lietotājs
         Auth::login($user);
 

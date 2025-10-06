@@ -1,0 +1,816 @@
+[
+  {
+    "name": "Striker",
+    "weapons": {
+      "primary": [
+        {
+          "name": "M4",
+          "scopes": ["Reflex Sight", "Holographic Sight"],
+          "attachments": ["Flash Hider", "Compensator"],
+          "grips": ["Vertical Grip", "Angled Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Sledge",
+    "weapons": {
+      "primary": [
+        {
+          "name": "M590A1",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P226 MK 25",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Stun Grenade"]
+  },
+  {
+    "name": "Thatcher",
+    "weapons": {
+      "primary": [
+        {
+          "name": "L85A2",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "M1911",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["EMP Grenade", "Claymore"]
+  },
+  {
+    "name": "Ash",
+    "weapons": {
+      "primary": [
+        {
+          "name": "G36C",
+          "scopes": ["Reflex Sight", "Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Thermite",
+    "weapons": {
+      "primary": [
+        {
+          "name": "M4",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Twitch",
+    "weapons": {
+      "primary": [
+        {
+          "name": "F2",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Montagne",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Le Roc",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Smoke Grenade"]
+  },
+  {
+    "name": "Glaz",
+    "weapons": {
+      "primary": [
+        {
+          "name": "OTs-03",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Smoke Grenade"]
+  },
+  {
+    "name": "Fuze",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AK-12",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Smoke Grenade"]
+  },
+  {
+    "name": "Blitz",
+    "weapons": {
+      "primary": [
+        {
+          "name": "G52-Tactical",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P12",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Smoke Grenade"]
+  },
+  {
+    "name": "IQ",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AUG A2",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P12",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Buck",
+    "weapons": {
+      "primary": [
+        {
+          "name": "C8-SFW",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "MK1 9mm",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Stun Grenade"]
+  },
+  {
+    "name": "Blackbeard",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MK17 CQB",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "D-50",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Capitão",
+    "weapons": {
+      "primary": [
+        {
+          "name": "PARA-308",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PRB92",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Hibana",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Type-89",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P229",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Stun Grenade"]
+  },
+  {
+    "name": "Jackal",
+    "weapons": {
+      "primary": [
+        {
+          "name": "C7E",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "USP40",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Ying",
+    "weapons": {
+      "primary": [
+        {
+          "name": "T-95 LSW",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Q-929",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Zofia",
+    "weapons": {
+      "primary": [
+        {
+          "name": "LMG-E",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "RG15",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Dokkaebi",
+    "weapons": {
+      "primary": [
+        {
+          "name": "MK 14 EBR",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "C75 Auto",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Smoke Grenade"]
+  },
+  {
+    "name": "Lion",
+    "weapons": {
+      "primary": [
+        {
+          "name": "V308",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Finka",
+    "weapons": {
+      "primary": [
+        {
+          "name": "Spear .308",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Smoke Grenade"]
+  },
+  {
+    "name": "Maverick",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AR-15.50",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "1911 TACOPS",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Nomad",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AK-74M",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": ".44 Mag Semi-Auto",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Stun Grenade"]
+  },
+  {
+    "name": "Gridlock",
+    "weapons": {
+      "primary": [
+        {
+          "name": "F90",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Super 90",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Smoke Grenade"]
+  },
+  {
+    "name": "Nøkk",
+    "weapons": {
+      "primary": [
+        {
+          "name": "FMG-9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Claymore"]
+  },
+  {
+    "name": "Amaru",
+    "weapons": {
+      "primary": [
+        {
+          "name": "G8A1",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "SMG-11",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Kali",
+    "weapons": {
+      "primary": [
+        {
+          "name": "CSRX 300",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "SPSMG9",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Iana",
+    "weapons": {
+      "primary": [
+        {
+          "name": "ARX200",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "MK1 9mm",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Frag Grenade", "Smoke Grenade"]
+  },
+  {
+    "name": "Ace",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AK-12",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P9",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Zero",
+    "weapons": {
+      "primary": [
+        {
+          "name": "SC3000K",
+          "scopes": ["ACOG Sight"],
+          "attachments": ["Suppressor"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "5.7 USG",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Flores",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AR33",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "GS .45 ACP",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Osa",
+    "weapons": {
+      "primary": [
+        {
+          "name": "556XI",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "PMM",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Sens",
+    "weapons": {
+      "primary": [
+        {
+          "name": "POF-9",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "SDP 9mm",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Grim",
+    "weapons": {
+      "primary": [
+        {
+          "name": "SG-CQB",
+          "scopes": ["Reflex Sight"],
+          "attachments": [],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "P229",
+          "scopes": [],
+          "attachments": ["Suppressor"],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Brava",
+    "weapons": {
+      "primary": [
+        {
+          "name": "PARA-308",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "Super 90",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Ram",
+    "weapons": {
+      "primary": [
+        {
+          "name": "R4-C",
+          "scopes": ["Reflex Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": "RG15",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  },
+  {
+    "name": "Deimos",
+    "weapons": {
+      "primary": [
+        {
+          "name": "AK-74M",
+          "scopes": ["Holographic Sight"],
+          "attachments": ["Flash Hider"],
+          "grips": ["Vertical Grip"]
+        }
+      ],
+      "secondary": [
+        {
+          "name": ".44 Mag Semi-Auto",
+          "scopes": [],
+          "attachments": [],
+          "grips": []
+        }
+      ]
+    },
+    "gadgets": ["Breach Charge", "Claymore"]
+  }
+]

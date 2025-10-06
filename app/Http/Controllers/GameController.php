@@ -249,7 +249,46 @@ class GameController extends Controller
 
     public function impact_auction(Game $game): Response
     {
-        return Inertia::render('Games/ImpactAuction', []);
+        $gameItems = GameItem::where('game_id', $game->id)
+            ->get();
+
+        $items = $gameItems->map(function ($gameItem) {
+            $itemData = $gameItem->value;
+            $itemData['id'] = $gameItem->id;
+            return $itemData;
+        });
+
+        // Shuffle items for randomness in multiplayer
+        $items = $items->shuffle()->values();
+
+        $bestScore = 0;
+        if (auth()->check()) {
+            $bestScore = Score::where('user_id', auth()->id())
+                ->where('game_id', $game->id)
+                ->max('score') ?? 0;
+        }
+
+        // Check if user is coming from a lobby
+        $lobbyCode = request()->get('lobby');
+        $lobby = null;
+
+        if ($lobbyCode && auth()->check()) {
+            $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)
+                ->with(['game', 'host', 'players'])
+                ->whereHas('players', function ($query) {
+                    $query->where('user_id', auth()->id());
+                })
+                ->first();
+        }
+
+        return Inertia::render('Games/ImpactAuction', [
+            'game' => array_merge($game->toArray(), [
+                'lobby_code' => $lobbyCode,
+                'lobby' => $lobby
+            ]),
+            'items' => $items,
+            'bestScore' => $bestScore
+        ]);
     }
 
     public function factually(Game $game)
