@@ -46,7 +46,7 @@ return [
     |
     */
     'commands' => [
-        'Server' => Command::from('php artisan serve')->lazy(),
+        'Server' => 'php artisan serve',
         'Logs' => EnhancedTailCommand::file(storage_path('logs/laravel.log')),
         'Queue' => Command::from('php artisan queue:work')->lazy(),
         'Tests' => Command::from('php artisan test --colors=always')->withEnv(['APP_ENV' => 'testing'])->lazy(),
