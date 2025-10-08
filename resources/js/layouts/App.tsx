@@ -28,8 +28,7 @@ export default function App({
 }: PropsWithChildren<Props>) {
   const [loading, setLoading] = useState(false);
 
-  // Only initialize friends hook if user is authenticated
-  const friendsHook = auth.user ? useFriends(auth.user.id) : null;
+  const friendsHook = useFriends(auth.user?.id);
 
   const getInitials = (name: string): string => {
     return name
@@ -46,7 +45,7 @@ export default function App({
   };
 
   const handleAcceptLobbyInvite = async (lobbyCode: string) => {
-    if (!friendsHook) return;
+    if (!auth.user) return;
     setLoading(true);
     try {
       await friendsHook.acceptLobbyInvitation(lobbyCode);
@@ -56,7 +55,7 @@ export default function App({
   };
 
   const handleDeclineLobbyInvite = () => {
-    if (!friendsHook) return;
+    if (!auth.user) return;
     friendsHook.declineLobbyInvitation();
   };
 
@@ -159,7 +158,7 @@ export default function App({
         <Toaster richColors />
 
         {/* Global Lobby Invitation Modal - only show for authenticated users */}
-        {auth.user && friendsHook && (
+        {auth.user && (
           <LobbyInvitationModal
             lobbyInvitation={friendsHook.lobbyInvitation}
             onAccept={handleAcceptLobbyInvite}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePage } from "@inertiajs/react";
 import App from "@/layouts/App";
 import { Game } from "@/types";
 import {
@@ -25,11 +26,18 @@ interface Props {
 }
 
 export default function Home({ auth, games }: Props) {
+  const { flash } = usePage().props;
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHeroScreen, setShowHeroScreen] = useState(false);
 
   const { currentLobby, leaveLobby } = useLobby(auth.user?.id);
+
+  useEffect(() => {
+    if (flash.success) {
+      toast.success(flash.success);
+    }
+  }, [flash.success]);
 
   useEffect(() => {
     if (currentLobby && currentLobby.started) {

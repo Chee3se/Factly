@@ -110,7 +110,7 @@ Route::get('/email/verify', function () {
 // Verify Email
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
-    return redirect('/');
+    return redirect('/')->with('success', 'Your email address has been verified successfully!');
 })->middleware(['auth'])->name('verification.verify');
 
 // Resend email
