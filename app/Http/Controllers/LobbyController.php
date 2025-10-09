@@ -349,7 +349,7 @@ class LobbyController extends Controller
             'message' => $request->message,
         ]);
 
-        $messageData = $message->load('user');
+        $messageData = $message->load('user.decoration');
 
         broadcast(new LobbyMessageSent($lobby, $messageData));
 
@@ -372,7 +372,7 @@ class LobbyController extends Controller
         }
 
         $messages = $lobby->messages()
-            ->with('user')
+            ->with('user.decoration')
             ->orderBy('created_at', 'asc')
             ->limit(50) // Limit to last 50 messages
             ->get();

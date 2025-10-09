@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'role',
         'type',
+        'decoration_id',
     ];
 
     /**
@@ -39,6 +40,15 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var list<string>
+     */
+    protected $with = [
+        'decoration',
     ];
 
     /**

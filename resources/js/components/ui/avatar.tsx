@@ -1,22 +1,37 @@
-import * as React from "react"
-import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import * as React from "react";
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+import { Decoration } from "@/types";
 
 function Avatar({
   className,
+  decoration,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+}: React.ComponentProps<typeof AvatarPrimitive.Root> & {
+  decoration?: Decoration;
+}) {
+  const isTelevision = decoration?.name === "Television";
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
-      className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden rounded-full",
-        className
+    <div className="relative inline-block">
+      <AvatarPrimitive.Root
+        data-slot="avatar"
+        className={cn(
+          "relative flex size-8 m-0.5 shrink-0 overflow-hidden",
+          decoration && isTelevision ? "rounded-md" : "rounded-full",
+          className,
+        )}
+        {...props}
+      />
+      {decoration && (
+        <img
+          src={decoration.image_url}
+          alt="Decoration"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+        />
       )}
-      {...props}
-    />
-  )
+    </div>
+  );
 }
 
 function AvatarImage({
@@ -29,7 +44,7 @@ function AvatarImage({
       className={cn("aspect-square size-full", className)}
       {...props}
     />
-  )
+  );
 }
 
 function AvatarFallback({
@@ -40,12 +55,12 @@ function AvatarFallback({
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "bg-muted flex size-full items-center justify-center rounded-full",
-        className
+        "bg-muted flex size-full items-center justify-center",
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Avatar, AvatarImage, AvatarFallback }
+export { Avatar, AvatarImage, AvatarFallback };

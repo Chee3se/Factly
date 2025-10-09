@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
 
         // Call seeder
         $this->call([
+            DecorationSeeder::class,
             HigherLowerItemSeeder::class,
             QuizLadderItemSeeder::class,
             ImpactAuctionItemSeeder::class,

@@ -86,7 +86,10 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
             <div className="space-y-2">
               <p className="text-lg text-gray-600">🏆 Winner</p>
               <div className="flex items-center justify-center space-x-3">
-                <Avatar className="w-12 h-12 shadow-lg border-2 border-gray-400">
+                <Avatar
+                  className="w-12 h-12 shadow-lg border-2 border-gray-400"
+                  decoration={winner?.player?.decoration}
+                >
                   <AvatarImage
                     src={getAvatarUrl(winner?.player?.avatar) || undefined}
                     alt={winner?.player?.name}
@@ -131,7 +134,10 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
                       <div className="flex items-center space-x-1">
                         {getRankIcon(index + 1)}
                       </div>
-                      <Avatar className="w-10 h-10 shadow-md border-2 border-gray-400">
+                      <Avatar
+                        className="w-10 h-10 shadow-md border-2 border-gray-400"
+                        decoration={playerState.player?.decoration}
+                      >
                         <AvatarImage
                           src={
                             getAvatarUrl(playerState.player?.avatar) ||
@@ -143,9 +149,6 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
                           {getInitials(playerState.player?.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium text-base text-gray-800">
-                        {playerState.player?.name}
-                      </span>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-base text-gray-700">

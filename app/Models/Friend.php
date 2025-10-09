@@ -19,11 +19,11 @@ class Friend extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')->with('decoration');
     }
 
     public function friendUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'friend_id');
+        return $this->belongsTo(User::class, 'friend_id')->with('decoration');
     }
 }

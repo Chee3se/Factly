@@ -115,6 +115,7 @@ export const QuestionArea: React.FC<QuestionAreaProps> = ({
                               <Avatar
                                 key={player.id}
                                 className="w-10 h-10 shadow-md border-2 border-gray-300"
+                                decoration={player.decoration}
                               >
                                 <AvatarImage
                                   src={getAvatarUrl(player.avatar) || undefined}

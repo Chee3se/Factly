@@ -103,6 +103,7 @@ class AuthController extends Controller
     {
         return Inertia::render('Profile', [
             'sessions' => $this->getUserSessions(),
+            'decorations' => \App\Models\Decoration::all(),
         ]);
     }
 
@@ -238,6 +239,26 @@ class AuthController extends Controller
         ]);
 
         return back()->with('success', 'Password updated successfully.');
+    }
+
+    /**
+     * Update the user's decoration.
+     */
+    public function updateDecoration(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'decoration_id' => 'nullable|integer|exists:decorations,id',
+        ]);
+
+        $user->update([
+            'decoration_id' => $validated['decoration_id'],
+        ]);
+
+        $user->load('decoration');
+
+        return back()->with('success', 'Profile decoration updated successfully.');
     }
 
     /**

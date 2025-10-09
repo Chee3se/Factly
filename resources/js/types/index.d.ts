@@ -1,6 +1,13 @@
 import { Config } from "ziggy-js";
 import { Type } from "@/types/enums";
 
+export interface Decoration {
+  id: number;
+  name: string;
+  description: string;
+  image_url: string;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -12,6 +19,7 @@ export interface User {
   updated_at: string;
   email_verified_at?: string;
   friend_request_id?: number; // Add this
+  decoration?: Decoration;
 }
 
 interface Suggestion {

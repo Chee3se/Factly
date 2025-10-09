@@ -53,6 +53,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Avatar management routes
     Route::post('/profile/avatar/upload', [AuthController::class, 'uploadAvatar'])->name('profile.avatar.upload');
 
+    // Decoration management routes
+    Route::put('/profile/decoration', [AuthController::class, 'updateDecoration'])->name('profile.decoration.update');
+    Route::resource('decorations', \App\Http\Controllers\DecorationController::class);
+
     // Session management routes
     Route::get('/profile/sessions', [AuthController::class, 'getSessions'])->name('profile.sessions');
     Route::post('/profile/logout-other-sessions', [AuthController::class, 'logoutOtherSessions'])->name('profile.logout-other-sessions');

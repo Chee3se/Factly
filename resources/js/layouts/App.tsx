@@ -92,7 +92,10 @@ export default function App({
                         variant="ghost"
                         className="relative h-10 w-10 rounded-full"
                       >
-                        <Avatar className="h-10 w-10">
+                        <Avatar
+                          className="h-10 w-10"
+                          decoration={auth.user.decoration}
+                        >
                           <AvatarImage
                             src={getAvatarUrl(auth.user.avatar)}
                             alt={auth.user.name}

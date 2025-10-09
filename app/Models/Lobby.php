@@ -38,7 +38,8 @@ class Lobby extends Model
     {
         return $this->belongsToMany(User::class, 'lobby_players')
             ->withTimestamps()
-            ->withPivot('joined_at', 'ready');
+            ->withPivot('joined_at', 'ready')
+            ->with('decoration');
     }
 
     public function messages(): HasMany

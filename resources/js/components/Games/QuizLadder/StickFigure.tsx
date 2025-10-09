@@ -89,7 +89,7 @@ export const StickFigure: React.FC<StickFigureProps> = ({
                 : "ring-1 ring-gray-400"
             }`}
           >
-            <Avatar className="w-full h-full">
+            <Avatar className="w-full h-full" decoration={player?.decoration}>
               <AvatarImage
                 src={getAvatarUrl(player?.avatar) || undefined}
                 alt={player?.name || "Player"}

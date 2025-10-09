@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send } from "lucide-react";
+import type { Message } from "@/types/lobby";
 
 export default function LobbyChat({
   auth,
@@ -185,7 +186,10 @@ export default function LobbyChat({
                     : ""
                 }`}
               >
-                <Avatar className={`${avatarSize} flex-shrink-0`}>
+                <Avatar
+                  className={`${avatarSize} flex-shrink-0`}
+                  decoration={message.user.decoration ?? undefined}
+                >
                   <AvatarImage
                     src={getAvatarUrl(message.user.avatar) || undefined}
                     alt={message.user.name}

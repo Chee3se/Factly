@@ -75,6 +75,7 @@ class FriendsController extends Controller
         })
             ->whereNotIn('id', $existingFriendIds)
             ->limit(20)
+            ->with('decoration')
             ->get(['id', 'name', 'email', 'avatar']);
 
         return response()->json(['users' => $users]);

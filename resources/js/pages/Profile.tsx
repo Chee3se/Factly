@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { DeviceType, Session } from "@/types/session";
 import { Type } from "@/types/enums";
+import { Decoration } from "@/types";
 import { ImageCropper } from "@/components/Profile/ImageCropper";
 import { useLobby } from "@/hooks/useLobby";
 import LobbyNotificationBanner from "@/components/Lobby/LobbyNotificationBanner";
@@ -48,6 +49,7 @@ import LobbyNotificationBanner from "@/components/Lobby/LobbyNotificationBanner"
 export interface Props {
   auth: Auth;
   sessions: Session[];
+  decorations: Decoration[];
 }
 
 interface PasswordData {
@@ -61,7 +63,11 @@ interface FormData {
   email: string;
 }
 
-export default function Profile({ auth, sessions = [] }: Props) {
+export default function Profile({
+  auth,
+  sessions = [],
+  decorations = [],
+}: Props) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     name: auth.user.name || "",
@@ -72,6 +78,7 @@ export default function Profile({ auth, sessions = [] }: Props) {
   const [showAvatarDialog, setShowAvatarDialog] = useState<boolean>(false);
   const [showSessionsDialog, setShowSessionsDialog] = useState<boolean>(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [passwordData, setPasswordData] = useState<PasswordData>({
@@ -79,6 +86,24 @@ export default function Profile({ auth, sessions = [] }: Props) {
     password: "",
     password_confirmation: "",
   });
+
+  const handleDecorationChange = (decorationId: number | null) => {
+    setIsLoading(true);
+    router.put(
+      route("profile.decoration.update"),
+      { decoration_id: decorationId },
+      {
+        onSuccess: () => {
+          setIsLoading(false);
+          // Reload page data to update auth.user with new decoration
+          router.reload();
+        },
+        onError: () => {
+          setIsLoading(false);
+        },
+      },
+    );
+  };
 
   const { currentLobby } = useLobby(auth.user?.id);
 
@@ -250,7 +275,10 @@ export default function Profile({ auth, sessions = [] }: Props) {
               <CardHeader>
                 <div className="flex items-center space-x-4">
                   <div className="relative">
-                    <Avatar className="h-20 w-20">
+                    <Avatar
+                      className="h-20 w-20"
+                      decoration={auth.user.decoration}
+                    >
                       <AvatarImage
                         src={getAvatarUrl(auth.user.avatar) || undefined}
                         alt={formData.name}
@@ -387,6 +415,70 @@ export default function Profile({ auth, sessions = [] }: Props) {
                     <Save className="h-4 w-4" />
                     {isLoading ? "Saving..." : "Save Changes"}
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Profile Decorations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span>🎨</span>
+                  Profile Decorations
+                </CardTitle>
+                <CardDescription>
+                  Choose a decoration to frame your profile picture.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div
+                    className={`cursor-pointer border-2 rounded-lg p-4 text-center transition-all ${
+                      !auth.user.decoration
+                        ? "border-primary bg-primary/10"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => handleDecorationChange(null)}
+                  >
+                    <Avatar className="mx-auto mb-2 h-16 w-16">
+                      <AvatarImage
+                        src={getAvatarUrl(auth.user.avatar) || undefined}
+                        alt={formData.name}
+                      />
+                      <AvatarFallback>
+                        {getInitials(formData.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <p className="text-sm font-medium">None</p>
+                  </div>
+                  {decorations.map((decoration) => (
+                    <div
+                      key={decoration.id}
+                      className={`cursor-pointer border-2 rounded-lg p-4 text-center transition-all ${
+                        auth.user.decoration?.id === decoration.id
+                          ? "border-primary bg-primary/10"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => handleDecorationChange(decoration.id)}
+                    >
+                      <Avatar
+                        className="mx-auto mb-2 h-16 w-16"
+                        decoration={decoration}
+                      >
+                        <AvatarImage
+                          src={getAvatarUrl(auth.user.avatar) || undefined}
+                          alt={formData.name}
+                        />
+                        <AvatarFallback>
+                          {getInitials(formData.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium">{decoration.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {decoration.description}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
