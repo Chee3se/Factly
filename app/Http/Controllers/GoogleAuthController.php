@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
@@ -25,26 +26,32 @@ class GoogleAuthController extends Controller
     public function callback()
     {
         try {
-            $user = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->user();
         } catch (Throwable $e) {
-            return redirect('/')->with('error', 'Google authentication failed.');
+            Log::error('Google authentication failed during callback: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect('/login')->with('error', 'Google authentication failed. Please try again.');
         }
 
-        $existingUser = User::where('email', $user->email)->first();
+        try {
+            $existingUser = User::where('email', $googleUser->email)->first();
+            if ($existingUser) {
+                Auth::login($existingUser);
+            } else {
+                $newUser = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'password' => bcrypt(Str::random(16)), // Generate a random password for Google users
+                    'email_verified_at' => now(), // Assume Google users are verified
+                    'type' => 'google'
+                ]);
+                Auth::login($newUser);
+            }
 
-        if ($existingUser) {
-            Auth::login($existingUser);
-        } else {
-            $newUser = User::create([
-                'name' => $user->name,
-                'email' => $user->email,
-                'password' => bcrypt(Str::random(16)),
-                'email_verified_at' => now(),
-                'type' => 'google'
-            ]);
-            Auth::login($newUser);
+            return redirect('/');
+        } catch (Throwable $e) {
+            Log::error('User creation or login failed after Google authentication: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('User creation or login failed after Google authentication: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect('/login')->with('error', 'Could not process your Google account. Please try again or use another method.');
         }
-
-        return redirect('/');
     }
 }

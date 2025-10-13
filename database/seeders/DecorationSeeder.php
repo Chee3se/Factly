@@ -12,16 +12,40 @@ class DecorationSeeder extends Seeder
      */
     public function run(): void
     {
-        Decoration::create([
-            'name' => 'Astronaut helmet',
-            'description' => 'One small step for man, a giant leap for mankind.',
-            'image_url' => 'https://picsum.photos/seed/astro/100/100',
-        ]);
+        Decoration::updateOrCreate(
+            ['name' => 'Astronaut helmet'],
+            [
+                'description' => 'One small step for man, a giant leap for mankind.',
+                'image_url' => '/decorations/astro.png',
+                'unlock_type' => 'game_score',
+                'unlock_game_slug' => 'higher-or-lower',
+                'unlock_score' => 20,
+                'unlock_description' => 'Beat all of the questions on Higher or Lower.',
+            ]
+        );
 
-        Decoration::create([
-            'name' => 'Television',
-            'description' => 'Display your knowledge by becoming the box of knowledge.',
-            'image_url' => 'https://picsum.photos/seed/television/100/100',
-        ]);
+        Decoration::updateOrCreate(
+            ['name' => 'Television'],
+            [
+                'description' => 'Display your knowledge by becoming the box of knowledge.',
+                'image_url' => '/decorations/television.png',
+                'unlock_type' => 'game_score',
+                'unlock_game_slug' => 'factually',
+                'unlock_score' => 20,
+                'unlock_description' => 'Prove your knowledge by beating all of the questions on Factually.',
+            ]
+        );
+
+        Decoration::updateOrCreate(
+            ['name' => 'MS Paint'],
+            [
+                'description' => 'Show your art skills',
+                'image_url' => '/decorations/mspaint.png',
+                'unlock_type' => 'game_score',
+                'unlock_game_slug' => 'curators-test',
+                'unlock_score' => 80,
+                'unlock_description' => "Prove your artistic skills by getting a rating better than 80 on the Curator's Test",
+            ]
+        );
     }
 }

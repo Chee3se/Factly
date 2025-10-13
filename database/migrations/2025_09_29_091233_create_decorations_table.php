@@ -16,6 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('description');
             $table->string('image_url');
+            $table->string('unlock_type')->nullable();
+            $table->string('unlock_game_slug')->nullable();
+            $table->integer('unlock_score')->nullable();
+            $table->string('unlock_description')->nullable();
             $table->timestamps();
         });
     }

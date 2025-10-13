@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Models\Score;
+use App\Models\Game;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +17,7 @@ use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\RateLimiter;
 use Jenssegers\Agent\Agent;
 use Carbon\Carbon;
 
@@ -60,6 +63,13 @@ class AuthController extends Controller
      */
     public function register(Request $request): RedirectResponse
     {
+        // Rate limiting to prevent too many accounts from one device
+        $key = 'register:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 3)) { // Allow 3 attempts per hour
+            return back()->withErrors(['general' => 'Too many registration attempts from this device. Please try again later.']);
+        }
+        RateLimiter::hit($key, 3600); // 1 hour window
+
         // Validē lietotāja ievadītos datus
         $request->validate([
             'name' => 'required|string|max:255|unique:users',
@@ -101,10 +111,35 @@ class AuthController extends Controller
 
     public function profile(): Response
     {
+        $decorations = \App\Models\Decoration::all()->map(function ($decoration) {
+            $decoration->is_unlocked = $this->isDecorationUnlocked($decoration, auth()->user());
+            return $decoration;
+        });
+
         return Inertia::render('Profile', [
             'sessions' => $this->getUserSessions(),
-            'decorations' => \App\Models\Decoration::all(),
+            'decorations' => $decorations,
         ]);
+    }
+
+    private function isDecorationUnlocked($decoration, $user)
+    {
+        if (!$decoration->unlock_type) {
+            return true; // No unlock condition, always unlocked
+        }
+
+        if ($decoration->unlock_type === 'game_score') {
+            $game = Game::where('slug', $decoration->unlock_game_slug)->first();
+            if (!$game) {
+                return false;
+            }
+            $maxScore = Score::where('user_id', $user->id)
+                ->where('game_id', $game->id)
+                ->max('score') ?? 0;
+            return $maxScore >= $decoration->unlock_score;
+        }
+
+        return false; // Unknown type, locked
     }
 
     /**
@@ -251,6 +286,13 @@ class AuthController extends Controller
         $validated = $request->validate([
             'decoration_id' => 'nullable|integer|exists:decorations,id',
         ]);
+
+        if ($validated['decoration_id']) {
+            $decoration = \App\Models\Decoration::find($validated['decoration_id']);
+            if (!$this->isDecorationUnlocked($decoration, $user)) {
+                return back()->withErrors(['decoration' => 'This decoration is locked.']);
+            }
+        }
 
         $user->update([
             'decoration_id' => $validated['decoration_id'],

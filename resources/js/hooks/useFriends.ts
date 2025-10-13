@@ -88,6 +88,7 @@ export function useFriends(authUserId?: number) {
                     name: sender.name,
                     email: sender.email || "",
                     avatar: sender.avatar || null,
+                    decoration: sender.decoration,
                     friend_request_id: requestId,
                   },
                 ];
@@ -110,6 +111,7 @@ export function useFriends(authUserId?: number) {
                     name: friend.name,
                     email: friend.email || "",
                     avatar: friend.avatar || null,
+                    decoration: friend.decoration,
                   },
                 ];
               }
@@ -260,6 +262,7 @@ export function useFriends(authUserId?: number) {
                 name: requestData.friendUser.name,
                 email: requestData.friendUser.email || "",
                 avatar: requestData.friendUser.avatar || null,
+                decoration: requestData.friendUser.decoration,
               },
             ];
           }
@@ -302,6 +305,7 @@ export function useFriends(authUserId?: number) {
                   name: friend.name,
                   email: friend.email || "",
                   avatar: friend.avatar || null,
+                  decoration: friend.decoration,
                 },
               ];
             }

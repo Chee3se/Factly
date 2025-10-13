@@ -8,6 +8,7 @@ use App\Events\FriendRequestAccepted;
 use App\Events\FriendRequestDeclined;
 use App\Events\LobbyInvitationSent;
 use App\Models\Friend;
+use App\Models\LobbyPlayer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -258,6 +259,14 @@ class FriendsController extends Controller
         $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)->with('game')->first();
         if (!$lobby) {
             return response()->json(['message' => 'Lobby not found'], 404);
+        }
+
+        // Check if friend is already in the lobby
+        $existingPlayer = LobbyPlayer::where('lobby_id', $lobby->id)
+            ->where('user_id', $friendId)
+            ->first();
+        if ($existingPlayer) {
+            return response()->json(['message' => 'This friend is already in the lobby'], 400);
         }
 
         $friend = User::find($friendId);

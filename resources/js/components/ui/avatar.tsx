@@ -7,18 +7,22 @@ import { Decoration } from "@/types";
 function Avatar({
   className,
   decoration,
+  margin = "m-0.5", // Add this prop with a default
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Root> & {
   decoration?: Decoration;
+  margin?: string; // Define the new prop type
 }) {
-  const isTelevision = decoration?.name === "Television";
+  const isSquareDecoration =
+    decoration?.name === "Television" || decoration?.name === "MS Paint";
   return (
     <div className="relative inline-block">
       <AvatarPrimitive.Root
         data-slot="avatar"
         className={cn(
-          "relative flex size-8 m-0.5 shrink-0 overflow-hidden",
-          decoration && isTelevision ? "rounded-md" : "rounded-full",
+          "relative flex size-8 shrink-0 overflow-hidden",
+          margin, // Use the dynamic margin here instead of hardcoding m-0.5
+          decoration && isSquareDecoration ? "rounded-md" : "rounded-full",
           className,
         )}
         {...props}

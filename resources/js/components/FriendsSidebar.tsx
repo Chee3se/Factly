@@ -44,6 +44,7 @@ interface Props {
   onToggle: () => void;
   showInviteOptions?: boolean;
   onInviteFriend?: (friendId: number) => void;
+  excludedFromInvite?: number[];
 }
 
 export default function FriendsSidebar({
@@ -52,6 +53,7 @@ export default function FriendsSidebar({
   onToggle,
   showInviteOptions = false,
   onInviteFriend,
+  excludedFromInvite = [],
 }: Props) {
   const {
     friends,
@@ -273,7 +275,10 @@ export default function FriendsSidebar({
                                   size="sm"
                                   className="h-8 px-3"
                                   onClick={() => handleInviteFriend(friend.id)}
-                                  disabled={loading}
+                                  disabled={
+                                    loading ||
+                                    excludedFromInvite.includes(friend.id)
+                                  }
                                 >
                                   <Send className="h-3 w-3 mr-1" />
                                   Invite
@@ -535,6 +540,11 @@ export default function FriendsSidebar({
                                   <p className="text-xs text-muted-foreground truncate">
                                     {user.email}
                                   </p>
+                                  {user.decoration && (
+                                    <p className="text-xs text-blue-500 truncate">
+                                      {user.decoration.name}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               {status === "none" && (

@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, Settings, Trophy } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import LobbyInvitationModal from "@/components/Lobby/LobbyInvitationModal";
 import { useFriends } from "@/hooks/useFriends";
@@ -73,16 +73,28 @@ export default function App({
                 <span className="font-extrabold text-lg italic">{appName}</span>
               </Link>
 
-              {auth.user?.role == "admin" && (
-                <Button
-                  variant="outline"
-                  onClick={() => (window.location.href = "/admin/dashboard")}
-                  className="flex items-center gap-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  Admin
+              <div className="flex items-center space-x-4">
+                <Button asChild variant="ghost">
+                  <Link
+                    href="/leaderboards"
+                    className="flex items-center gap-2"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    Leaderboards
+                  </Link>
                 </Button>
-              )}
+
+                {auth.user?.role == "admin" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => (window.location.href = "/admin/dashboard")}
+                    className="flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Admin
+                  </Button>
+                )}
+              </div>
 
               <div className="flex items-center space-x-4">
                 {auth.user ? (

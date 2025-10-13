@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { usePage } from "@inertiajs/react";
+
 import App from "@/layouts/App";
 import { Game } from "@/types";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, User, Gamepad, Lightbulb, Plus } from "lucide-react";
+import { Users, User, Gamepad, Lightbulb, Plus, Sparkles } from "lucide-react";
 import SuggestionModal from "@/components/SuggestionModal";
 import { toast } from "sonner";
 import FriendsSidebar from "@/components/FriendsSidebar";
@@ -23,10 +23,13 @@ import { useLobby } from "@/hooks/useLobby";
 interface Props {
   auth: Auth;
   games: Game[];
+  flash: {
+    success?: string;
+    error?: string;
+  };
 }
 
-export default function Home({ auth, games }: Props) {
-  const { flash } = usePage().props;
+export default function Home({ auth, games, flash }: Props) {
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHeroScreen, setShowHeroScreen] = useState(false);
@@ -185,15 +188,29 @@ export default function Home({ auth, games }: Props) {
                     </CardContent>
 
                     <CardFooter className="mt-auto">
-                      <Button
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                        onClick={() =>
-                          (window.location.href = `/games/${game.slug}`)
-                        }
-                      >
-                        Play Game
-                        <Gamepad className="ml-2 h-4 w-4" />
-                      </Button>
+                      <div className="w-full space-y-2">
+                        <Button
+                          className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                          onClick={() =>
+                            (window.location.href = `/games/${game.slug}`)
+                          }
+                        >
+                          Play Game
+                          <Gamepad className="ml-2 h-4 w-4" />
+                        </Button>
+                        {game.slug === "curators-test" && (
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() =>
+                              (window.location.href = `/games/curators-test/gallery`)
+                            }
+                          >
+                            View Gallery
+                            <Sparkles className="ml-2 h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </CardFooter>
                   </Card>
                 ))}

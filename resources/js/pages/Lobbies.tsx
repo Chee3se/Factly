@@ -46,6 +46,9 @@ export default function Lobbies({ auth, game }: Props) {
             onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
             showInviteOptions={!!lobbyHook.currentLobby}
             onInviteFriend={handleInviteFriend}
+            excludedFromInvite={
+              lobbyHook.currentLobby?.players?.map((p) => p.id) || []
+            }
           />
         )}
       </div>

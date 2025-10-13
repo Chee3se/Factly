@@ -487,6 +487,7 @@ export function useLobby(authUserId?: number) {
           id: authUserId || 0,
           name: user.name,
           avatar: user.avatar,
+          decoration: user.decoration,
         },
         created_at: new Date().toISOString(),
       };

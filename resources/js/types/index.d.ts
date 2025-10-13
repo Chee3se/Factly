@@ -6,6 +6,11 @@ export interface Decoration {
   name: string;
   description: string;
   image_url: string;
+  unlock_type?: string;
+  unlock_game_slug?: string;
+  unlock_score?: number;
+  unlock_description?: string;
+  is_unlocked: boolean;
 }
 
 export interface User {

@@ -37,7 +37,8 @@ class FriendRequestAccepted implements ShouldBroadcast
             'friend' => [
                 'id' => $this->accepter->id,
                 'name' => $this->accepter->name,
-                'avatar' => $this->accepter->avatar
+                'avatar' => $this->accepter->avatar,
+                'decoration' => $this->accepter->decoration
             ],
             'message' => $this->accepter->name . ' accepted your friend request'
         ];

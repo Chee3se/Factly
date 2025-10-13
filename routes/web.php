@@ -6,6 +6,7 @@ use App\Http\Controllers\FriendsController;
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\LobbyController;
+use App\Http\Controllers\ScoreController;
 use App\Models\Game;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +17,10 @@ use Inertia\Inertia;
 
 // Public routes
 Route::get('/', [GameController::class, 'index'])->name('home');
+Route::get('/leaderboards', [ScoreController::class, 'index'])->name('leaderboards');
 
 // Score and leaderboard routes (public for leaderboards, auth required for saving)
-Route::get('/api/games/{gameSlug}/leaderboard', [GameController::class, 'getLeaderboard'])->name('games.leaderboard');
+Route::get('/api/games/{gameSlug}/leaderboard', [ScoreController::class, 'getLeaderboard'])->name('games.leaderboard');
 
 Route::middleware('throttle:auth')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -63,8 +65,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile/session/logout', [AuthController::class, 'logoutSession'])->name('profile.session.logout');
 
     // Game score routes (authenticated only)
-    Route::post('/api/save-score', [GameController::class, 'saveScore'])->name('games.save-score');
-    Route::get('/api/games/{gameSlug}/best-score', [GameController::class, 'getUserBestScore'])->name('games.user-best-score');
+    Route::post('/api/save-score', [ScoreController::class, 'saveScore'])->name('games.save-score');
+    Route::get('/api/games/{gameSlug}/best-score', [ScoreController::class, 'getUserBestScore'])->name('games.user-best-score');
+
+    // Curator's Test AI chat endpoint
+    Route::post('/api/games/curators-test/chat', [GameController::class, 'curatorsTestChat'])->name('games.curators-test.chat');
+
+    // Curator's Test artwork endpoints
+    Route::post('/api/games/curators-test/save-artwork', [GameController::class, 'saveCuratorsTestArtwork'])->name('games.curators-test.save-artwork');
+    Route::get('/api/games/curators-test/artworks', [GameController::class, 'getCuratorsTestArtworks'])->name('games.curators-test.artworks');
+    Route::get('/games/curators-test/gallery', [GameController::class, 'curatorsTestGallery'])->name('games.curators-test.gallery');
 
     Route::get('/lobbies/{lobbyCode}', [LobbyController::class, 'showLobby'])
         ->where('lobbyCode', '[A-Z0-9]{8}')

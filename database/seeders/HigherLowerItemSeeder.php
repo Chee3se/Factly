@@ -143,7 +143,13 @@ class HigherLowerItemSeeder extends Seeder
                 'image_url' => 'https://indoappliances.com/cdn/shop/files/10.png?v=1729503504',
                 'value' => 120,
                 'description' => 'Fans are energy efficient compared to air conditioners. Running a small fan for several hours daily uses ~120 kWh/year.'
-            ]
+            ],
+            [
+                'name' => 'Washing Machine',
+                'image_url' => 'https://images.unsplash.com/photo-1668417863230-64f268d1d252?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                'value' => 400,
+                'description' => 'Washing machines use electricity for motor operation and water heating. Using cold water cycles and efficient models can reduce consumption by up to 50%.'
+            ],
         ];
 
         foreach ($items as $item) {

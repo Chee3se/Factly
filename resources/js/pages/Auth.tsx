@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Head } from "@inertiajs/react";
 import Login from "../components/Auth/Login";
 import Register from "../components/Auth/Register";
 import space from "../../images/space_background.png";
@@ -17,6 +18,7 @@ interface Props {
 export default function Auth({ canResetPassword, status }: Props) {
   return (
     <div className="min-h-screen flex">
+      <Head title="Sign up" />
       <div className="flex-1 flex items-center justify-center bg-background p-8 lg:p-12">
         <div className="w-full max-w-md space-y-6">
           <div className="text-center space-y-2">

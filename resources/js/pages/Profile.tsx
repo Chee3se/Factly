@@ -278,6 +278,7 @@ export default function Profile({
                     <Avatar
                       className="h-20 w-20"
                       decoration={auth.user.decoration}
+                      margin="m-1"
                     >
                       <AvatarImage
                         src={getAvatarUrl(auth.user.avatar) || undefined}
@@ -454,16 +455,27 @@ export default function Profile({
                   {decorations.map((decoration) => (
                     <div
                       key={decoration.id}
-                      className={`cursor-pointer border-2 rounded-lg p-4 text-center transition-all ${
+                      className={`${
+                        decoration.is_unlocked
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed opacity-50"
+                      } border-2 rounded-lg p-4 text-center transition-all ${
                         auth.user.decoration?.id === decoration.id
                           ? "border-primary bg-primary/10"
-                          : "border-gray-200 hover:border-gray-300"
+                          : decoration.is_unlocked
+                            ? "border-gray-200 hover:border-gray-300"
+                            : "border-gray-300"
                       }`}
-                      onClick={() => handleDecorationChange(decoration.id)}
+                      onClick={() =>
+                        decoration.is_unlocked
+                          ? handleDecorationChange(decoration.id)
+                          : undefined
+                      }
                     >
                       <Avatar
-                        className="mx-auto mb-2 h-16 w-16"
+                        className="h-16 w-16"
                         decoration={decoration}
+                        margin="m-1"
                       >
                         <AvatarImage
                           src={getAvatarUrl(auth.user.avatar) || undefined}
@@ -475,8 +487,13 @@ export default function Profile({
                       </Avatar>
                       <p className="text-sm font-medium">{decoration.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {decoration.description}
+                        {decoration.is_unlocked
+                          ? decoration.description
+                          : decoration.unlock_description || "Locked"}
                       </p>
+                      {!decoration.is_unlocked && (
+                        <p className="text-xs text-red-500 mt-1">🔒 Locked</p>
+                      )}
                     </div>
                   ))}
                 </div>

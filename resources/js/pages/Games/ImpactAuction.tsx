@@ -698,51 +698,64 @@ export default function ImpactAuction({ auth, game, items }: Props) {
     return <LoadingScreen auth={auth} />;
   }
 
+  let content;
+
   if (gameState.phase === "results") {
-    return (
+    content = (
       <ResultsScreen
         gameState={gameState}
         onLeaveLobby={handleLeaveLobby}
         currentLobby={currentLobby}
+        players={currentLobby?.players || []}
+        lobbyHook={lobbyHook}
+        auth={auth}
       />
     );
-  }
-
-  if (gameState.phase === "reveal" && gameState.itemWinners.length > 0) {
+  } else if (gameState.phase === "reveal" && gameState.itemWinners.length > 0) {
     const lastWinner = gameState.itemWinners[gameState.itemWinners.length - 1];
     const item = gameState.items.find((i) => i.id === lastWinner.itemId);
-
-    if (item) {
-      return (
-        <RevealScreen
-          item={item}
-          winner={lastWinner}
-          gameState={gameState}
-          isGameOwner={gameState.isGameOwner}
-        />
-      );
-    }
-  }
-
-  if (gameState.phase === "bidding" && gameState.currentItem && auth.user?.id) {
+    content = item ? (
+      <RevealScreen
+        item={item}
+        winner={lastWinner}
+        gameState={gameState}
+        isGameOwner={gameState.isGameOwner}
+        players={currentLobby?.players || []}
+        currentLobby={currentLobby}
+        lobbyHook={lobbyHook}
+      />
+    ) : (
+      <LoadingScreen auth={auth} />
+    );
+  } else if (
+    gameState.phase === "bidding" &&
+    gameState.currentItem &&
+    auth.user?.id
+  ) {
     const playerState = gameState.playerStates[auth.user.id];
     const playersWhoPlacedBids = Object.values(gameState.playerStates)
       .filter((p) => p.hasPlacedBid)
       .map((p) => p.userId);
-
-    if (playerState) {
-      return (
-        <BiddingScreen
-          currentItem={gameState.currentItem}
-          playerState={playerState}
-          gameState={gameState}
-          onPlaceBid={placeBid}
-          timeLeft={gameState.timeLeft}
-          playersWhoPlacedBids={playersWhoPlacedBids}
-        />
-      );
-    }
+    content = playerState ? (
+      <BiddingScreen
+        currentItem={gameState.currentItem}
+        playerState={playerState}
+        gameState={gameState}
+        onPlaceBid={placeBid}
+        timeLeft={gameState.timeLeft}
+        playersWhoPlacedBids={playersWhoPlacedBids}
+        onlineUsers={onlineUsers}
+      />
+    ) : (
+      <LoadingScreen auth={auth} />
+    );
+  } else {
+    content = <LoadingScreen auth={auth} />;
   }
 
-  return <LoadingScreen auth={auth} />;
+  return (
+    <App title="Impact Auction" auth={auth}>
+      {content}
+    </App>
+  );
 }
