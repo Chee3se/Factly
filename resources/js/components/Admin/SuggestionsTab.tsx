@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle, XCircle, Clock, Settings, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 import { AdminSuggestion, PaginatedData } from "@/types/admin";
+import { Label } from "@/components/ui/label";
 
 interface SuggestionsTabProps {
   suggestions: PaginatedData<AdminSuggestion>;
@@ -38,28 +37,23 @@ export default function SuggestionsTab({
   suggestions,
   onUpdateSuggestions,
 }: SuggestionsTabProps) {
-  // Suggestion management state
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<AdminSuggestion | null>(null);
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
-  const [adminNotes, setAdminNotes] = useState("");
   const [isUpdatingSuggestion, setIsUpdatingSuggestion] = useState(false);
 
-  // Suggestion management functions
   const openSuggestionModal = (suggestion: AdminSuggestion) => {
     setSelectedSuggestion(suggestion);
-    setAdminNotes(suggestion.admin_notes || "");
     setShowSuggestionModal(true);
   };
 
   const closeSuggestionModal = () => {
     setSelectedSuggestion(null);
     setShowSuggestionModal(false);
-    setAdminNotes("");
   };
 
   const handleUpdateSuggestion = async (
-    status: "pending" | "reviewing" | "approved" | "rejected" | "implemented",
+    status: "pending" | "approved" | "rejected" | "implemented",
   ) => {
     if (!selectedSuggestion) return;
 
@@ -67,18 +61,14 @@ export default function SuggestionsTab({
     try {
       const response = await axios.patch(
         `/admin/suggestions/${selectedSuggestion.id}/status`,
-        {
-          status: status,
-          admin_notes: adminNotes,
-        },
+        { status },
       );
       if (response.data.success) {
-        // Update local state
         onUpdateSuggestions((prev) => ({
           ...prev,
           data: prev.data.map((suggestion) =>
             suggestion.id === selectedSuggestion.id
-              ? { ...suggestion, status: status, admin_notes: adminNotes }
+              ? { ...suggestion, status }
               : suggestion,
           ),
         }));
@@ -102,7 +92,6 @@ export default function SuggestionsTab({
     const safeStatus = status || "pending";
     const statusConfig = {
       pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock },
-      reviewing: { color: "bg-blue-100 text-blue-800", icon: Settings },
       approved: { color: "bg-green-100 text-green-800", icon: CheckCircle },
       rejected: { color: "bg-red-100 text-red-800", icon: XCircle },
       implemented: {
@@ -135,18 +124,35 @@ export default function SuggestionsTab({
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>User</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {suggestions.data.map((suggestion) => (
-                <TableRow key={suggestion.id}>
-                  <TableCell className="font-medium">
+                <TableRow
+                  key={suggestion.id}
+                  onClick={() => openSuggestionModal(suggestion)}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
+                  {/* Title truncated */}
+                  <TableCell
+                    className="font-medium max-w-xs truncate"
+                    title={suggestion.title}
+                  >
                     {suggestion.title}
                   </TableCell>
+
+                  {/* Description truncated */}
+                  <TableCell
+                    className="max-w-sm truncate"
+                    title={suggestion.description}
+                  >
+                    {suggestion.description}
+                  </TableCell>
+
+                  {/* User Info */}
                   <TableCell>
                     <div>
                       <div className="font-medium">{suggestion.user.name}</div>
@@ -155,23 +161,13 @@ export default function SuggestionsTab({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(suggestion.status)}</TableCell>
+
+                  {/* Date */}
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       {formatDate(suggestion.created_at)}
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openSuggestionModal(suggestion)}
-                      className="flex items-center gap-1"
-                    >
-                      <Settings className="h-3 w-3" />
-                      Review
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -182,17 +178,18 @@ export default function SuggestionsTab({
 
       {/* Suggestion Review Modal */}
       <Dialog open={showSuggestionModal} onOpenChange={setShowSuggestionModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Review Suggestion</DialogTitle>
             <DialogDescription>
               Review and update the status of this game suggestion.
             </DialogDescription>
           </DialogHeader>
+
           {selectedSuggestion && (
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg break-words whitespace-pre-wrap">
                   {selectedSuggestion.title}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -200,65 +197,33 @@ export default function SuggestionsTab({
                   {formatDate(selectedSuggestion.created_at)}
                 </p>
               </div>
+
+              {/* Description wraps downward instead of horizontally */}
               <div>
                 <Label>Description</Label>
-                <div className="mt-2 p-3 bg-muted rounded-lg">
-                  <p className="text-sm">{selectedSuggestion.description}</p>
+                <div className="mt-2 p-3 bg-muted rounded-lg overflow-hidden">
+                  <p className="text-sm break-words whitespace-pre-wrap overflow-x-hidden">
+                    {selectedSuggestion.description}
+                  </p>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="admin-notes">Admin Notes</Label>
-                <Textarea
-                  id="admin-notes"
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="Add notes about this suggestion..."
-                  className="min-h-[100px] mt-2"
-                  maxLength={1000}
-                />
-                <div className="text-xs text-muted-foreground text-right mt-1">
-                  {adminNotes.length}/1000 characters
+
+              {selectedSuggestion.admin_notes && (
+                <div>
+                  <Label>Admin Notes</Label>
+                  <div className="mt-2 p-3 bg-muted rounded-lg overflow-hidden">
+                    <p className="text-sm break-words whitespace-pre-wrap overflow-x-hidden">
+                      {selectedSuggestion.admin_notes}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <Label>Current Status</Label>
-                <div className="mt-2">
-                  {getStatusBadge(selectedSuggestion.status)}
-                </div>
-              </div>
+              )}
             </div>
           )}
+
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateSuggestion("approved")}
-                disabled={isUpdatingSuggestion}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateSuggestion("rejected")}
-                disabled={isUpdatingSuggestion}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <XCircle className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleUpdateSuggestion("reviewing")}
-                disabled={isUpdatingSuggestion}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Mark Reviewing
-              </Button>
-            </div>
             <Button variant="outline" onClick={closeSuggestionModal}>
-              Cancel
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

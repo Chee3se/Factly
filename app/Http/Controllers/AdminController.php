@@ -28,7 +28,6 @@ class AdminController extends Controller
             'rejected_suggestions' => Suggestion::where('status', 'rejected')->count(),
         ];
 
-        // Load all data for the unified dashboard
         $users = User::withCount('scores')
             ->with(['friendsTo' => function ($query) {
                 $query->where('accepted', true);
@@ -38,7 +37,6 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        // Add friends count to each user
         $users->getCollection()->transform(function ($user) {
             $allFriends = $user->friendsTo->merge($user->friendsFrom);
             $user->friends_count = $allFriends->unique('id')->count();
@@ -46,11 +44,19 @@ class AdminController extends Controller
             return $user;
         });
 
-        $friends = Friend::with(['user:id,name,email', 'friendUser:id,name,email'])
+        $friends = Friend::with(['user:id,name,email,decoration', 'friendUser:id,name,email,decoration'])
             ->whereHas('user')
             ->whereHas('friendUser')
             ->whereNotNull('user_id')
             ->whereNotNull('friend_id')
+            ->where(function($query) {
+                $query->where('accepted', false)
+                    ->orWhere(function($q) {
+                        $q->where('accepted', true)
+                          ->whereRaw('user_id < friend_id');
+                    });
+            })
+            ->orderBy('accepted', 'asc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -91,7 +97,6 @@ class AdminController extends Controller
             return response()->json(['error' => 'You cannot delete your own account.'], 403);
         }
 
-        // Prevent deleting the last admin
         if ($user->role === 'admin' && User::where('role', 'admin')->count() <= 1) {
             return response()->json(['error' => 'Cannot delete the last admin user.'], 400);
         }
@@ -125,13 +130,11 @@ class AdminController extends Controller
     public function updateSuggestionStatus(Request $request, Suggestion $suggestion)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,reviewing,approved,rejected,implemented',
-            'admin_notes' => 'nullable|string|max:1000'
+            'status' => 'required|in:pending,approved,rejected,implemented',
         ]);
 
         $suggestion->update([
             'status' => $validated['status'],
-            'admin_notes' => $validated['admin_notes'] ?? null,
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id()
         ]);

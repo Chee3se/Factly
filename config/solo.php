@@ -47,8 +47,8 @@ return [
     */
     'commands' => [
         'Server' => 'php artisan serve',
-        'Logs' => EnhancedTailCommand::file(storage_path('logs/laravel.log')),
-        'Queue' => Command::from('php artisan queue:work')->lazy(),
+        'Queue' => 'php artisan queue:work',
+        'Build' => 'npm run build',
     ],
 
     /**
@@ -57,7 +57,7 @@ return [
      * PTY and some ANSI rendering things. Not all environments have Screen,
      * so you can turn it off for a slightly degraded experience.
      */
-    'use_screen' => (bool) env('SOLO_USE_SCREEN', true),
+    'use_screen' => false,
 
     /*
     |--------------------------------------------------------------------------

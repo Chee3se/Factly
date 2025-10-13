@@ -34,7 +34,6 @@ export default function FriendsTab({
   friends,
   onUpdateFriends,
 }: FriendsTabProps) {
-  // Friend management state
   const [selectedFriend, setSelectedFriend] = useState<AdminFriend | null>(
     null,
   );
@@ -44,7 +43,6 @@ export default function FriendsTab({
   );
   const [isProcessingFriend, setIsProcessingFriend] = useState(false);
 
-  // Friend management functions
   const openFriendActionModal = (
     friend: AdminFriend,
     action: "approve" | "decline",
@@ -72,7 +70,6 @@ export default function FriendsTab({
         },
       );
       if (response.data.success) {
-        // Update local state
         if (friendAction === "approve") {
           onUpdateFriends((prev) => ({
             ...prev,
@@ -83,7 +80,6 @@ export default function FriendsTab({
             ),
           }));
         } else {
-          // Remove declined friend request
           onUpdateFriends((prev) => ({
             ...prev,
             data: prev.data.filter((friend) => friend.id !== selectedFriend.id),
@@ -138,7 +134,6 @@ export default function FriendsTab({
                 <TableHead>Friend</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Requested</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -157,10 +152,10 @@ export default function FriendsTab({
                   <TableCell>
                     <div>
                       <div className="font-medium">
-                        {friend.friendUser?.name || "Unknown User"}
+                        {friend.friend_user?.name || "Unknown User"}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {friend.friendUser?.email || "unknown@example.com"}
+                        {friend.friend_user?.email || "unknown@example.com"}
                       </div>
                     </div>
                   </TableCell>

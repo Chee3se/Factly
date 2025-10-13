@@ -20,7 +20,7 @@ export interface AdminFriend {
     name: string;
     email: string;
   };
-  friendUser?: {
+  friend_user?: {
     id: number;
     name: string;
     email: string;
