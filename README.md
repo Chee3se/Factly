@@ -75,7 +75,7 @@ Factly is a dynamic minigame hosting platform where fun meets competition! Wheth
 
 ---
 
-## 📋 Development Roadmap
+## 📋 Development Roadmap (TO-DO)
 
 ### ✅ Completed
 - [x] User authentication system
