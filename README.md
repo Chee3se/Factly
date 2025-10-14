@@ -89,12 +89,12 @@ Factly is a dynamic minigame hosting platform where fun meets competition! Wheth
 - [x] Custom logo and unique color scheme design
 - [x] Real-time WebSocket integration
 - [x] Responsive UI design
+- [x] Additional singleplayer and multiplayer game
+- [x] Score-based leaderboard system
+- [x] Cosmetic rewards system for profiles
+- [x] AI-powered interactive game (The Currator's Test)
+- [x] Question shuffling on game retry
 
 ### 🚧 In Progress
-- [ ] Additional singleplayer and multiplayer game
-- [ ] Score-based leaderboard system
-- [ ] Cosmetic rewards system for profiles
-- [ ] AI-powered interactive features
-- [ ] Question shuffling on game retry
 - [ ] Celebration effects (login confetti, admin global confetti)
 - [ ] Real-time leaderboard updates
