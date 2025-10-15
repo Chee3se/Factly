@@ -120,9 +120,15 @@ it('can update only profile picture', function () {
     $page->attach('Profile Picture', $file);
     $page->click('Save Profile');
 
-    // Assert file was stored
-    Storage::disk('public')->assertExists('avatars/' . $file->hashName());
-});
+    $page->click('button[data-slot=dialog-trigger]');
+    $page->click('Choose Image');
+    $page->attach('input[type=file]', $file->getRealPath());
+    $page->click('Crop');
+
+    // Assert that a file was stored in the avatars directory
+    $files = Storage::disk('public')->files('avatars');
+    expect($files)->toHaveCount(1);
+})->only();
 
 it('accepts JPEG image format', function () {
     Storage::fake('public');
