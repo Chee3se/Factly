@@ -23,7 +23,7 @@ Route::get('/leaderboards', [ScoreController::class, 'index'])->name('leaderboar
 Route::get('/api/games/{gameSlug}/leaderboard', [ScoreController::class, 'getLeaderboard'])->name('games.leaderboard');
 
 Route::middleware('throttle:auth')->group(function () {
-    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/redirect' , [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
 });
 
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');

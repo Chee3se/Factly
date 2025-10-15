@@ -71,6 +71,16 @@ class AuthController extends Controller
             'name' => 'required|string|max:255|unique:users',
             'email' => 'required|string|lowercase|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'name.required' => 'Username is required.',
+            'name.unique' => 'This username is already taken. Please choose another one.',
+            'name.max' => 'Username must not exceed 255 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'An account with this email already exists. Please use another email or sign in.',
+            'email.max' => 'Email address must not exceed 255 characters.',
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ]);
 
         $user = User::create([
