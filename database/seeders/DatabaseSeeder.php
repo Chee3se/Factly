@@ -19,23 +19,9 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make(env('ADMIN_PASSWORD')),
             'email_verified_at' => now(),
             'role' => 'admin',
-        ]);
-
-        User::factory()->create([
-            'name' => 'John Doe',
-            'email' => 'test1@example.com',
-            'password' => Hash::make('password1'),
-            'email_verified_at' => now(),
-        ]);
-
-        User::factory()->create([
-            'name' => 'James Week',
-            'email' => 'test2@example.com',
-            'password' => Hash::make('password2'),
-            'email_verified_at' => now(),
         ]);
 
         // Call seeder
