@@ -57,7 +57,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Decoration management routes
     Route::put('/profile/decoration', [AuthController::class, 'updateDecoration'])->name('profile.decoration.update');
-    Route::resource('decorations', \App\Http\Controllers\DecorationController::class);
 
     // Session management routes
     Route::get('/profile/sessions', [AuthController::class, 'getSessions'])->name('profile.sessions');
