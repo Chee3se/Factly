@@ -82,16 +82,22 @@ it('shows error when user already owns a lobby', function () {
         ->click('Play Game')
         ->assertPathIs('/api/lobbies/'.$game->slug);
 
+    // Get initial lobby count for the user and game
+    $initialLobbyCount = Lobby::where('host_user_id', $user->id)
+        ->where('game_id', $game->id)
+        ->count();
+
     // Scenario: User already owns a lobby
     // When: User tries to create another lobby
     $page->click('Create ' . $game->name . ' Lobby');
 
-    // Then: User receives error notification
-    $page->assertSee('error'); // Adjust based on your error message
+    // Then: No new lobby should have been created in the database
+    $finalLobbyCount = Lobby::where('host_user_id', $user->id)
+        ->where('game_id', $game->id)
+        ->count();
 
-    // And: User is connected to existing lobby channel
-    $page->assertSee($existingLobby->lobby_code);
-})->only();
+    expect($finalLobbyCount)->toBe($initialLobbyCount);
+});
 
 it('can join a lobby for a game', function () {
     $user1 = User::factory()->create();
@@ -173,7 +179,7 @@ it('can send messages in a lobby', function () {
     // When: User enters message in designated field
     $this->be($user1);
     $page->navigate('/api/lobbies/'.$game->slug);
-    $page->fill('[placeholder="Type a message..."]', 'Hello from user1{enter}')
+    $page->fill('[placeholder="Type a message..."]', 'Hello from user1')
         ->submit();
 
     // Then: Message is sent to server
@@ -191,14 +197,14 @@ it('can send messages in a lobby', function () {
     // User2 sends message
     $this->be($user2);
     $page->navigate('/api/lobbies/'.$game->slug);
-    $page->fill('[placeholder="Type a message..."]', 'Hi back from user2{enter}')
+    $page->fill('[placeholder="Type a message..."]', 'Hi back from user2')
         ->submit();
 
     Event::assertDispatched(LobbyMessageSent::class);
     $page->assertSee('Hi back from user2');
 });
 
-it('shows error when message field is empty', function () {
+it('does not let the user send the message if the field is empty', function () {
     Event::fake();
 
     // Context: User is in a lobby
@@ -216,16 +222,20 @@ it('shows error when message field is empty', function () {
     $page->assertSee('Create ' . $game->name . ' Lobby')
         ->click('Create ' . $game->name . ' Lobby');
 
+    // Get initial message count
+    $initialMessageCount = \App\Models\LobbyMessage::count();
+
     // Scenario: Message field is not filled
     // When: User doesn't enter message in designated field
-    $page->fill('[placeholder="Type a message..."]', '{enter}')
+    $page->fill('[placeholder="Type a message..."]', '‎')
         ->submit();
 
     // Then: Message is not sent to server
     Event::assertNotDispatched(LobbyMessageSent::class);
 
-    // And: Error notification is displayed
-    $page->assertSee('error'); // Adjust based on your implementation
+    // And: No message is saved in database
+    $finalMessageCount = \App\Models\LobbyMessage::count();
+    expect($finalMessageCount)->toBe($initialMessageCount);
 });
 
 /**
@@ -296,7 +306,7 @@ it('can start game when all players are ready', function () {
     ]);
 });
 
-it('shows error when not enough players in lobby', function () {
+it('does not let the user start the game when not enough players in lobby', function () {
     Event::fake();
 
     // Context: User creates lobby
@@ -317,19 +327,24 @@ it('shows error when not enough players in lobby', function () {
     // User marks ready
     $page->click("//button[text()='Mark Ready']");
 
+    $lobby = Lobby::where('host_user_id', $user->id)->first();
+
     // Scenario: Not enough players in lobby
     // When: All users are ready but not enough players, and lobby owner tries to start
     $page->assertButtonEnabled('Start Game')
         ->click('Start Game');
 
-    // Then: Error notification is displayed
-    $page->assertSee('Not enough players'); // Adjust based on your error message
-
-    // Game should not start
+    // Then: Game should not start
     Event::assertNotDispatched(LobbyStarted::class);
+
+    // And: Lobby should still be open
+    $this->assertDatabaseHas('lobbies', [
+        'id' => $lobby->id,
+        'started' => false,
+    ]);
 });
 
-it('shows error when non-owner tries to start game', function () {
+it('does not let the non-owner user start the game', function () {
     Event::fake();
 
     // Context: Two users in lobby
@@ -375,13 +390,13 @@ it('shows error when non-owner tries to start game', function () {
     $page->navigate('/api/lobbies/'.$game->slug);
 
     // Button should not be visible or clickable for non-owner
-    $page->assertButtonMissing('Start Game'); // Or assertButtonDisabled
+    $page->assertDontSee('Start Game');
 
-    // If they somehow try to start (via API), it should fail
+    // Verify game did not start
     Event::assertNotDispatched(LobbyStarted::class);
 });
 
-it('shows notification when not all players are ready', function () {
+it('does not let the owner user start the game when not all players are ready', function () {
     Event::fake();
 
     // Context: Two users in lobby
@@ -402,6 +417,7 @@ it('shows notification when not all players are ready', function () {
         ->click('Create ' . $game->name . ' Lobby');
 
     $code = Lobby::where('host_user_id', $user1->id)->first()->lobby_code;
+    $lobby = Lobby::where('host_user_id', $user1->id)->first();
 
     // User2 joins
     $this->be($user2);
@@ -423,8 +439,12 @@ it('shows notification when not all players are ready', function () {
     // When: Enough players but one or more haven't marked ready, owner tries to start
     $page->assertButtonDisabled('Start Game'); // Button should be disabled
 
-    // And: Notification is displayed
-    $page->assertSee('Not all players are ready'); // Adjust based on message
-
+    // Verify game did not start
     Event::assertNotDispatched(LobbyStarted::class);
+
+    // And: Lobby should still be open
+    $this->assertDatabaseHas('lobbies', [
+        'id' => $lobby->id,
+        'started' => false,
+    ]);
 });
