@@ -23,6 +23,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User,
   Mail,
@@ -63,6 +64,16 @@ interface FormData {
   email: string;
 }
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/svg+xml",
+];
+const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".svg"];
+
 export default function Profile({
   auth,
   sessions = [],
@@ -78,6 +89,7 @@ export default function Profile({
   const [showAvatarDialog, setShowAvatarDialog] = useState<boolean>(false);
   const [showSessionsDialog, setShowSessionsDialog] = useState<boolean>(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string>("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,7 +107,6 @@ export default function Profile({
       {
         onSuccess: () => {
           setIsLoading(false);
-          // Reload page data to update auth.user with new decoration
           router.reload();
         },
         onError: () => {
@@ -138,11 +149,44 @@ export default function Profile({
     });
   };
 
+  const validateFile = (file: File): string | null => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return "The file must not be larger than 2MB.";
+    }
+
+    // Check file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return "The file must be a JPEG, PNG, GIF, or SVG image.";
+    }
+
+    // Check file extension
+    const extension = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      return "The file must have a valid image extension (.jpg, .jpeg, .png, .gif, or .svg).";
+    }
+
+    return null;
+  };
+
   const handleFileUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     const file = event.target.files?.[0];
+    setFileError("");
+
     if (file) {
+      // Validate file
+      const error = validateFile(file);
+      if (error) {
+        setFileError(error);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
       setSelectedImageFile(file);
       setShowAvatarDialog(false);
       setShowCropDialog(true);
@@ -158,6 +202,7 @@ export default function Profile({
       onSuccess: () => {
         setIsLoading(false);
         setSelectedImageFile(null);
+        setFileError("");
       },
       onError: () => {
         setIsLoading(false);
@@ -250,14 +295,12 @@ export default function Profile({
     return `/storage/${avatar}`;
   };
 
-  // Check if user is a Google user
   const isGoogleUser = auth.user.type === Type.Google;
 
   return (
     <App title="Profile" auth={auth}>
       <LobbyNotificationBanner currentLobby={currentLobby} />
       <div className="container mx-auto py-6 px-4 max-w-4xl">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Profile</h1>
         </div>
@@ -268,9 +311,7 @@ export default function Profile({
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
-          {/* General Tab */}
           <TabsContent value="general" className="space-y-6">
-            {/* Profile Header Card */}
             <Card>
               <CardHeader>
                 <div className="flex items-center space-x-4">
@@ -290,7 +331,12 @@ export default function Profile({
                     </Avatar>
                     <Dialog
                       open={showAvatarDialog}
-                      onOpenChange={setShowAvatarDialog}
+                      onOpenChange={(open) => {
+                        setShowAvatarDialog(open);
+                        if (!open) {
+                          setFileError("");
+                        }
+                      }}
                     >
                       <DialogTrigger asChild>
                         <Button
@@ -309,6 +355,11 @@ export default function Profile({
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
+                          {fileError && (
+                            <Alert variant="destructive">
+                              <AlertDescription>{fileError}</AlertDescription>
+                            </Alert>
+                          )}
                           <div className="text-center">
                             <div className="flex items-center justify-center">
                               <Button
@@ -323,13 +374,13 @@ export default function Profile({
                               <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept="image/*"
+                                accept=".jpg,.jpeg,.png,.gif,.svg"
                                 onChange={handleFileUpload}
                                 className="hidden"
                               />
                             </div>
                             <p className="text-sm text-muted-foreground mt-2">
-                              Supports JPEG, PNG, GIF, SVG up to 2MB
+                              Supports JPEG, PNG, GIF, SVG (max 2MB)
                             </p>
                           </div>
                         </div>
@@ -363,7 +414,6 @@ export default function Profile({
               </CardHeader>
             </Card>
 
-            {/* Personal Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -420,7 +470,6 @@ export default function Profile({
               </CardContent>
             </Card>
 
-            {/* Profile Decorations */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -501,7 +550,6 @@ export default function Profile({
             </Card>
           </TabsContent>
 
-          {/* Security Tab */}
           <TabsContent value="security" className="space-y-6">
             <Card>
               <CardHeader>
@@ -514,7 +562,6 @@ export default function Profile({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Only show password change section for non-Google users */}
                 {!isGoogleUser && (
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium">Change Password</h4>
@@ -704,7 +751,6 @@ export default function Profile({
               </CardContent>
             </Card>
 
-            {/* Danger Zone */}
             <Card className="border-red-200 bg-red-50/50">
               <CardHeader className="border-b border-red-200">
                 <CardTitle className="text-red-700 flex items-center gap-2">
@@ -782,7 +828,6 @@ export default function Profile({
           </TabsContent>
         </Tabs>
 
-        {/* Image Cropper Modal */}
         <ImageCropper
           open={showCropDialog}
           onOpenChange={setShowCropDialog}

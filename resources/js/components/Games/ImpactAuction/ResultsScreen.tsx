@@ -6,7 +6,7 @@ import {
 } from "@/types/impactauction";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import LobbyChat from "@/components/Lobby/LobbyChat";
+
 import { Lobby } from "@/types/lobby";
 import { useLobby } from "@/hooks/useLobby";
 import { cn } from "@/lib/utils";
@@ -134,8 +134,8 @@ export function ResultsScreen({
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="max-w-7xl mx-auto">
+        <div>
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold text-gray-900 mb-2">
               Impact Revealed!
@@ -493,12 +493,6 @@ export function ResultsScreen({
             >
               Return to Lobby
             </Button>
-          </div>
-        </div>
-
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm h-full">
-            <LobbyChat auth={auth} lobbyHook={lobbyHook} />
           </div>
         </div>
       </div>

@@ -58,9 +58,6 @@ class AuthController extends Controller
     /**
      * Handle an incoming registration request.
      */
-    /**
-     * Apstrādā ienākošu reģistrācijas pieprasījumu.
-     */
     public function register(Request $request): RedirectResponse
     {
         // Rate limiting to prevent too many accounts from one device
@@ -70,30 +67,24 @@ class AuthController extends Controller
         }
         RateLimiter::hit($key, 3600); // 1 hour window
 
-        // Validē lietotāja ievadītos datus
         $request->validate([
             'name' => 'required|string|max:255|unique:users',
             'email' => 'required|string|lowercase|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Izveido jaunu lietotāju datubāzē ar ievadītajiem datiem
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        // Nosūta e-pasta verifikācijas notifikāciju
         event(new Registered($user));
 
-        // Automātiski ielogojas kā jaunizveidotais lietotājs
         Auth::login($user);
 
-        // Pāradresē lietotāju uz mājaslapas sākumlapu
         return redirect('/');
     }
-
 
     /**
      * Destroy an authenticated session (logout).
@@ -125,7 +116,7 @@ class AuthController extends Controller
     private function isDecorationUnlocked($decoration, $user)
     {
         if (!$decoration->unlock_type) {
-            return true; // No unlock condition, always unlocked
+            return true;
         }
 
         if ($decoration->unlock_type === 'game_score') {
@@ -139,7 +130,7 @@ class AuthController extends Controller
             return $maxScore >= $decoration->unlock_score;
         }
 
-        return false; // Unknown type, locked
+        return false;
     }
 
     /**
@@ -190,7 +181,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Get location from IP address (you can integrate with a service like ipinfo.io).
+     * Get location from IP address.
      */
     private function getLocationFromIp(string $ip): ?string
     {
@@ -234,15 +225,43 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        // Validate file
         $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'avatar' => [
+                'required',
+                'file',
+                'mimes:jpeg,jpg,png,gif,svg',
+                'max:2048', // 2MB max
+            ],
+        ], [
+            'avatar.mimes' => 'The avatar must be a file of type: JPEG, PNG, GIF, or SVG.',
+            'avatar.max' => 'The avatar must not be larger than 2MB.',
         ]);
 
+        $file = $request->file('avatar');
+
+        // Additional backend validation for file size
+        if ($file->getSize() > 2048 * 1024) { // 2MB in bytes
+            return back()->withErrors([
+                'avatar' => 'The avatar must not be larger than 2MB.',
+            ]);
+        }
+
+        // Check mime type
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml'];
+        if (!in_array($file->getMimeType(), $allowedMimes)) {
+            return back()->withErrors([
+                'avatar' => 'The avatar must be a file of type: JPEG, PNG, GIF, or SVG.',
+            ]);
+        }
+
+        // Delete old avatar if exists (but not preset avatars)
         if ($user->avatar && !str_starts_with($user->avatar, '/avatars/preset-')) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        // Store the new avatar
+        $avatarPath = $file->store('avatars', 'public');
 
         $user->update([
             'avatar' => $avatarPath,
