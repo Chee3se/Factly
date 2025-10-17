@@ -10,34 +10,39 @@ use Illuminate\Support\Facades\Storage;
  * and make it more recognizable to other users.
  */
 
-it('can edit profile successfully', function () {
-    // Context: User edits profile
-    $user = User::factory()->create([
-        'name' => 'OldUsername',
-        'email' => 'olduser@example.com',
-        'email_verified_at' => now()
-    ]);
+ it('can edit profile successfully', function () {
+     // tiek izveidots jauns lietotājs
+     $user = User::factory()->create([
+         'name' => 'OldUsername',          // Sākotnējais lietotājvārds
+         'email' => 'olduser@example.com', // Sākotnējais e-pasts
+         'email_verified_at' => now()      // E-pasts ir verificēts
+     ]);
 
-    $this->be($user);
-    $page = visit('/');
+     // Lietotājs tiek autentificēts
+     $this->be($user);
+     $page = visit('/');
 
-    $page->click('Get Started');
-    $page->click('[data-slot=avatar]');
-    $page->click('Profile');
+     // Navigē uz profila lapu
+     $page->click('Get Started');
+     $page->click('[data-slot=avatar]');
+     $page->click('Profile');
 
-    // Update only username
-    $page->fill('Username', 'NewUsername');
-    $page->fill('Email', 'user@example.com');
-    $page->click('Save Changes');
+     // Atjauno lietotājvārdu un e-pastu
+     $page->fill('Username', 'NewUsername');
+     $page->fill('Email', 'user@example.com');
+     $page->click('Save Changes');
 
-    $this->assertDatabaseHas('users', [
-        'id' => $user->id,
-        'name' => 'NewUsername',
-        'email' => 'user@example.com',
-    ]);
+     // Pārbauda, vai izmaiņas saglabātas datubāzē
+     $this->assertDatabaseHas('users', [
+         'id' => $user->id,
+         'name' => 'NewUsername',
+         'email' => 'user@example.com',
+     ]);
 
-    $page->assertSee('Verify Your Email');
-});
+     // Pārbauda, vai tiek rādīts e-pasta verifikācijas paziņojums
+     $page->assertSee('Verify Your Email');
+ });
+
 
 it('can update only username', function () {
     // Context: User edits profile

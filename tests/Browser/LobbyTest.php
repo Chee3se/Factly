@@ -34,34 +34,36 @@ it('can login', function () {
  * to make learning more interactive and fun.
  */
 
-it('can create a lobby for a game', function () {
-    // Context: User is logged in and selects a specific game
-    $user = User::factory()->create();
-    $game = Game::factory()->create();
+ it('can create a lobby for a game', function () {
+     // Izveido testam lietotāju un spēli
+     $user = User::factory()->create();
+     $game = Game::factory()->create();
 
-    $this->be($user);
-    $page = visit('/');
-    $page->click('Get Started');
+     // Pieraksta lietotāju sistēmā un atver sākumlapu
+     $this->be($user);
+     $page = visit('/');
+     $page->click('Get Started');
 
-    $page->assertSee('Play Game')
-        ->click('Play Game')
-        ->assertPathIs('/api/lobbies/'.$game->slug);
+     // Pārbauda, vai ir redzama spēles poga un navigācija uz spēles lapu
+     $page->assertSee('Play Game')
+         ->click('Play Game')
+         ->assertPathIs('/api/lobbies/'.$game->slug);
 
-    // Scenario: Successfully created lobby
-    // When: User doesn't already own a lobby
-    $page->assertSee('Create ' . $game->name . ' Lobby')
-        ->click('Create ' . $game->name . ' Lobby');
+     // Simulē istabas izveidi, ja lietotājam vēl nav istabas
+     $page->assertSee('Create ' . $game->name . ' Lobby')
+         ->click('Create ' . $game->name . ' Lobby');
 
-    // Then: New lobby is created
-    $this->assertDatabaseHas('lobbies', [
-        'host_user_id' => $user->id,
-        'game_id' => $game->id,
-    ]);
+     // Pārbauda, vai datubāzē izveidota jauna istaba
+     $this->assertDatabaseHas('lobbies', [
+         'host_user_id' => $user->id,
+         'game_id' => $game->id,
+     ]);
 
-    // And: User is connected to lobby channel
-    $page->assertButtonDisabled('Start Game')
-        ->assertButtonEnabled('Delete Lobby');
-});
+     // Pārbauda, vai lietotājs atrodas istabā un ir tās vadītājs
+     $page->assertButtonDisabled('Start Game')
+         ->assertButtonEnabled('Delete Lobby');
+ });
+
 
 it('shows error when user already owns a lobby', function () {
     // Context: User is logged in
@@ -142,67 +144,69 @@ it('can join a lobby for a game', function () {
  * so we can discuss the game and compare our opinions.
  */
 
-it('can send messages in a lobby', function () {
-    Event::fake();
+ it('can send messages in a lobby', function () {
+     // Izslēdz notikumu nosūtīšanu, lai varētu pārbaudīt to izsaukšanu
+     Event::fake();
 
-    // Context: User is logged in, selects a game, and creates/joins lobby
-    $user1 = User::factory()->create();
-    $user2 = User::factory()->create();
-    $game = Game::factory()->create();
+     // Tiek izveidoti divi lietotāji un spēle
+     $user1 = User::factory()->create();
+     $user2 = User::factory()->create();
+     $game = Game::factory()->create();
 
-    // User1 creates lobby
-    $this->be($user1);
-    $page = visit('/');
-    $page->click('Get Started');
+     // Lietotājs 1 izveido istabu
+     $this->be($user1);
+     $page = visit('/');
+     $page->click('Get Started');
 
-    $page->assertSee('Play Game')
-        ->click('Play Game')
-        ->assertPathIs('/api/lobbies/'.$game->slug);
+     $page->assertSee('Play Game')
+         ->click('Play Game')
+         ->assertPathIs('/api/lobbies/'.$game->slug);
 
-    $page->assertSee('Create ' . $game->name . ' Lobby')
-        ->click('Create ' . $game->name . ' Lobby');
+     $page->assertSee('Create ' . $game->name . ' Lobby')
+         ->click('Create ' . $game->name . ' Lobby');
 
-    $code = Lobby::where('host_user_id', $user1->id)->first()->lobby_code;
+     // Iegūst izveidotās istabas kodu
+     $code = Lobby::where('host_user_id', $user1->id)->first()->lobby_code;
 
-    // User2 joins
-    $this->be($user2);
-    $page->navigate('/')
-        ->assertSee('Play Game')
-        ->click('Play Game')
-        ->assertPathIs('/api/lobbies/'.$game->slug);
+     // Lietotājs 2 pievienojas istabai, izmantojot kodu
+     $this->be($user2);
+     $page->navigate('/')
+         ->assertSee('Play Game')
+         ->click('Play Game')
+         ->assertPathIs('/api/lobbies/'.$game->slug);
 
-    $page->assertSee('Join Lobby')
-        ->fill('Lobby Code', $code)
-        ->click('Join Lobby');
+     $page->assertSee('Join Lobby')
+         ->fill('Lobby Code', $code)
+         ->click('Join Lobby');
 
-    // Scenario: Successfully sent message in lobby
-    // When: User enters message in designated field
-    $this->be($user1);
-    $page->navigate('/api/lobbies/'.$game->slug);
-    $page->fill('[placeholder="Type a message..."]', 'Hello from user1')
-        ->submit();
+     // Lietotājs 1 nosūta ziņu istabā
+     $this->be($user1);
+     $page->navigate('/api/lobbies/'.$game->slug);
+     $page->fill('[placeholder="Type a message..."]', 'Hello from user1')
+         ->submit();
 
-    // Then: Message is sent to server
-    Event::assertDispatched(LobbyMessageSent::class);
+     // Tiek pārbaudīts vai tiek nosūtīts notikums LobbyMessageSent
+     Event::assertDispatched(LobbyMessageSent::class);
 
-    // And: Message is saved in database
-    $this->assertDatabaseHas('lobby_messages', [
-        'user_id' => $user1->id,
-        'message' => 'Hello from user1',
-    ]);
+     // Tiek pārbaudīts vai ziņa tiek saglabāta datubāzē
+     $this->assertDatabaseHas('lobby_messages', [
+         'user_id' => $user1->id,
+         'message' => 'Hello from user1',
+     ]);
 
-    // And: Message is sent to lobby channel
-    $page->assertSee('Hello from user1');
+     // Tiek pārbaudīts vai ziņa tiek parādīta istabas tērzēšanā
+     $page->assertSee('Hello from user1');
 
-    // User2 sends message
-    $this->be($user2);
-    $page->navigate('/api/lobbies/'.$game->slug);
-    $page->fill('[placeholder="Type a message..."]', 'Hi back from user2')
-        ->submit();
+     // Lietotājs 2 nosūta atbildes ziņu
+     $this->be($user2);
+     $page->navigate('/api/lobbies/'.$game->slug);
+     $page->fill('[placeholder="Type a message..."]', 'Hi back from user2')
+         ->submit();
 
-    Event::assertDispatched(LobbyMessageSent::class);
-    $page->assertSee('Hi back from user2');
-});
+     // Pārbauda, vai notikums tiek nosūtīts un ziņa redzama istabā
+     Event::assertDispatched(LobbyMessageSent::class);
+     $page->assertSee('Hi back from user2');
+ });
 
 it('does not let the user send the message if the field is empty', function () {
     Event::fake();

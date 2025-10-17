@@ -14,44 +14,36 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('can register with Google account successfully', function () {
-    // Create a mock user with public properties (not methods)
+    // Izveido imitētu Google lietotāju ar viltotiem datiem
     $abstractUser = Mockery::mock('Laravel\Socialite\Two\User');
-
-    // Mock as properties, not methods
     $abstractUser->id = 'google-id-12345';
     $abstractUser->name = 'New Google User';
     $abstractUser->email = 'newgoogle@example.com';
     $abstractUser->avatar = 'https://example.com/avatar.jpg';
-
-    // Also set up method calls in case they're used
+    // Definē metodes, kas atgriež tās pašas vērtības
     $abstractUser->shouldReceive('getId')->andReturn('google-id-12345');
     $abstractUser->shouldReceive('getName')->andReturn('New Google User');
     $abstractUser->shouldReceive('getEmail')->andReturn('newgoogle@example.com');
     $abstractUser->shouldReceive('getAvatar')->andReturn('https://example.com/avatar.jpg');
-
-    // Mock the Socialite Provider
+    // Izveido imitētu Google pakalpojuma sniedzēju
     $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
     $provider->shouldReceive('user')->andReturn($abstractUser);
-
-    // Mock the Socialite facade
+    // Simulē Socialite 'google' dzinēju
     Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
-
-    // Directly call the callback route
+    // Izsauc Google callback maršrutu
     $response = $this->get('/auth/google/callback');
-
-    // Assert redirect to home
+    // Pārbauda, vai lietotājs tiek pāradresēts uz mājaslapu
     $response->assertRedirect('/');
-
-    // Assert new user was created
+    // Pārbauda, vai lietotājs ir izveidots datu bāzē
     $this->assertDatabaseHas('users', [
         'name' => 'New Google User',
         'email' => 'newgoogle@example.com',
         'type' => 'google',
     ]);
-
-    // Assert user is authenticated
+    // Pārbauda, vai lietotājs ir autentificēts
     $this->assertAuthenticated();
 });
+
 
 it('redirects to login when Google account already linked to existing profile', function () {
     // Create existing user with Google email
