@@ -32,9 +32,7 @@ export function useLobby(authUserId?: number) {
     if (channelRef.current && window.Echo) {
       try {
         window.Echo.leave(channelRef.current.name);
-      } catch (error) {
-        console.warn("Error leaving channel:", error);
-      }
+      } catch {}
       channelRef.current = null;
       setCurrentChannel(null);
       setWhisperHandlers({});
@@ -109,7 +107,6 @@ export function useLobby(authUserId?: number) {
   const sendWhisper = useCallback(
     (event: string, data: any, targetUserId?: number) => {
       if (!channelRef.current || !channelRef.current.isReady) {
-        console.warn("Cannot send whisper - channel not ready");
         return;
       }
 
@@ -132,12 +129,8 @@ export function useLobby(authUserId?: number) {
 
         if (pusherChannel && pusherChannel.trigger) {
           pusherChannel.trigger(`client-${event}`, whisperData);
-        } else {
-          console.warn("Pusher channel not ready for whisper");
         }
-      } catch (error) {
-        console.warn("Whisper send error:", error);
-      }
+      } catch {}
     },
     [userReady],
   );
@@ -765,7 +758,6 @@ export function useLobby(authUserId?: number) {
   const onWhisper = useCallback(
     (event: string, handler: (data: any) => void) => {
       if (!channelRef.current || !channelRef.current.isReady) {
-        console.warn("Cannot setup whisper listener - channel not ready");
         return;
       }
 
@@ -777,9 +769,7 @@ export function useLobby(authUserId?: number) {
       try {
         channelRef.current.listenForWhisper(event, wrappedHandler);
         setWhisperHandlers((prev) => ({ ...prev, [event]: wrappedHandler }));
-      } catch (error) {
-        console.warn("Whisper listen error:", error);
-      }
+      } catch {}
     },
     [authUserId],
   );
@@ -798,9 +788,7 @@ export function useLobby(authUserId?: number) {
           delete newHandlers[event];
           return newHandlers;
         });
-      } catch (error) {
-        console.warn("Whisper off error:", error);
-      }
+      } catch {}
     },
     [whisperHandlers],
   );

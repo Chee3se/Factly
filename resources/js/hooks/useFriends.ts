@@ -74,7 +74,6 @@ export function useFriends(authUserId?: number) {
 
       const channel = window.Echo.private(channelName)
         .listen("FriendRequestSent", (e: any) => {
-          console.log("FriendRequestSent event received:", e);
           const sender = e.sender;
           const requestId = e.request_id;
           if (sender && sender.id && sender.name && requestId) {

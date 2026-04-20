@@ -44,10 +44,6 @@ export default function Home({ auth, games, flash }: Props) {
 
   useEffect(() => {
     if (currentLobby && currentLobby.started) {
-      console.log(
-        "Automatically leaving started lobby:",
-        currentLobby.lobby_code,
-      );
       leaveLobby();
     }
   }, [currentLobby, leaveLobby]);
@@ -55,7 +51,6 @@ export default function Home({ auth, games, flash }: Props) {
   useEffect(() => {
     const timer = setTimeout(() => {
       const hasSeenHero = localStorage.getItem("hasSeenHeroScreen");
-      console.log("Has seen hero:", hasSeenHero);
       if (!hasSeenHero || hasSeenHero !== "true") {
         setShowHeroScreen(true);
       }

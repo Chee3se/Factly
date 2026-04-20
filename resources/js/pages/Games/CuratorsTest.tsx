@@ -894,8 +894,6 @@ async function saveArtwork(
 ) {
   try {
     const routeUrl = route("games.curators-test.save-artwork");
-    console.log("Saving artwork to:", routeUrl);
-    console.log("Artwork data length:", artworkData.length);
 
     const response = await (window as any).axios.post(routeUrl, {
       artwork_data: artworkData,
@@ -904,7 +902,6 @@ async function saveArtwork(
       user_id: userId,
     });
 
-    console.log("Save artwork response:", response);
     return response.data;
   } catch (error: any) {
     console.error("Error saving artwork:", error);
@@ -916,13 +913,11 @@ async function saveArtwork(
 async function loadSavedArtworks(word: string) {
   try {
     const routeUrl = route("games.curators-test.artworks");
-    console.log("Loading artworks from:", routeUrl, "with subject:", word);
 
     const response = await (window as any).axios.get(routeUrl, {
       params: { subject: word },
     });
 
-    console.log("Loaded artworks:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error loading artworks:", error);

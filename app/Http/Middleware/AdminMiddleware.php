@@ -15,9 +15,17 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !auth()->user()->role == 'admin') {
+        if (!auth()->check()) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+                return response()->json(['error' => 'Unauthenticated'], 401);
+            }
+
+            abort(401, 'Authentication required.');
+        }
+
+        if (auth()->user()->role !== 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Forbidden'], 403);
             }
 
             abort(403, 'Access denied. Admin privileges required.');
