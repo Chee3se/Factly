@@ -36,6 +36,10 @@ Route::middleware('guest')->group(function () {
     Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.request');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+})
+
 // Authenticated routes
 Route::middleware(['auth', 'verified'])->group(function () {
     // Lobby page route
@@ -44,7 +48,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Game routes with lobby middleware
     Route::get('/games/{game:slug}', [GameController::class, 'show'])->name('games.show')->middleware('lobby');
 
-    Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/profile', [AuthController::class, 'profile'])->name('profile');
 
     // Profile management routes
