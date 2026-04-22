@@ -106,10 +106,10 @@ export const StickFigure: React.FC<StickFigureProps> = ({
           }}
         >
           <div
-            className={`w-11 h-11 rounded-full ${
+            className={`w-11 h-11 rounded-full overflow-hidden ${
               isCurrentUser
                 ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg"
-                : "ring-1 ring-border shadow"
+                : "ring-1 ring-border/80 shadow-md"
             }`}
           >
             <Avatar className="w-full h-full" decoration={player?.decoration}>
@@ -119,7 +119,7 @@ export const StickFigure: React.FC<StickFigureProps> = ({
                 className="object-cover object-center"
               />
               <AvatarFallback
-                className={`text-sm font-bold text-white bg-gradient-to-br ${fallbackGradient}`}
+                className={`text-base font-bold text-white bg-gradient-to-br ${fallbackGradient} shadow-inner`}
               >
                 {getInitials(player?.name)}
               </AvatarFallback>

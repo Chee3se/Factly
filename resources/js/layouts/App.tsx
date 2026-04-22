@@ -26,6 +26,7 @@ import AnimatedGridBackground from "@/components/AnimatedGridBackground";
 import FriendsSidebar from "@/components/FriendsSidebar";
 import { useFriends } from "@/hooks/useFriends";
 import { FriendsContext } from "@/contexts/FriendsContext";
+import { LobbyContext, ActiveLobbyInfo } from "@/contexts/LobbyContext";
 
 const appName = import.meta.env.VITE_APP_NAME || "Factly";
 
@@ -42,6 +43,7 @@ export default function App({
   const [loading, setLoading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isFriendsOpen, setIsFriendsOpen] = useState(false);
+  const [activeLobby, setActiveLobby] = useState<ActiveLobbyInfo | null>(null);
   const page = usePage();
   const isInGame = /^\/games\/[^/]+/.test(page.url);
 
@@ -78,6 +80,7 @@ export default function App({
 
   return (
     <FriendsContext.Provider value={friendsHook}>
+      <LobbyContext.Provider value={{ activeLobby, setActiveLobby }}>
       <Head title={title} />
       <AnimatedGridBackground />
       <div className="relative z-10 min-h-screen flex flex-col">
@@ -274,6 +277,7 @@ export default function App({
           </div>
         </footer>
       </div>
+      </LobbyContext.Provider>
     </FriendsContext.Provider>
   );
 }

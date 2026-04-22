@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useFriends } from "@/hooks/useFriends";
+import { useLobbyContext } from "@/contexts/LobbyContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -55,6 +56,9 @@ export default function FriendsSidebar({
     externalHook ? undefined : auth.user.id,
   );
   const hook = externalHook ?? internalHook;
+  const { activeLobby } = useLobbyContext();
+  const lobbyInviteEnabled = !showInviteOptions && !!activeLobby;
+  const lobbyExcluded = new Set(activeLobby?.players?.map((p) => p.id) || []);
   const {
     friends,
     friendRequests,
@@ -298,6 +302,30 @@ export default function FriendsSidebar({
                                     disabled={
                                       loading ||
                                       excludedFromInvite.includes(friend.id)
+                                    }
+                                  >
+                                    <Send className="h-3 w-3 mr-1" />
+                                    Invite
+                                  </Button>
+                                )}
+                                {lobbyInviteEnabled && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3"
+                                    onClick={() =>
+                                      hook.inviteFriendToLobby(
+                                        friend.id,
+                                        activeLobby!.lobby_code,
+                                      )
+                                    }
+                                    disabled={
+                                      loading || lobbyExcluded.has(friend.id)
+                                    }
+                                    title={
+                                      lobbyExcluded.has(friend.id)
+                                        ? "Already in your lobby"
+                                        : "Invite to your lobby"
                                     }
                                   >
                                     <Send className="h-3 w-3 mr-1" />
