@@ -13,19 +13,10 @@ class ScoreController extends Controller
 {
     public function saveScore(Request $request)
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
         $validated = $request->validate([
             'game' => 'required|string|max:50',
             'score' => 'required|integer|min:0',
-            'user_id' => 'required|integer|exists:users,id'
         ]);
-
-        if ($validated['user_id'] !== auth()->id()) {
-            return response()->json(['error' => 'Forbidden'], 403);
-        }
 
         try {
             $game = Game::where('slug', $validated['game'])->first();
@@ -33,29 +24,33 @@ class ScoreController extends Controller
                 return response()->json(['error' => 'Game not found'], 404);
             }
 
+            $userId = auth()->id();
+
+            // Read previous best before inserting so is_new_best is correct.
+            $previousBest = Score::where('user_id', $userId)
+                ->where('game_id', $game->id)
+                ->max('score');
+
             $newScore = Score::create([
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
                 'game_id' => $game->id,
                 'score' => $validated['score'],
             ]);
 
-            $bestScore = Score::where('user_id', $validated['user_id'])
-                ->where('game_id', $game->id)
-                ->max('score');
+            $bestScore = max($validated['score'], $previousBest ?? 0);
 
             return response()->json([
                 'success' => true,
                 'score_id' => $newScore->id,
                 'best_score' => $bestScore,
-                'is_new_best' => $validated['score'] >= $bestScore
+                'is_new_best' => $previousBest === null || $validated['score'] > $previousBest,
             ]);
 
         } catch (Exception $e) {
             Log::error('Failed to save game score', [
                 'error' => $e->getMessage(),
-                'user_id' => $validated['user_id'],
+                'user_id' => auth()->id(),
                 'game' => $validated['game'],
-                'score' => $validated['score']
             ]);
 
             return response()->json(['error' => 'Failed to save score'], 500);
@@ -64,10 +59,6 @@ class ScoreController extends Controller
 
     public function getUserBestScore(Request $request, $gameSlug)
     {
-        if (!auth()->check()) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
         $game = Game::where('slug', $gameSlug)->first();
         if (!$game) {
             return response()->json(['error' => 'Game not found'], 404);
