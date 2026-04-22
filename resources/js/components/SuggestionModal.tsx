@@ -21,6 +21,11 @@ interface SuggestionModalProps {
   auth: Auth;
 }
 
+const TITLE_MIN = 3;
+const TITLE_MAX = 100;
+const DESC_MIN = 10;
+const DESC_MAX = 500;
+
 export default function SuggestionModal({
   isOpen,
   onClose,
@@ -29,19 +34,37 @@ export default function SuggestionModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
+
+  const validate = (): boolean => {
+    const next: { title?: string; description?: string } = {};
+    const t = title.trim();
+    const d = description.trim();
+
+    if (!t) next.title = "Title is required.";
+    else if (t.length < TITLE_MIN)
+      next.title = `Title must be at least ${TITLE_MIN} characters.`;
+    else if (t.length > TITLE_MAX)
+      next.title = `Title may not be longer than ${TITLE_MAX} characters.`;
+
+    if (!d) next.description = "Description is required.";
+    else if (d.length < DESC_MIN)
+      next.description = `Description must be at least ${DESC_MIN} characters.`;
+    else if (d.length > DESC_MAX)
+      next.description = `Description may not be longer than ${DESC_MAX} characters.`;
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!title.trim() || !description.trim()) {
-      toast.error("Please fill in both title and description");
-      return;
-    }
+    if (!validate()) return;
 
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post("/suggestions", {
+      await axios.post("/suggestions", {
         title: title.trim(),
         description: description.trim(),
       });
@@ -49,18 +72,15 @@ export default function SuggestionModal({
       toast.success("Thank you! Your suggestion has been submitted.");
       setTitle("");
       setDescription("");
+      setErrors({});
       onClose();
     } catch (error: any) {
       if (error.response?.status === 422) {
-        // Handle validation errors
-        const errors = error.response.data.errors;
-        if (errors.title) {
-          toast.error(errors.title[0]);
-        } else if (errors.description) {
-          toast.error(errors.description[0]);
-        } else {
-          toast.error("Please check your input and try again.");
-        }
+        const serverErrors = error.response.data.errors || {};
+        setErrors({
+          title: serverErrors.title?.[0],
+          description: serverErrors.description?.[0],
+        });
       } else if (error.response?.status === 401) {
         toast.error("Please log in to submit a suggestion.");
       } else {
@@ -69,7 +89,6 @@ export default function SuggestionModal({
             "Failed to submit suggestion. Please try again.",
         );
       }
-      console.error("Suggestion submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -79,6 +98,7 @@ export default function SuggestionModal({
     if (!isSubmitting) {
       setTitle("");
       setDescription("");
+      setErrors({});
       onClose();
     }
   };
@@ -106,13 +126,20 @@ export default function SuggestionModal({
               type="text"
               placeholder="What's your game called?"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={100}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) setErrors((p) => ({ ...p, title: undefined }));
+              }}
+              maxLength={TITLE_MAX}
               disabled={isSubmitting}
               className="w-full"
+              aria-invalid={!!errors.title}
             />
+            {errors.title && (
+              <p className="text-sm text-red-600">{errors.title}</p>
+            )}
             <div className="text-xs text-muted-foreground text-right">
-              {title.length}/100 characters
+              {title.length}/{TITLE_MAX} characters
             </div>
           </div>
 
@@ -124,13 +151,21 @@ export default function SuggestionModal({
               id="description"
               placeholder="Describe your game idea - how it works, what makes it fun, rules, etc..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={500}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (errors.description)
+                  setErrors((p) => ({ ...p, description: undefined }));
+              }}
+              maxLength={DESC_MAX}
               disabled={isSubmitting}
               className="min-h-[120px] resize-none"
+              aria-invalid={!!errors.description}
             />
+            {errors.description && (
+              <p className="text-sm text-red-600">{errors.description}</p>
+            )}
             <div className="text-xs text-muted-foreground text-right">
-              {description.length}/500 characters
+              {description.length}/{DESC_MAX} characters
             </div>
           </div>
 
