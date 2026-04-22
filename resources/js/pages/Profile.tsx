@@ -1,5 +1,5 @@
 import { useState, useRef, JSX } from "react";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import App from "@/layouts/App";
 import {
   Card,
@@ -79,11 +79,57 @@ export default function Profile({
   sessions = [],
   decorations = [],
 }: Props) {
+  const isGoogleUser = auth.user.type === Type.Google;
+  const { errors: pageErrors } = usePage().props as unknown as {
+    errors: Record<string, string>;
+  };
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     name: auth.user.name || "",
     email: auth.user.email || "",
   });
+  const [clientErrors, setClientErrors] = useState<Record<string, string>>({});
+
+  const fieldError = (field: string): string | undefined =>
+    clientErrors[field] || pageErrors?.[field];
+
+  const validateProfile = (): boolean => {
+    const next: Record<string, string> = {};
+    const name = formData.name.trim();
+    if (!name) next.name = "Username is required.";
+    else if (name.length < 3)
+      next.name = "Username must be at least 3 characters.";
+    else if (name.length > 20)
+      next.name = "Username may not be longer than 20 characters.";
+    else if (!/^[a-zA-Z0-9_\- ]+$/.test(name))
+      next.name =
+        "Username may only contain letters, numbers, spaces, hyphens, and underscores.";
+
+    if (!isGoogleUser) {
+      const email = formData.email.trim();
+      if (!email) next.email = "Email is required.";
+      else if (email.length > 100)
+        next.email = "Email may not be longer than 100 characters.";
+      else if (!/^\S+@\S+\.\S+$/.test(email))
+        next.email = "Please enter a valid email address.";
+    }
+
+    setClientErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const validatePassword = (): boolean => {
+    const next: Record<string, string> = {};
+    if (!passwordData.current_password)
+      next.current_password = "Current password is required.";
+    if (!passwordData.password) next.password = "New password is required.";
+    else if (passwordData.password.length < 8)
+      next.password = "Password must be at least 8 characters.";
+    if (passwordData.password !== passwordData.password_confirmation)
+      next.password_confirmation = "Passwords do not match.";
+    setClientErrors((prev) => ({ ...prev, ...next }));
+    return !next.current_password && !next.password && !next.password_confirmation;
+  };
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [showCropDialog, setShowCropDialog] = useState<boolean>(false);
   const [showAvatarDialog, setShowAvatarDialog] = useState<boolean>(false);
@@ -123,6 +169,11 @@ export default function Profile({
       ...prev,
       [field]: value,
     }));
+    setClientErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handlePasswordChange = (
@@ -133,15 +184,22 @@ export default function Profile({
       ...prev,
       [field]: value,
     }));
+    setClientErrors((prev) => {
+      if (!prev[field]) return prev;
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const handleSave = (): void => {
+    if (!validateProfile()) return;
     setIsLoading(true);
 
     // @ts-ignore
     router.put(route("profile.update"), formData, {
       onSuccess: () => {
         setIsLoading(false);
+        setClientErrors({});
       },
       onError: () => {
         setIsLoading(false);
@@ -212,6 +270,7 @@ export default function Profile({
   };
 
   const handlePasswordUpdate = (): void => {
+    if (!validatePassword()) return;
     setIsLoading(true);
 
     // @ts-ignore
@@ -223,6 +282,7 @@ export default function Profile({
           password_confirmation: "",
         });
         setIsLoading(false);
+        setClientErrors({});
       },
       onError: () => {
         setIsLoading(false);
@@ -294,8 +354,6 @@ export default function Profile({
     if (!avatar) return null;
     return `/storage/${avatar}`;
   };
-
-  const isGoogleUser = auth.user.type === Type.Google;
 
   return (
     <App title="Profile" auth={auth}>
@@ -435,7 +493,17 @@ export default function Profile({
                         handleInputChange("name", e.target.value)
                       }
                       disabled={isLoading}
+                      maxLength={20}
+                      aria-invalid={!!fieldError("name")}
                     />
+                    {fieldError("name") && (
+                      <p className="text-sm text-red-600">
+                        {fieldError("name")}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      3–20 characters. Letters, numbers, spaces, hyphens, underscores.
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -448,7 +516,14 @@ export default function Profile({
                         handleInputChange("email", e.target.value)
                       }
                       disabled={isLoading || isGoogleUser}
+                      maxLength={100}
+                      aria-invalid={!!fieldError("email")}
                     />
+                    {fieldError("email") && (
+                      <p className="text-sm text-red-600">
+                        {fieldError("email")}
+                      </p>
+                    )}
                     {isGoogleUser && (
                       <p className="text-sm text-muted-foreground">
                         Email cannot be changed for Google accounts
@@ -581,7 +656,13 @@ export default function Profile({
                             )
                           }
                           disabled={isLoading}
+                          aria-invalid={!!fieldError("current_password")}
                         />
+                        {fieldError("current_password") && (
+                          <p className="text-sm text-red-600">
+                            {fieldError("current_password")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -594,7 +675,13 @@ export default function Profile({
                             handlePasswordChange("password", e.target.value)
                           }
                           disabled={isLoading}
+                          aria-invalid={!!fieldError("password")}
                         />
+                        {fieldError("password") && (
+                          <p className="text-sm text-red-600">
+                            {fieldError("password")}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -612,7 +699,13 @@ export default function Profile({
                             )
                           }
                           disabled={isLoading}
+                          aria-invalid={!!fieldError("password_confirmation")}
                         />
+                        {fieldError("password_confirmation") && (
+                          <p className="text-sm text-red-600">
+                            {fieldError("password_confirmation")}
+                          </p>
+                        )}
                       </div>
 
                       <Button
