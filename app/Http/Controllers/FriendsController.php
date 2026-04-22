@@ -57,7 +57,9 @@ class FriendsController extends Controller
         ]);
 
         $user = Auth::user();
-        $query = $request->input('query');
+        // Escape LIKE wildcards so % and _ from the user are matched literally
+        // and can't be used to widen the search.
+        $escaped = addcslashes($request->input('query'), '%_\\');
 
         $existingFriendIds = Friend::where(function($q) use ($user) {
             $q->where('user_id', $user->id)
@@ -70,14 +72,11 @@ class FriendsController extends Controller
             ->push($user->id)
             ->unique();
 
-        $users = User::where(function($q) use ($query) {
-            $q->where('name', 'LIKE', "%{$query}%")
-                ->orWhere('email', 'LIKE', "%{$query}%");
-        })
+        $users = User::where('name', 'LIKE', "%{$escaped}%")
             ->whereNotIn('id', $existingFriendIds)
             ->limit(20)
             ->with('decoration')
-            ->get(['id', 'name', 'email', 'avatar']);
+            ->get(['id', 'name', 'avatar']);
 
         return response()->json(['users' => $users]);
     }
