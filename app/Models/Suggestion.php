@@ -11,10 +11,22 @@ class Suggestion extends Model
         'user_id',
         'title',
         'description',
+        'status',
+        'reviewed_at',
+        'reviewed_by',
+    ];
+
+    protected $casts = [
+        'reviewed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 }
