@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             ImpactAuctionItemSeeder::class,
             FactuallySeeder::class,
             CuratorsTestSeeder::class,
+            DemoUserSeeder::class,
         ]);
 
         // Delete Laravel storage files
