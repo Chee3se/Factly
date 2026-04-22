@@ -680,6 +680,34 @@ export default function ImpactAuction({ auth, game, items }: Props) {
     }
   }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner]);
 
+  // Auto-end bidding when every player has placed a bid (owner only)
+  useEffect(() => {
+    if (
+      gameState.phase !== "bidding" ||
+      !gameState.isGameOwner ||
+      gameState.timeLeft <= 0
+    ) {
+      return;
+    }
+
+    const playerIds = Object.keys(gameState.playerStates);
+    if (playerIds.length === 0) return;
+
+    const allBid = playerIds.every(
+      (id) => gameState.playerStates[parseInt(id)]?.hasPlacedBid,
+    );
+
+    if (allBid) {
+      endBidding();
+    }
+  }, [
+    gameState.playerStates,
+    gameState.phase,
+    gameState.isGameOwner,
+    gameState.timeLeft,
+    endBidding,
+  ]);
+
   if (databaseItems.length === 0) {
     return (
       <LoadingScreen auth={auth}>

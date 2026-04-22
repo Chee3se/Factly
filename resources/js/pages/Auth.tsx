@@ -23,14 +23,13 @@ export default function Auth({ canResetPassword, status }: Props) {
         <div className="w-full max-w-md space-y-6">
           <div className="text-center space-y-2">
             <div className="flex justify-center">
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
-                <img src={"./factly-logo-v2-white.png"} className="h-9" />
-              </div>
+              <img
+                src="/factly-logo-v3.png"
+                alt={appName}
+                className="h-12 w-auto"
+              />
             </div>
-            <h1 className="text-2xl font-bold">
-              Welcome to{" "}
-              <span className="font-extrabold italic">{appName}</span>
-            </h1>
+            <h1 className="text-2xl font-bold">Welcome</h1>
             <p className="text-muted-foreground">
               Sign in to your account or create a new one
             </p>

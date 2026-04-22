@@ -1,8 +1,6 @@
 import React from "react";
 import App from "@/layouts/App";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trophy, Medal, Award, Crown } from "lucide-react";
 import { GameState } from "@/types/quizladder";
@@ -30,148 +28,130 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
   const winner = sortedPlayers[0];
   const isWinner = winner?.userId === auth.user?.id;
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       ? name
           .split(" ")
-          .map((word) => word[0])
+          .map((w) => w[0])
           .join("")
           .toUpperCase()
           .slice(0, 2)
       : "?";
-  };
 
-  const getAvatarUrl = (avatar?: string): string | null => {
-    if (!avatar) return null;
-    return `/storage/${avatar}`;
-  };
+  const getAvatarUrl = (avatar?: string): string | null =>
+    avatar ? `/storage/${avatar}` : null;
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Crown className="w-6 h-6 text-yellow-600" />;
-      case 2:
-        return <Medal className="w-6 h-6 text-gray-500" />;
-      case 3:
-        return <Award className="w-6 h-6 text-orange-600" />;
-      default:
-        return <Trophy className="w-6 h-6 text-blue-600" />;
-    }
-  };
-
-  const getRankBadgeColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case 2:
-        return "bg-gray-100 text-gray-700 border-gray-300";
-      case 3:
-        return "bg-orange-100 text-orange-800 border-orange-300";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-300";
-    }
+  const rankIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="w-4 h-4 text-yellow-500" />;
+    if (rank === 2) return <Medal className="w-4 h-4 text-slate-400" />;
+    if (rank === 3) return <Award className="w-4 h-4 text-amber-600" />;
+    return null;
   };
 
   return (
     <App title="Quiz Ladder - Game Over" auth={auth}>
-      <div className="min-h-[80vh] bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center p-4">
-        <Card className="text-gray-900 bg-white/90 backdrop-blur-sm border-gray-300 max-w-2xl w-full shadow-xl">
-          <CardHeader className="text-center pb-4 border-b border-gray-300">
-            <div className="flex justify-center mb-3">
-              <Trophy className="w-16 h-16 text-blue-600" />
+      <div className="max-w-2xl mx-auto">
+        <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur overflow-hidden">
+          <div className="p-8 text-center border-b border-border/40">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-primary" />
+              </div>
             </div>
-            <CardTitle className="text-4xl font-bold mb-3 text-gray-800">
-              {isWinner ? "VICTORY!" : "GAME OVER"}
-            </CardTitle>
-            <div className="space-y-2">
-              <p className="text-lg text-gray-600">🏆 Winner</p>
-              <div className="flex items-center justify-center space-x-3">
-                <Avatar
-                  className="w-12 h-12 shadow-lg border-2 border-gray-400"
-                  decoration={winner?.player?.decoration}
-                >
-                  <AvatarImage
-                    src={getAvatarUrl(winner?.player?.avatar) || undefined}
-                    alt={winner?.player?.name}
-                  />
-                  <AvatarFallback className="text-lg font-bold bg-gray-200 text-gray-700">
-                    {getInitials(winner?.player?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-xl font-bold text-gray-800">
-                    {winner?.player?.name}
-                  </p>
-                  <p className="text-base text-gray-600">
-                    {winner?.cubes} points
-                  </p>
+            <h1 className="text-3xl font-bold tracking-tight mb-6">
+              {isWinner ? "Victory" : "Game Over"}
+            </h1>
+
+            <div className="inline-flex items-center gap-4 px-5 py-4 rounded-2xl border border-border/60 bg-background">
+              <Avatar
+                className="w-14 h-14"
+                decoration={winner?.player?.decoration}
+              >
+                <AvatarImage
+                  src={getAvatarUrl(winner?.player?.avatar) || undefined}
+                  alt={winner?.player?.name}
+                />
+                <AvatarFallback className="text-base font-bold bg-primary text-primary-foreground">
+                  {getInitials(winner?.player?.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="text-left">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  Winner
+                </div>
+                <div className="text-lg font-bold">{winner?.player?.name}</div>
+                <div className="text-sm text-muted-foreground tabular-nums">
+                  {winner?.cubes} points
                 </div>
               </div>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-6 space-y-4">
-            <div>
-              <h3 className="text-lg font-bold text-center mb-3 text-gray-600">
-                🏅 Final Rankings
-              </h3>
-              <div className="space-y-2">
-                {sortedPlayers.map((playerState, index) => (
-                  <div
+          <div className="p-6">
+            <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+              Final Rankings
+            </h3>
+            <ul className="space-y-1">
+              {sortedPlayers.map((playerState, index) => {
+                const rank = index + 1;
+                const isCurrentUser = playerState.userId === auth.user?.id;
+                return (
+                  <li
                     key={playerState.userId}
-                    className={`flex items-center justify-between p-3 rounded-lg backdrop-blur-sm transition-all duration-300 ${
-                      playerState.userId === auth.user?.id
-                        ? "bg-blue-50 border border-blue-300 shadow-lg"
-                        : "bg-gray-50 border border-gray-300 hover:bg-gray-100"
+                    className={`flex items-center gap-4 px-4 py-3 rounded-xl ${
+                      isCurrentUser ? "bg-primary/5" : "bg-muted/30"
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Badge
-                        className={`${getRankBadgeColor(index + 1)} font-bold px-2 py-1 border text-sm`}
-                      >
-                        #{index + 1}
-                      </Badge>
-                      <div className="flex items-center space-x-1">
-                        {getRankIcon(index + 1)}
-                      </div>
-                      <Avatar
-                        className="w-10 h-10 shadow-md border-2 border-gray-400"
-                        decoration={playerState.player?.decoration}
-                      >
-                        <AvatarImage
-                          src={
-                            getAvatarUrl(playerState.player?.avatar) ||
-                            undefined
-                          }
-                          alt={playerState.player?.name}
-                        />
-                        <AvatarFallback className="text-sm font-bold bg-gray-200 text-gray-700">
-                          {getInitials(playerState.player?.name)}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div className="w-8 flex items-center justify-center">
+                      {rank <= 3 ? (
+                        rankIcon(rank)
+                      ) : (
+                        <span className="text-sm font-semibold text-muted-foreground tabular-nums">
+                          {rank}
+                        </span>
+                      )}
+                    </div>
+                    <Avatar
+                      className="w-10 h-10"
+                      decoration={playerState.player?.decoration}
+                    >
+                      <AvatarImage
+                        src={
+                          getAvatarUrl(playerState.player?.avatar) || undefined
+                        }
+                        alt={playerState.player?.name}
+                      />
+                      <AvatarFallback className="text-sm font-bold bg-muted text-foreground">
+                        {getInitials(playerState.player?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <span className="font-medium truncate">
+                        {playerState.player?.name}
+                      </span>
+                      {isCurrentUser && (
+                        <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                          You
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-base text-gray-700">
+                      <div className="font-bold tabular-nums">
                         {playerState.cubes}
                       </div>
-                      <div className="text-xs text-gray-500">points</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
 
-            <div className="text-center pt-3">
-              <Button
-                onClick={onLeaveLobby}
-                size="default"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 border border-blue-600 hover:border-blue-700 shadow-lg transform hover:scale-105 transition-all duration-300 font-bold text-base text-white"
-              >
+            <div className="text-center pt-6">
+              <Button onClick={onLeaveLobby} size="lg" className="px-8">
                 Return to Lobbies
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </App>
   );

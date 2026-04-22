@@ -22,7 +22,10 @@ import {
 import { User, LogOut, Settings, Trophy, X } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import LobbyInvitationModal from "@/components/Lobby/LobbyInvitationModal";
+import AnimatedGridBackground from "@/components/AnimatedGridBackground";
+import FriendsSidebar from "@/components/FriendsSidebar";
 import { useFriends } from "@/hooks/useFriends";
+import { FriendsContext } from "@/contexts/FriendsContext";
 
 const appName = import.meta.env.VITE_APP_NAME || "Factly";
 
@@ -38,6 +41,7 @@ export default function App({
 }: PropsWithChildren<Props>) {
   const [loading, setLoading] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isFriendsOpen, setIsFriendsOpen] = useState(false);
   const page = usePage();
   const isInGame = /^\/games\/[^/]+/.test(page.url);
 
@@ -73,9 +77,10 @@ export default function App({
   };
 
   return (
-    <>
+    <FriendsContext.Provider value={friendsHook}>
       <Head title={title} />
-      <div className="min-h-screen bg-background flex flex-col">
+      <AnimatedGridBackground />
+      <div className="relative z-10 min-h-screen flex flex-col">
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14">
@@ -83,20 +88,22 @@ export default function App({
                 <button
                   type="button"
                   onClick={() => setShowExitConfirm(true)}
-                  className="flex items-center space-x-2 cursor-pointer group"
+                  className="flex items-center cursor-pointer group"
                   title="Exit game"
                 >
-                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center group-hover:opacity-80 transition-opacity">
-                    <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                  </div>
-                  <span className="font-extrabold text-lg italic">{appName}</span>
+                  <img
+                    src="/factly-logo-v3.png"
+                    alt={appName}
+                    className="h-8 w-auto group-hover:opacity-80 transition-opacity"
+                  />
                 </button>
               ) : (
-                <Link href="/" className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                    <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                  </div>
-                  <span className="font-extrabold text-lg italic">{appName}</span>
+                <Link href="/" className="flex items-center">
+                  <img
+                    src="/factly-logo-v3.png"
+                    alt={appName}
+                    className="h-8 w-auto"
+                  />
                 </Link>
               )}
 
@@ -219,6 +226,15 @@ export default function App({
           />
         )}
 
+        {auth.user && (
+          <FriendsSidebar
+            auth={auth}
+            isOpen={isFriendsOpen}
+            onToggle={() => setIsFriendsOpen(!isFriendsOpen)}
+            friendsHook={friendsHook}
+          />
+        )}
+
         <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -244,10 +260,12 @@ export default function App({
         <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
             <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                  <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                </div>
+              <div className="flex items-center space-x-3">
+                <img
+                  src="/factly-logo-v3.png"
+                  alt={appName}
+                  className="h-6 w-auto"
+                />
                 <span className="text-sm text-muted-foreground">
                   © 2025 {appName}. All rights reserved.
                 </span>
@@ -256,6 +274,6 @@ export default function App({
           </div>
         </footer>
       </div>
-    </>
+    </FriendsContext.Provider>
   );
 }

@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Users, User, Gamepad, Lightbulb, Plus, Sparkles } from "lucide-react";
 import SuggestionModal from "@/components/SuggestionModal";
 import { toast } from "sonner";
-import FriendsSidebar from "@/components/FriendsSidebar";
 import LobbyNotificationBanner from "@/components/Lobby/LobbyNotificationBanner";
 import { useLobby } from "@/hooks/useLobby";
 
@@ -30,7 +29,6 @@ interface Props {
 
 export default function Home({ auth, games, flash }: Props) {
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { currentLobby, leaveLobby } = useLobby(auth.user?.id);
 
@@ -55,26 +53,8 @@ export default function Home({ auth, games, flash }: Props) {
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes move-bg-diagonal {
-          0% { transform: rotate(45deg) scale(150%) translateX(0); }
-          100% { transform: rotate(45deg) scale(150%) translateX(15%); }
-        }
-      `}</style>
-      <App title={"Home"} auth={auth}>
-        {/* Full Screen Animated Background Elements - Rotated 45 degrees */}
-        <div className="fixed inset-0 z-0 overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{ animation: "move-bg-diagonal 10s linear infinite" }}
-          >
-            {/* Grid pattern overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.15)_1px,transparent_1px)] bg-[size:2rem_2rem]" />
-          </div>
-        </div>
-        <div className="relative z-10">
-          <LobbyNotificationBanner currentLobby={currentLobby} />
+    <App title={"Home"} auth={auth}>
+      <LobbyNotificationBanner currentLobby={currentLobby} />
           {/* Main Content Area */}
           <div className="container mx-auto px-4 py-8">
             {/* Header with suggestion button */}
@@ -201,17 +181,6 @@ export default function Home({ auth, games, flash }: Props) {
               auth={auth}
             />
           </div>
-
-          {/* Sliding Friends Sidebar - Only show if user is logged in */}
-          {auth.user && (
-            <FriendsSidebar
-              auth={auth}
-              isOpen={isSidebarOpen}
-              onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-            />
-          )}
-        </div>
-      </App>
-    </>
+    </App>
   );
 }

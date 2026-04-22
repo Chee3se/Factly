@@ -9,6 +9,23 @@ interface StickFigureProps {
   winningCubes: number;
 }
 
+const PALETTE = [
+  "from-blue-500 to-blue-700",
+  "from-purple-500 to-purple-700",
+  "from-pink-500 to-pink-700",
+  "from-amber-500 to-amber-700",
+  "from-emerald-500 to-emerald-700",
+  "from-red-500 to-red-700",
+  "from-cyan-500 to-cyan-700",
+  "from-indigo-500 to-indigo-700",
+];
+
+const pickColor = (id?: number | string) => {
+  if (id == null) return PALETTE[0];
+  const n = typeof id === "number" ? id : id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  return PALETTE[n % PALETTE.length];
+};
+
 export const StickFigure: React.FC<StickFigureProps> = ({
   player,
   playerState,
@@ -19,47 +36,49 @@ export const StickFigure: React.FC<StickFigureProps> = ({
     100,
     (playerState.cubes / winningCubes) * 100,
   );
-  const ladderHeight = 140;
-  const numberOfRungs = 10;
+  const ladderHeight = 160;
+  const numberOfRungs = 8;
   const avatarPosition = (progressPercentage / 100) * ladderHeight;
 
-  const getInitials = (name: string) => {
-    return name ? name.charAt(0).toUpperCase() : "?";
-  };
+  const getInitials = (name: string) =>
+    name
+      ? name
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)
+      : "?";
 
-  const getAvatarUrl = (avatar?: string): string | null => {
-    if (!avatar) return null;
-    return `/storage/${avatar}`;
-  };
+  const getAvatarUrl = (avatar?: string): string | null =>
+    avatar ? `/storage/${avatar}` : null;
+
+  const fallbackGradient = pickColor(player?.id ?? player?.name);
 
   return (
     <div className="flex flex-col items-center relative">
       <div
-        className={`mb-1 px-2 py-1 rounded text-xs ${
+        className={`mb-2 px-2.5 py-1 rounded-full text-xs font-semibold max-w-[80px] truncate ${
           isCurrentUser
-            ? "bg-blue-100 border border-blue-300"
-            : "bg-gray-100 border border-gray-300"
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-foreground"
         }`}
+        title={player?.name || "Unknown"}
       >
-        <span
-          className={`font-semibold ${
-            isCurrentUser ? "text-blue-800" : "text-gray-600"
-          }`}
-        >
-          {player?.name || "Unknown"}
-        </span>
+        {player?.name || "Unknown"}
       </div>
 
       <div
         className="relative"
-        style={{ height: `${ladderHeight + 80}px`, width: "80px" }}
+        style={{ height: `${ladderHeight + 60}px`, width: "72px" }}
       >
+        {/* Ladder posts */}
         <div
-          className="absolute left-1/2 transform -translate-x-1/2 flex justify-between"
-          style={{ width: "40px", height: `${ladderHeight}px` }}
+          className="absolute left-1/2 -translate-x-1/2 flex justify-between"
+          style={{ width: "40px", height: `${ladderHeight}px`, bottom: 0 }}
         >
-          <div className="w-1 h-full bg-gray-600"></div>
-          <div className="w-1 h-full bg-gray-600"></div>
+          <div className="w-1 h-full rounded-full bg-gradient-to-b from-stone-400 to-stone-600" />
+          <div className="w-1 h-full rounded-full bg-gradient-to-b from-stone-400 to-stone-600" />
 
           {Array.from({ length: numberOfRungs }).map((_, index) => {
             const rungPosition =
@@ -67,26 +86,30 @@ export const StickFigure: React.FC<StickFigureProps> = ({
             return (
               <div
                 key={index}
-                className="absolute left-1/2 transform -translate-x-1/2 w-10 h-1 bg-gray-600"
-                style={{ top: `${rungPosition}px` }}
+                className="absolute left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-stone-500"
+                style={{ bottom: `${rungPosition}px` }}
               />
             );
           })}
         </div>
 
+        {/* Climbing avatar */}
         <div
-          className="absolute left-1/2 transform -translate-x-1/2 transition-all duration-500 ease-out"
+          className="absolute left-1/2 z-10"
           style={{
             bottom: `${avatarPosition}px`,
-            width: "42px",
-            height: "42px",
+            transform: "translateX(-50%)",
+            transition: "bottom 700ms cubic-bezier(0.22, 1, 0.36, 1)",
+            width: "44px",
+            height: "44px",
+            willChange: "bottom",
           }}
         >
           <div
-            className={`w-10 h-10 rounded-full ${
+            className={`w-11 h-11 rounded-full ${
               isCurrentUser
-                ? "ring-2 ring-blue-400 shadow-lg"
-                : "ring-1 ring-gray-400"
+                ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg"
+                : "ring-1 ring-border shadow"
             }`}
           >
             <Avatar className="w-full h-full" decoration={player?.decoration}>
@@ -95,7 +118,9 @@ export const StickFigure: React.FC<StickFigureProps> = ({
                 alt={player?.name || "Player"}
                 className="object-cover object-center"
               />
-              <AvatarFallback className="text-sm font-bold bg-gray-200 text-gray-700">
+              <AvatarFallback
+                className={`text-sm font-bold text-white bg-gradient-to-br ${fallbackGradient}`}
+              >
                 {getInitials(player?.name)}
               </AvatarFallback>
             </Avatar>
@@ -104,24 +129,13 @@ export const StickFigure: React.FC<StickFigureProps> = ({
       </div>
 
       <div
-        className={`mt-1 px-2 py-1 rounded border text-xs ${
+        className={`mt-1 px-2.5 py-1 rounded-full text-xs text-center tabular-nums ${
           isCurrentUser
-            ? "bg-blue-50 border-blue-300"
-            : "bg-gray-50 border-gray-300"
+            ? "bg-primary/10 text-primary font-bold"
+            : "bg-muted text-muted-foreground font-semibold"
         }`}
       >
-        <div className="text-center">
-          <div
-            className={`font-bold ${
-              isCurrentUser ? "text-blue-800" : "text-gray-600"
-            }`}
-          >
-            {playerState.cubes}/{winningCubes}
-          </div>
-          <div className="text-xs text-gray-500">
-            {progressPercentage.toFixed(0)}%
-          </div>
-        </div>
+        {playerState.cubes}/{winningCubes}
       </div>
     </div>
   );
