@@ -245,16 +245,17 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // Validate file
+        // Validate file. SVG excluded on purpose: same-origin SVG uploads can
+        // run JS and we have no sanitizer in place.
         $request->validate([
             'avatar' => [
                 'required',
                 'file',
-                'mimes:jpeg,jpg,png,gif,svg',
+                'mimes:jpeg,jpg,png,gif,webp',
                 'max:2048', // 2MB max
             ],
         ], [
-            'avatar.mimes' => 'The avatar must be a file of type: JPEG, PNG, GIF, or SVG.',
+            'avatar.mimes' => 'The avatar must be a file of type: JPEG, PNG, GIF, or WebP.',
             'avatar.max' => 'The avatar must not be larger than 2MB.',
         ]);
 
@@ -268,10 +269,10 @@ class AuthController extends Controller
         }
 
         // Check mime type
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/svg+xml'];
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!in_array($file->getMimeType(), $allowedMimes)) {
             return back()->withErrors([
-                'avatar' => 'The avatar must be a file of type: JPEG, PNG, GIF, or SVG.',
+                'avatar' => 'The avatar must be a file of type: JPEG, PNG, GIF, or WebP.',
             ]);
         }
 
