@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Account
+    |--------------------------------------------------------------------------
+    |
+    | Credentials used by DatabaseSeeder to provision the admin user. Read
+    | via config() so `php artisan config:cache` doesn't return null.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL', 'admin@example.com'),
+    'admin_password' => env('ADMIN_PASSWORD'),
+
 ];
