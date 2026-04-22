@@ -14,7 +14,7 @@ interface Props {
   items: any[];
 }
 
-const WINNING_CUBES = 100;
+const WINNING_CUBES = 20;
 const QUESTION_TIME = 30;
 const GAME_START_DELAY = 3000;
 const SYNC_INTERVAL = 3;
@@ -655,6 +655,39 @@ export default function QuizLadder({ auth, game, items }: Props) {
       return () => clearTimeout(timer);
     }
   }, [gameState.timeLeft, gameState.phase, gameState.isGameOwner]);
+
+  // Auto-end question when every player has answered (owner only)
+  useEffect(() => {
+    if (
+      gameState.phase !== "question" ||
+      !gameState.isGameOwner ||
+      gameState.timeLeft <= 0
+    ) {
+      return;
+    }
+
+    const players = currentLobby?.players || [];
+    if (players.length === 0) return;
+
+    const answeredIds = new Set<number>();
+    if (gameState.hasAnswered && authUserIdRef.current) {
+      answeredIds.add(authUserIdRef.current);
+    }
+    gameState.playerSelections.forEach((s) => answeredIds.add(s.userId));
+
+    const allAnswered = players.every((p: any) => answeredIds.has(p.id));
+    if (allAnswered) {
+      endQuestion();
+    }
+  }, [
+    gameState.playerSelections,
+    gameState.hasAnswered,
+    gameState.phase,
+    gameState.isGameOwner,
+    gameState.timeLeft,
+    currentLobby?.players,
+    endQuestion,
+  ]);
 
   if (databaseQuestions.length === 0) {
     return (
