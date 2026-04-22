@@ -131,6 +131,7 @@ export default function Profile({
     return !next.current_password && !next.password && !next.password_confirmation;
   };
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [deletePassword, setDeletePassword] = useState<string>("");
   const [showCropDialog, setShowCropDialog] = useState<boolean>(false);
   const [showAvatarDialog, setShowAvatarDialog] = useState<boolean>(false);
   const [showSessionsDialog, setShowSessionsDialog] = useState<boolean>(false);
@@ -291,10 +292,19 @@ export default function Profile({
   };
 
   const handleDeleteAccount = (): void => {
+    if (!isGoogleUser && !deletePassword) {
+      setClientErrors((prev) => ({
+        ...prev,
+        delete_password: "Password is required to confirm deletion.",
+      }));
+      return;
+    }
     setIsLoading(true);
     router.delete(route("profile.destroy"), {
+      data: isGoogleUser ? {} : { current_password: deletePassword },
       onSuccess: () => {
         setIsLoading(false);
+        setDeletePassword("");
       },
       onError: () => {
         setIsLoading(false);
@@ -898,10 +908,46 @@ export default function Profile({
                           </p>
                         </DialogDescription>
                       </DialogHeader>
+                      {!isGoogleUser && (
+                        <div className="space-y-2">
+                          <Label htmlFor="delete_password">
+                            Confirm your password
+                          </Label>
+                          <Input
+                            id="delete_password"
+                            type="password"
+                            value={deletePassword}
+                            onChange={(e) => {
+                              setDeletePassword(e.target.value);
+                              setClientErrors((prev) => {
+                                const next = { ...prev };
+                                delete next.delete_password;
+                                return next;
+                              });
+                            }}
+                            placeholder="Current password"
+                          />
+                          {(fieldError("delete_password") ||
+                            pageErrors?.current_password) && (
+                            <p className="text-sm text-red-600">
+                              {fieldError("delete_password") ||
+                                pageErrors?.current_password}
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <DialogFooter className="gap-2">
                         <Button
                           variant="outline"
-                          onClick={() => setShowDeleteDialog(false)}
+                          onClick={() => {
+                            setShowDeleteDialog(false);
+                            setDeletePassword("");
+                            setClientErrors((prev) => {
+                              const next = { ...prev };
+                              delete next.delete_password;
+                              return next;
+                            });
+                          }}
                         >
                           Cancel
                         </Button>
