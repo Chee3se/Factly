@@ -85,10 +85,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Lobby API routes - grouped with proper API prefix
     Route::prefix('api')->group(function () {
         Route::get('/lobbies', [LobbyController::class, 'apiIndex']); // Changed to apiIndex
+        Route::get('/lobbies/current', [LobbyController::class, 'getCurrentUserLobby']);
         Route::get('/lobbies/{game:slug}', [LobbyController::class, 'gameLobbies'])
             ->middleware(['auth'])
             ->name('lobbies.game');
-        Route::get('/lobbies/current', [LobbyController::class, 'getCurrentUserLobby']);
         Route::post('/lobbies', [LobbyController::class, 'store']);
         Route::post('/lobbies/find', [LobbyController::class, 'findByCode']);
         Route::post('/lobbies/join', [LobbyController::class, 'join']);
