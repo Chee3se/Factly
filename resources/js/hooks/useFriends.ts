@@ -12,6 +12,7 @@ export function useFriends(authUserId?: number) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [privateChannel, setPrivateChannel] = useState<any>(null);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set());
 
   const [lobbyInvitation, setLobbyInvitation] = useState<{
     inviter: { id: number; name: string; avatar?: string };
@@ -21,6 +22,7 @@ export function useFriends(authUserId?: number) {
   } | null>(null);
 
   const channelRef = useRef<any>(null);
+  const presenceChannelRef = useRef<any>(null);
   const initializingRef = useRef(false);
 
   const refreshSentRequests = useCallback(async () => {
@@ -210,6 +212,50 @@ export function useFriends(authUserId?: number) {
       }
       channelRef.current = null;
       setPrivateChannel(null);
+    }
+  }, []);
+
+  const joinOnlineChannel = useCallback(() => {
+    if (!window.Echo || !authUserId || presenceChannelRef.current) return;
+
+    try {
+      const channel = window.Echo.join("online")
+        .here((users: Array<{ id: number }>) => {
+          setOnlineUserIds(new Set(users.map((u) => u.id)));
+        })
+        .joining((user: { id: number }) => {
+          setOnlineUserIds((prev) => {
+            const next = new Set(prev);
+            next.add(user.id);
+            return next;
+          });
+        })
+        .leaving((user: { id: number }) => {
+          setOnlineUserIds((prev) => {
+            const next = new Set(prev);
+            next.delete(user.id);
+            return next;
+          });
+        })
+        .error((err: any) => {
+          console.error("Online presence channel error:", err);
+        });
+
+      presenceChannelRef.current = channel;
+    } catch (err) {
+      console.error("Failed to join online presence channel:", err);
+    }
+  }, [authUserId]);
+
+  const leaveOnlineChannel = useCallback(() => {
+    if (presenceChannelRef.current && window.Echo) {
+      try {
+        window.Echo.leave("online");
+      } catch (err) {
+        console.error("Error leaving online channel:", err);
+      }
+      presenceChannelRef.current = null;
+      setOnlineUserIds(new Set());
     }
   }, []);
 
@@ -415,6 +461,7 @@ export function useFriends(authUserId?: number) {
     if (authUserId && !initializingRef.current) {
       loadFriends();
       joinPrivateChannel();
+      joinOnlineChannel();
     } else if (!authUserId) {
       setInitializing(false);
       setFriends([]);
@@ -422,14 +469,16 @@ export function useFriends(authUserId?: number) {
       setSentRequests([]);
       setSearchResults([]);
       setLobbyInvitation(null);
+      setOnlineUserIds(new Set());
     }
-  }, [authUserId, loadFriends, joinPrivateChannel]);
+  }, [authUserId, loadFriends, joinPrivateChannel, joinOnlineChannel]);
 
   useEffect(() => {
     return () => {
       leavePrivateChannel();
+      leaveOnlineChannel();
     };
-  }, [leavePrivateChannel]);
+  }, [leavePrivateChannel, leaveOnlineChannel]);
 
   const inviteFriendToLobby = useCallback(
     async (friendId: number, lobbyCode: string) => {
@@ -485,5 +534,6 @@ export function useFriends(authUserId?: number) {
     lobbyInvitation,
     acceptLobbyInvitation,
     declineLobbyInvitation,
+    onlineUserIds,
   };
 }

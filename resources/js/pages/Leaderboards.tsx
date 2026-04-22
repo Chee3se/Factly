@@ -1,16 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import App from "@/layouts/App";
 import { Game } from "@/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy } from "lucide-react";
+import { Trophy, Crown, Medal, Award } from "lucide-react";
 
 interface LeaderboardEntry {
   user_id: number;
@@ -40,161 +32,144 @@ interface Props {
 }
 
 export default function Leaderboards({ auth, leaderboards }: Props) {
+  const [activeGame, setActiveGame] = useState<number | null>(
+    leaderboards[0]?.game.id ?? null,
+  );
+
   const getAvatarUrl = (avatar?: string): string | undefined => {
     if (!avatar) return undefined;
     return `/storage/${avatar}`;
   };
 
-  const getRankIcon = (rank: number) => {
-    const textColor =
-      rank <= 3 ? "text-white" : "text-gray-900 dark:text-gray-100";
-    return <span className={`text-sm font-bold ${textColor}`}>#{rank}</span>;
+  const rankIcon = (rank: number) => {
+    if (rank === 1) return <Crown className="h-4 w-4 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-4 w-4 text-slate-400" />;
+    if (rank === 3) return <Award className="h-4 w-4 text-amber-600" />;
+    return null;
   };
 
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return "bg-gradient-to-r from-yellow-400 to-yellow-600";
-      case 2:
-        return "bg-gradient-to-r from-gray-300 to-gray-500";
-      case 3:
-        return "bg-gradient-to-r from-amber-400 to-amber-600";
-      default:
-        return "bg-transparent";
-    }
-  };
+  const active = leaderboards.find((l) => l.game.id === activeGame);
 
   return (
     <App title="Leaderboards" auth={auth}>
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className="text-4xl font-bold tracking-tight mb-2">
             Leaderboards
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            See how you rank against other players across all games
+          <p className="text-muted-foreground">
+            Top players across every game.
           </p>
         </div>
 
         {leaderboards.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-2">
-              No scores yet
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              Be the first to play and set a high score!
+          <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur p-16 text-center">
+            <Trophy className="mx-auto h-12 w-12 text-muted-foreground/40 mb-4" />
+            <h3 className="text-lg font-semibold mb-1">No scores yet</h3>
+            <p className="text-sm text-muted-foreground">
+              Be the first to play and set a high score.
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {leaderboards.map(({ game, leaderboard }) => (
-              <Card key={game.id} className="overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={game.thumbnail}
-                      alt={game.name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjE4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K";
-                      }}
-                    />
-                    <div>
-                      <CardTitle className="text-2xl">{game.name}</CardTitle>
-                      <CardDescription>{game.description}</CardDescription>
-                    </div>
+          <>
+            {/* Game tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {leaderboards.map(({ game }) => {
+                const isActive = game.id === activeGame;
+                return (
+                  <button
+                    key={game.id}
+                    onClick={() => setActiveGame(game.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                      isActive
+                        ? "bg-foreground text-background border-foreground"
+                        : "bg-background/80 backdrop-blur border-border/60 hover:border-foreground/40"
+                    }`}
+                  >
+                    {game.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {active && (
+              <div className="rounded-2xl border border-border/60 bg-background/80 backdrop-blur overflow-hidden">
+                {active.leaderboard.length === 0 ? (
+                  <div className="p-16 text-center text-muted-foreground text-sm">
+                    No scores recorded for this game yet.
                   </div>
-                </CardHeader>
+                ) : (
+                  <ul>
+                    {active.leaderboard
+                      .slice()
+                      .sort((a, b) => {
+                        const aPos =
+                          a.position ?? active.leaderboard.indexOf(a) + 1;
+                        const bPos =
+                          b.position ?? active.leaderboard.indexOf(b) + 1;
+                        return aPos - bPos;
+                      })
+                      .map((entry, index) => {
+                        const rank = entry.position ?? index + 1;
+                        const isCurrentUser = auth.user?.id === entry.user.id;
+                        const isTopThree = rank <= 3;
 
-                <CardContent className="p-0">
-                  {leaderboard.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      No scores recorded for this game yet
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {leaderboard
-                        .sort((a, b) => {
-                          // Sort by position first, then by score
-                          const aPos = a.position || leaderboard.indexOf(a) + 1;
-                          const bPos = b.position || leaderboard.indexOf(b) + 1;
-                          return aPos - bPos;
-                        })
-                        .map((entry, index) => {
-                          // Use position field if available (for current user not in top 5), otherwise use array index + 1
-                          const rank = entry.position || index + 1;
-                          const isCurrentUser = auth.user?.id === entry.user.id;
+                        return (
+                          <li
+                            key={entry.user_id}
+                            className={`flex items-center gap-4 px-6 py-4 border-b border-border/40 last:border-b-0 ${
+                              isCurrentUser ? "bg-primary/5" : ""
+                            }`}
+                          >
+                            <div className="flex items-center justify-center w-10 shrink-0">
+                              {isTopThree ? (
+                                rankIcon(rank)
+                              ) : (
+                                <span className="text-sm font-semibold text-muted-foreground tabular-nums">
+                                  {rank}
+                                </span>
+                              )}
+                            </div>
 
-                          return (
-                            <div
-                              key={entry.user_id}
-                              className={`flex items-center justify-between p-4 ${
-                                isCurrentUser
-                                  ? "bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 border-blue-500 shadow-sm"
-                                  : ""
-                              }`}
+                            <Avatar
+                              className="w-10 h-10 shrink-0"
+                              decoration={entry.user.decoration || undefined}
                             >
-                              <div className="flex items-center gap-4">
-                                <div
-                                  className={`flex items-center justify-center w-10 h-10 ${
-                                    rank <= 3 ? "rounded-full" : ""
-                                  } ${getRankColor(rank)}`}
-                                >
-                                  {getRankIcon(rank)}
-                                </div>
+                              <AvatarImage
+                                src={getAvatarUrl(
+                                  entry.user.avatar || undefined,
+                                )}
+                                alt={entry.user.name}
+                              />
+                              <AvatarFallback className="bg-muted text-foreground text-sm font-medium">
+                                {entry.user.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
 
-                                <div className="flex items-center gap-3">
-                                  <Avatar
-                                    className="w-10 h-10"
-                                    decoration={
-                                      entry.user.decoration || undefined
-                                    }
-                                  >
-                                    <AvatarImage
-                                      src={getAvatarUrl(
-                                        entry.user.avatar || undefined,
-                                      )}
-                                      alt={entry.user.name}
-                                    />
-                                    <AvatarFallback className="bg-primary text-primary-foreground">
-                                      {entry.user.name.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <div className="font-medium text-gray-900 dark:text-gray-100">
-                                      {entry.user.name}
-                                      {isCurrentUser && (
-                                        <Badge
-                                          variant="secondary"
-                                          className="ml-2 text-xs"
-                                        >
-                                          You
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                                  {entry.best_score.toLocaleString()}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  points
-                                </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate flex items-center gap-2">
+                                {entry.user.name}
+                                {isCurrentUser && (
+                                  <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                                    You
+                                  </span>
+                                )}
                               </div>
                             </div>
-                          );
-                        })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+
+                            <div className="text-right tabular-nums">
+                              <div className="text-lg font-bold">
+                                {entry.best_score.toLocaleString()}
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </App>

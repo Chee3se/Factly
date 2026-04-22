@@ -42,12 +42,13 @@ export default function Landing() {
         {/* Header */}
         <header className="relative z-20 border-b bg-background/80 backdrop-blur-md sticky top-0">
           <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
-            <div className="flex justify-between items-center h-16">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shrink-0">
-                  <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                </div>
-                <span className="font-extrabold text-xl italic">{appName}</span>
+            <div className="flex justify-between items-center h-14">
+              <Link href="/" className="flex items-center">
+                <img
+                  src="/factly-logo-v3.png"
+                  alt={appName}
+                  className="h-8 w-auto"
+                />
               </Link>
 
               <nav className="flex items-center gap-2 sm:gap-3">
@@ -185,9 +186,11 @@ export default function Landing() {
           <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16 py-5">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                  <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                </div>
+                <img
+                  src="/factly-logo-v3.png"
+                  alt={appName}
+                  className="h-6 w-auto"
+                />
                 <span className="text-sm text-muted-foreground">
                   © 2025 {appName}. All rights reserved.
                 </span>

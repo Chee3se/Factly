@@ -12,13 +12,13 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
 }) => {
   return (
     <App title="Quiz Ladder" auth={auth}>
-      <div className="min-h-[80vh] bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           {children || (
             <>
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto"></div>
-              <p className="mt-6 text-gray-700 text-lg font-medium">
-                Loading game lobby...
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" />
+              <p className="mt-4 text-muted-foreground text-sm">
+                Loading game lobby…
               </p>
             </>
           )}

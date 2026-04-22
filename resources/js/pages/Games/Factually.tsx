@@ -133,7 +133,7 @@ export default function Factually({
         </div>
 
         <div className="rounded-xl shadow-sm">
-          <Card className="bg-transparent">
+          <Card>
             <CardHeader className="px-6">
               <CardTitle className="text-lg">
                 {currentQuestion.question.split("_")[0]}

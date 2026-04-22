@@ -1,13 +1,5 @@
 import { useState } from "react";
 import { useFriends } from "@/hooks/useFriends";
-import { User } from "@/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,28 +25,36 @@ import {
   Clock,
   Mail,
   AlertCircle,
+  Send,
   ChevronLeft,
   ChevronRight,
-  Send,
 } from "lucide-react";
 
 interface Props {
   auth: Auth;
   isOpen: boolean;
   onToggle: () => void;
+  friendsHook?: ReturnType<typeof useFriends>;
   showInviteOptions?: boolean;
   onInviteFriend?: (friendId: number) => void;
   excludedFromInvite?: number[];
+  showTab?: boolean;
 }
 
 export default function FriendsSidebar({
   auth,
   isOpen,
   onToggle,
+  friendsHook: externalHook,
   showInviteOptions = false,
   onInviteFriend,
   excludedFromInvite = [],
+  showTab = true,
 }: Props) {
+  const internalHook = useFriends(
+    externalHook ? undefined : auth.user.id,
+  );
+  const hook = externalHook ?? internalHook;
   const {
     friends,
     friendRequests,
@@ -70,7 +70,8 @@ export default function FriendsSidebar({
     cancelFriendRequest,
     getFriendshipStatus,
     clearSearch,
-  } = useFriends(auth.user.id);
+    onlineUserIds,
+  } = hook;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showRemoveDialog, setShowRemoveDialog] = useState<number | null>(null);
@@ -101,10 +102,6 @@ export default function FriendsSidebar({
     }
   };
 
-  const handleSendRequest = async (friendId: number) => {
-    await sendFriendRequest(friendId);
-  };
-
   const handleAcceptRequest = async (userId: number) => {
     const request = friendRequests.find((req) => req.id === userId);
     if (request && request.friend_request_id) {
@@ -124,66 +121,81 @@ export default function FriendsSidebar({
     setShowRemoveDialog(null);
   };
 
-  const handleCancelRequest = async (friendId: number) => {
-    await cancelFriendRequest(friendId);
+  const AvatarWithPresence = ({
+    name,
+    avatar,
+    decoration,
+    userId,
+    showDot = true,
+  }: {
+    name: string;
+    avatar?: string;
+    decoration?: any;
+    userId: number;
+    showDot?: boolean;
+  }) => {
+    const isOnline = onlineUserIds?.has(userId);
+    return (
+      <div className="relative">
+        <Avatar className="h-10 w-10" decoration={decoration}>
+          <AvatarImage src={getAvatarUrl(avatar) || undefined} alt={name} />
+          <AvatarFallback className="text-sm">
+            {getInitials(name)}
+          </AvatarFallback>
+        </Avatar>
+        {showDot && (
+          <span
+            className={`absolute bottom-0 right-0 block h-3 w-3 rounded-full ring-2 ring-background ${
+              isOnline ? "bg-emerald-500" : "bg-muted-foreground/40"
+            }`}
+            title={isOnline ? "Online" : "Offline"}
+          />
+        )}
+      </div>
+    );
   };
 
-  const handleInviteFriend = (friendId: number) => {
-    if (onInviteFriend) {
-      onInviteFriend(friendId);
-    }
-  };
+  const hasBadge = friendRequests.length > 0;
 
   return (
     <>
-      {/* Toggle Button - Always visible */}
-      <div
-        className={`fixed top-1/2 -translate-y-1/2 z-50 transition-all duration-300 ${
-          isOpen ? "right-80" : "right-0"
-        }`}
-      >
-        <Button
-          onClick={onToggle}
-          variant="outline"
-          size="sm"
-          className="h-12 w-8 rounded-l-lg rounded-r-none border-r-0 bg-background/95 backdrop-blur shadow-lg hover:bg-muted/50"
-        >
-          {isOpen ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <>
-              <ChevronLeft className="h-4 w-4" />
-              {(friendRequests.length > 0 || friends.length > 0) && (
-                <div className="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Overlay for mobile */}
-      {isOpen && (
+      {showTab && (
         <div
-          className="fixed inset-0 bg-black/20 z-40 lg:hidden"
-          onClick={onToggle}
-        />
+          className={`fixed z-[60] transition-all duration-300 top-20 ${
+            isOpen ? "right-80" : "right-0"
+          }`}
+        >
+          <button
+            onClick={onToggle}
+            aria-label="Toggle friends"
+            className="group relative flex flex-col items-center justify-center gap-1.5 h-24 w-11 rounded-l-xl rounded-r-none border border-r-0 border-border bg-primary text-primary-foreground shadow-lg hover:brightness-110 transition-all"
+          >
+            <Users className="h-4 w-4" />
+            <span className="text-[10px] font-semibold tracking-wider uppercase [writing-mode:vertical-rl] rotate-180">
+              Friends
+            </span>
+            {!isOpen && hasBadge && (
+              <span className="absolute -top-1.5 -left-1.5 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center tabular-nums ring-2 ring-background animate-pulse">
+                {friendRequests.length > 9 ? "9+" : friendRequests.length}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
-      {/* Sidebar */}
       <div
-        className={`fixed right-0 top-0 h-full w-80 bg-background border-l border-border z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 h-full w-80 border-l border-border bg-background z-[55] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         } shadow-xl`}
       >
         <div className="h-full flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-border">
+          <div className="flex items-center justify-between p-5 border-b border-border">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              <h2 className="text-lg font-semibold">Friends</h2>
+              <h2 className="text-lg font-semibold tracking-tight">Friends</h2>
               {showInviteOptions && (
-                <Badge variant="outline" className="ml-2">
-                  Invite Mode
+                <Badge variant="outline" className="ml-1 text-[10px]">
+                  Invite mode
                 </Badge>
               )}
             </div>
@@ -197,10 +209,9 @@ export default function FriendsSidebar({
             </Button>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-hidden">
             <Tabs defaultValue="friends" className="flex flex-col h-full">
-              <div className="px-6 pt-4 pb-3">
+              <div className="px-5 pt-4 pb-3">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="friends" className="text-xs">
                     Friends
@@ -232,162 +243,161 @@ export default function FriendsSidebar({
 
               <div className="flex-1 overflow-hidden">
                 <TabsContent value="friends" className="h-full mt-0">
-                  <ScrollArea className="h-full px-6">
+                  <ScrollArea className="h-full px-5">
                     {friends.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                        <Users className="h-10 w-10 text-muted-foreground/60 mb-3" />
                         <p className="text-sm text-muted-foreground">
-                          No friends yet. Start by searching for people to
-                          connect with!
+                          No friends yet.
+                        </p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">
+                          Search to add someone.
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 pb-6">
-                        {friends.map((friend) => (
-                          <div
-                            key={friend.id}
-                            className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center space-x-3 flex-1 min-w-0">
-                              <Avatar
-                                className="h-10 w-10"
-                                decoration={friend.decoration}
-                              >
-                                <AvatarImage
-                                  src={getAvatarUrl(friend.avatar) || undefined}
-                                  alt={friend.name}
+                      <div className="space-y-1.5 pb-6">
+                        {[...friends]
+                          .sort((a, b) => {
+                            const aOn = onlineUserIds?.has(a.id) ? 0 : 1;
+                            const bOn = onlineUserIds?.has(b.id) ? 0 : 1;
+                            if (aOn !== bOn) return aOn - bOn;
+                            return a.name.localeCompare(b.name);
+                          })
+                          .map((friend) => (
+                            <div
+                              key={friend.id}
+                              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/40 transition-colors"
+                            >
+                              <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                <AvatarWithPresence
+                                  name={friend.name}
+                                  avatar={friend.avatar}
+                                  decoration={friend.decoration}
+                                  userId={friend.id}
                                 />
-                                <AvatarFallback className="text-sm">
-                                  {getInitials(friend.name)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">
-                                  {friend.name}
-                                </p>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">
+                                    {friend.name}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {onlineUserIds?.has(friend.id)
+                                      ? "Online"
+                                      : "Offline"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {showInviteOptions && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3"
+                                    onClick={() =>
+                                      onInviteFriend?.(friend.id)
+                                    }
+                                    disabled={
+                                      loading ||
+                                      excludedFromInvite.includes(friend.id)
+                                    }
+                                  >
+                                    <Send className="h-3 w-3 mr-1" />
+                                    Invite
+                                  </Button>
+                                )}
+                                {!showInviteOptions && (
+                                  <Dialog
+                                    open={showRemoveDialog === friend.id}
+                                    onOpenChange={(open) =>
+                                      setShowRemoveDialog(
+                                        open ? friend.id : null,
+                                      )
+                                    }
+                                  >
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+                                      >
+                                        <UserX className="h-4 w-4" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md">
+                                      <DialogHeader>
+                                        <DialogTitle>Remove friend</DialogTitle>
+                                        <DialogDescription>
+                                          Remove {friend.name} from your friends
+                                          list?
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <DialogFooter>
+                                        <Button
+                                          variant="outline"
+                                          onClick={() =>
+                                            setShowRemoveDialog(null)
+                                          }
+                                        >
+                                          Cancel
+                                        </Button>
+                                        <Button
+                                          variant="destructive"
+                                          onClick={() =>
+                                            handleRemoveFriend(friend.id)
+                                          }
+                                          disabled={loading}
+                                        >
+                                          Remove
+                                        </Button>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+                                )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              {/* Show invite button when in invite mode */}
-                              {showInviteOptions && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-3"
-                                  onClick={() => handleInviteFriend(friend.id)}
-                                  disabled={
-                                    loading ||
-                                    excludedFromInvite.includes(friend.id)
-                                  }
-                                >
-                                  <Send className="h-3 w-3 mr-1" />
-                                  Invite
-                                </Button>
-                              )}
-                              {/* Only show remove button when NOT in invite mode */}
-                              {!showInviteOptions && (
-                                <Dialog
-                                  open={showRemoveDialog === friend.id}
-                                  onOpenChange={(open) =>
-                                    setShowRemoveDialog(open ? friend.id : null)
-                                  }
-                                >
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <UserX className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="sm:max-w-md">
-                                    <DialogHeader>
-                                      <DialogTitle>Remove Friend</DialogTitle>
-                                      <DialogDescription>
-                                        Are you sure you want to remove{" "}
-                                        {friend.name} from your friends list?
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <DialogFooter>
-                                      <Button
-                                        variant="outline"
-                                        onClick={() =>
-                                          setShowRemoveDialog(null)
-                                        }
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        variant="destructive"
-                                        onClick={() =>
-                                          handleRemoveFriend(friend.id)
-                                        }
-                                        disabled={loading}
-                                      >
-                                        Remove
-                                      </Button>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     )}
                   </ScrollArea>
                 </TabsContent>
 
                 <TabsContent value="requests" className="h-full mt-0">
-                  <ScrollArea className="h-full px-6">
+                  <ScrollArea className="h-full px-5">
                     {friendRequests.length === 0 &&
                     sentRequests.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+                        <Mail className="h-10 w-10 text-muted-foreground/60 mb-3" />
                         <p className="text-sm text-muted-foreground">
-                          No pending friend requests
+                          No pending requests
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-4 pb-6">
+                      <div className="space-y-5 pb-6">
                         {friendRequests.length > 0 && (
                           <div>
-                            <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+                            <h4 className="text-[10px] uppercase tracking-wider font-semibold mb-2 text-muted-foreground">
                               Received
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                               {friendRequests.map((request) => (
                                 <div
                                   key={request.id}
-                                  className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                                  className="flex items-center justify-between p-2.5 rounded-xl border border-border/60 bg-background/50"
                                 >
                                   <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                    <Avatar
-                                      className="h-10 w-10"
+                                    <AvatarWithPresence
+                                      name={request.name}
+                                      avatar={request.avatar}
                                       decoration={request.decoration}
-                                    >
-                                      <AvatarImage
-                                        src={
-                                          getAvatarUrl(request.avatar) ||
-                                          undefined
-                                        }
-                                        alt={request.name}
-                                      />
-                                      <AvatarFallback className="text-sm">
-                                        {getInitials(request.name)}
-                                      </AvatarFallback>
-                                    </Avatar>
+                                      userId={request.id}
+                                      showDot={false}
+                                    />
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-sm truncate">
                                         {request.name}
                                       </p>
-                                      <p className="text-xs text-muted-foreground truncate">
-                                        {request.email}
-                                      </p>
                                     </div>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-1">
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -397,7 +407,7 @@ export default function FriendsSidebar({
                                       }
                                       disabled={loading}
                                     >
-                                      <Check className="h-4 w-4 text-green-600" />
+                                      <Check className="h-4 w-4 text-emerald-600" />
                                     </Button>
                                     <Button
                                       variant="ghost"
@@ -408,7 +418,7 @@ export default function FriendsSidebar({
                                       }
                                       disabled={loading}
                                     >
-                                      <X className="h-4 w-4 text-red-600" />
+                                      <X className="h-4 w-4 text-red-500" />
                                     </Button>
                                   </div>
                                 </div>
@@ -419,48 +429,37 @@ export default function FriendsSidebar({
 
                         {sentRequests.length > 0 && (
                           <div>
-                            <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+                            <h4 className="text-[10px] uppercase tracking-wider font-semibold mb-2 text-muted-foreground">
                               Sent
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                               {sentRequests.map((request) => (
                                 <div
                                   key={request.id}
-                                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                                  className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40"
                                 >
                                   <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                    <Avatar
-                                      className="h-10 w-10"
+                                    <AvatarWithPresence
+                                      name={request.name}
+                                      avatar={request.avatar}
                                       decoration={request.decoration}
-                                    >
-                                      <AvatarImage
-                                        src={
-                                          getAvatarUrl(request.avatar) ||
-                                          undefined
-                                        }
-                                        alt={request.name}
-                                      />
-                                      <AvatarFallback className="text-sm">
-                                        {getInitials(request.name)}
-                                      </AvatarFallback>
-                                    </Avatar>
+                                      userId={request.id}
+                                      showDot={false}
+                                    />
                                     <div className="flex-1 min-w-0">
                                       <p className="font-medium text-sm truncate">
                                         {request.name}
                                       </p>
-                                      <p className="text-xs text-muted-foreground truncate">
-                                        {request.email}
-                                      </p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       className="h-8 w-8 p-0"
                                       onClick={() =>
-                                        handleCancelRequest(request.id)
+                                        cancelFriendRequest(request.id)
                                       }
                                       disabled={loading}
                                     >
@@ -478,7 +477,7 @@ export default function FriendsSidebar({
                 </TabsContent>
 
                 <TabsContent value="search" className="h-full mt-0">
-                  <div className="px-6 pb-4">
+                  <div className="px-5 pb-3">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                       <Input
@@ -489,14 +488,14 @@ export default function FriendsSidebar({
                       />
                     </div>
                     {searchQuery.length > 0 && searchQuery.length < 4 && (
-                      <div className="flex items-center gap-2 mt-2 text-xs text-amber-600">
+                      <div className="flex items-center gap-2 mt-2 text-[11px] text-amber-600">
                         <AlertCircle className="h-3 w-3" />
-                        Enter at least 4 characters to search
+                        At least 4 characters
                       </div>
                     )}
                   </div>
 
-                  <ScrollArea className="flex-1 px-6">
+                  <ScrollArea className="flex-1 px-5">
                     {searchLoading ? (
                       <div className="flex justify-center py-12">
                         <div className="text-sm text-muted-foreground">
@@ -506,42 +505,33 @@ export default function FriendsSidebar({
                     ) : searchResults.length === 0 &&
                       searchQuery.length >= 4 ? (
                       <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <Search className="h-12 w-12 text-muted-foreground mb-4" />
+                        <Search className="h-10 w-10 text-muted-foreground/60 mb-3" />
                         <p className="text-sm text-muted-foreground">
-                          No users found matching "{searchQuery}"
+                          No results for "{searchQuery}"
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-2 pb-6">
+                      <div className="space-y-1.5 pb-6">
                         {searchResults.map((user) => {
                           const status = getFriendshipStatus(user.id);
                           return (
                             <div
                               key={user.id}
-                              className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/40 transition-colors"
                             >
                               <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                <Avatar
-                                  className="h-10 w-10"
+                                <AvatarWithPresence
+                                  name={user.name}
+                                  avatar={user.avatar}
                                   decoration={user.decoration}
-                                >
-                                  <AvatarImage
-                                    src={getAvatarUrl(user.avatar) || undefined}
-                                    alt={user.name}
-                                  />
-                                  <AvatarFallback className="text-sm">
-                                    {getInitials(user.name)}
-                                  </AvatarFallback>
-                                </Avatar>
+                                  userId={user.id}
+                                />
                                 <div className="flex-1 min-w-0">
                                   <p className="font-medium text-sm truncate">
                                     {user.name}
                                   </p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {user.email}
-                                  </p>
                                   {user.decoration && (
-                                    <p className="text-xs text-blue-500 truncate">
+                                    <p className="text-[11px] text-blue-500 truncate">
                                       {user.decoration.name}
                                     </p>
                                   )}
@@ -552,7 +542,7 @@ export default function FriendsSidebar({
                                   variant="ghost"
                                   size="sm"
                                   className="h-8 w-8 p-0"
-                                  onClick={() => handleSendRequest(user.id)}
+                                  onClick={() => sendFriendRequest(user.id)}
                                   disabled={loading}
                                 >
                                   <UserPlus className="h-4 w-4" />
