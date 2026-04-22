@@ -17,7 +17,6 @@ import SuggestionModal from "@/components/SuggestionModal";
 import { toast } from "sonner";
 import FriendsSidebar from "@/components/FriendsSidebar";
 import LobbyNotificationBanner from "@/components/Lobby/LobbyNotificationBanner";
-import HeroScreen from "@/components/Home/HeroScreen";
 import { useLobby } from "@/hooks/useLobby";
 
 interface Props {
@@ -32,7 +31,6 @@ interface Props {
 export default function Home({ auth, games, flash }: Props) {
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showHeroScreen, setShowHeroScreen] = useState(false);
 
   const { currentLobby, leaveLobby } = useLobby(auth.user?.id);
 
@@ -47,22 +45,6 @@ export default function Home({ auth, games, flash }: Props) {
       leaveLobby();
     }
   }, [currentLobby, leaveLobby]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const hasSeenHero = localStorage.getItem("hasSeenHeroScreen");
-      if (!hasSeenHero || hasSeenHero !== "true") {
-        setShowHeroScreen(true);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleHeroComplete = () => {
-    localStorage.setItem("hasSeenHeroScreen", "true");
-    setShowHeroScreen(false);
-  };
 
   const handleSuggestionClick = () => {
     if (!auth.user) {
@@ -230,16 +212,6 @@ export default function Home({ auth, games, flash }: Props) {
           )}
         </div>
       </App>
-
-      {/* Hero Screen Overlay - Positioned to cover main content but allow header/footer to show */}
-      {showHeroScreen && (
-        <div className="fixed inset-0 z-40 pointer-events-none">
-          {/* Account for header (h-14 = 56px) and footer (~60px) */}
-          <div className="absolute top-14 bottom-16 left-0 right-0 pointer-events-auto">
-            <HeroScreen onComplete={handleHeroComplete} />
-          </div>
-        </div>
-      )}
     </>
   );
 }
