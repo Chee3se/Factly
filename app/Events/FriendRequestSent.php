@@ -40,7 +40,6 @@ class FriendRequestSent implements ShouldBroadcast
             'sender' => [
                 'id' => $this->sender->id,
                 'name' => $this->sender->name,
-                'email' => $this->sender->email,
                 'avatar' => $this->sender->avatar,
                 'decoration' => $this->sender->decoration
             ],
