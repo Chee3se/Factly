@@ -1,7 +1,17 @@
 import React, { PropsWithChildren, useState } from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link, Head, usePage } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings, Trophy } from "lucide-react";
+import { User, LogOut, Settings, Trophy, X } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import LobbyInvitationModal from "@/components/Lobby/LobbyInvitationModal";
 import { useFriends } from "@/hooks/useFriends";
@@ -27,6 +37,9 @@ export default function App({
   children,
 }: PropsWithChildren<Props>) {
   const [loading, setLoading] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const page = usePage();
+  const isInGame = /^\/games\/[^/]+/.test(page.url);
 
   const friendsHook = useFriends(auth.user?.id);
 
@@ -66,14 +79,38 @@ export default function App({
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14">
-              <Link href="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
-                  <img src={"/factly-logo-v2-white.png"} className="h-6" />
-                </div>
-                <span className="font-extrabold text-lg italic">{appName}</span>
-              </Link>
+              {isInGame ? (
+                <button
+                  type="button"
+                  onClick={() => setShowExitConfirm(true)}
+                  className="flex items-center space-x-2 cursor-pointer group"
+                  title="Exit game"
+                >
+                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center group-hover:opacity-80 transition-opacity">
+                    <img src={"/factly-logo-v2-white.png"} className="h-6" />
+                  </div>
+                  <span className="font-extrabold text-lg italic">{appName}</span>
+                </button>
+              ) : (
+                <Link href="/" className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center">
+                    <img src={"/factly-logo-v2-white.png"} className="h-6" />
+                  </div>
+                  <span className="font-extrabold text-lg italic">{appName}</span>
+                </Link>
+              )}
 
               <div className="flex items-center space-x-4">
+                {isInGame && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowExitConfirm(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Exit Game
+                  </Button>
+                )}
                 <Button asChild variant="ghost">
                   <Link
                     href="/leaderboards"
@@ -181,6 +218,28 @@ export default function App({
             loading={loading}
           />
         )}
+
+        <AlertDialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Exit game?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your current progress will be lost. Your best score stays saved.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep playing</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  window.location.href = "/";
+                }}
+              >
+                Exit
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-auto">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
