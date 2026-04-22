@@ -68,17 +68,19 @@ class AuthController extends Controller
         RateLimiter::hit($key, 3600); // 1 hour window
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|lowercase|email|max:255|unique:users',
+            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', 'unique:users'],
+            'email' => 'required|string|lowercase|email|max:100|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
             'name.required' => 'Username is required.',
             'name.unique' => 'This username is already taken. Please choose another one.',
-            'name.max' => 'Username must not exceed 255 characters.',
+            'name.min' => 'Username must be at least 3 characters.',
+            'name.max' => 'Username must not exceed 20 characters.',
+            'name.regex' => 'Username may only contain letters, numbers, spaces, hyphens, and underscores.',
             'email.required' => 'Email address is required.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'An account with this email already exists. Please use another email or sign in.',
-            'email.max' => 'Email address must not exceed 255 characters.',
+            'email.max' => 'Email address must not exceed 100 characters.',
             'password.required' => 'Password is required.',
             'password.confirmed' => 'Password confirmation does not match.',
         ]);
@@ -209,8 +211,16 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('users')->ignore($user->id)],
+        ], [
+            'name.regex' => 'The username may only contain letters, numbers, spaces, hyphens, and underscores.',
+            'name.min' => 'The username must be at least 3 characters.',
+            'name.max' => 'The username may not be longer than 20 characters.',
+            'name.unique' => 'This username is already taken.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.max' => 'The email may not be longer than 100 characters.',
+            'email.unique' => 'This email is already in use.',
         ]);
 
         if ($user->type === 'google') {
