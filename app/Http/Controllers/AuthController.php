@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
 use App\Models\Score;
 use App\Models\Game;
@@ -397,6 +396,13 @@ class AuthController extends Controller
     public function deleteAccount(Request $request): RedirectResponse
     {
         $user = $request->user();
+
+        // Google-auth users don't have a local password, so we skip the check for them.
+        if ($user->type !== 'google') {
+            $request->validate([
+                'current_password' => ['required', 'current_password'],
+            ]);
+        }
 
         if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
