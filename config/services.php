@@ -38,7 +38,12 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URL'),
-    ]
+    ],
 
+    'openai' => [
+        'url' => env('OPEN_AI_URL', 'https://api.openai.com/v1/chat/completions'),
+        'key' => env('OPEN_AI_KEY'),
+        'model' => env('OPEN_AI_MODEL_ID', 'gpt-3.5-turbo'),
+    ],
 
 ];
