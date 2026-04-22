@@ -63,6 +63,12 @@ class GameController extends Controller
 
     public function index()
     {
+        if (!auth()->check()) {
+            return Inertia::render('Landing', [
+                'games' => Game::select('id', 'name', 'slug', 'description', 'thumbnail', 'min_players', 'max_players')->get(),
+            ]);
+        }
+
         $games = Game::all();
         return Inertia::render('Home', [
             'games' => $games,
