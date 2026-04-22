@@ -442,7 +442,6 @@ class GameController extends Controller
                 'artwork_data' => 'required|string',
                 'subject' => 'required|string|max:100',
                 'score' => 'required|integer|min:0|max:100',
-                'user_id' => 'required|integer',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -458,12 +457,12 @@ class GameController extends Controller
                 return response()->json(['error' => 'Game not found'], 404);
             }
 
-            // Create a new GameItem to store the artwork
+            // Create a new GameItem to store the artwork. Never trust client-supplied user_id.
             $gameItem = GameItem::create([
                 'game_id' => $game->id,
                 'value' => [
                     'type' => 'user_artwork',
-                    'user_id' => $validated['user_id'],
+                    'user_id' => auth()->id(),
                     'user_name' => auth()->user()->name,
                     'subject' => $validated['subject'],
                     'artwork_data' => $validated['artwork_data'],
