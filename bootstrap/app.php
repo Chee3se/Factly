@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'lobby' => \App\Http\Middleware\EnsureUserIsInLobby::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
