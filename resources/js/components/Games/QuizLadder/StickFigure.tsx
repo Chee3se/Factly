@@ -105,26 +105,28 @@ export const StickFigure: React.FC<StickFigureProps> = ({
             willChange: "bottom",
           }}
         >
-          <div
-            className={`w-11 h-11 rounded-full overflow-hidden ${
+          <Avatar
+            className={`w-11 h-11 ${
               isCurrentUser
                 ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg"
-                : "ring-1 ring-border/80 shadow-md"
+                : !player?.avatar
+                  ? "ring-1 ring-border/80 shadow-md"
+                  : "shadow-md"
             }`}
+            margin="m-0"
+            decoration={player?.decoration}
           >
-            <Avatar className="w-full h-full" decoration={player?.decoration}>
-              <AvatarImage
-                src={getAvatarUrl(player?.avatar) || undefined}
-                alt={player?.name || "Player"}
-                className="object-cover object-center"
-              />
-              <AvatarFallback
-                className={`text-base font-bold text-white bg-gradient-to-br ${fallbackGradient} shadow-inner`}
-              >
-                {getInitials(player?.name)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
+            <AvatarImage
+              src={getAvatarUrl(player?.avatar) || undefined}
+              alt={player?.name || "Player"}
+              className="object-cover object-center"
+            />
+            <AvatarFallback
+              className={`text-base font-bold text-white bg-gradient-to-br ${fallbackGradient} shadow-inner`}
+            >
+              {getInitials(player?.name)}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
 
