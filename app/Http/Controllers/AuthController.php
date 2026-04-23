@@ -10,7 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
@@ -196,10 +199,30 @@ class AuthController extends Controller
      */
     private function getLocationFromIp(string $ip): ?string
     {
-        if ($ip === '127.0.0.1' || $ip === '::1') {
-            return 'Local Development';
+        if ($ip === '127.0.0.1' || $ip === '::1' || str_starts_with($ip, '192.168.') || str_starts_with($ip, '10.')) {
+            return 'Local Network';
         }
-        return null;
+
+        return Cache::remember("geoip:{$ip}", now()->addDay(), function () use ($ip) {
+            try {
+                $response = Http::timeout(3)->get("http://ip-api.com/json/{$ip}", [
+                    'fields' => 'status,country,regionName,city',
+                ]);
+
+                if (!$response->successful() || ($response->json('status') ?? '') !== 'success') {
+                    return null;
+                }
+
+                $city = $response->json('city');
+                $region = $response->json('regionName');
+                $country = $response->json('country');
+
+                return collect([$city, $region, $country])->filter()->join(', ') ?: null;
+            } catch (\Throwable $e) {
+                Log::warning('GeoIP lookup failed', ['ip' => $ip, 'error' => $e->getMessage()]);
+                return null;
+            }
+        });
     }
 
     /**
