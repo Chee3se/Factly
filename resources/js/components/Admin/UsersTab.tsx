@@ -147,14 +147,20 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
         { verified: nextVerified },
       );
       if (response.data.success) {
+        const newVerifiedAt = response.data.email_verified_at;
         onUpdateUsers((prev) => ({
           ...prev,
           data: prev.data.map((u) =>
             u.id === user.id
-              ? { ...u, email_verified_at: response.data.email_verified_at }
+              ? { ...u, email_verified_at: newVerifiedAt }
               : u,
           ),
         }));
+        setEditingUser((prev) =>
+          prev && prev.id === user.id
+            ? { ...prev, email_verified_at: newVerifiedAt }
+            : prev,
+        );
         toast.success(response.data.message);
       }
     } catch (error: any) {
@@ -277,29 +283,6 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleToggleVerify(user)}
-                        disabled={verifyingUserId === user.id}
-                        className={`flex items-center gap-1 ${
-                          user.email_verified_at
-                            ? "text-amber-600 hover:text-amber-700"
-                            : "text-emerald-600 hover:text-emerald-700"
-                        }`}
-                        title={
-                          user.email_verified_at
-                            ? "Clear verification"
-                            : "Mark email as verified"
-                        }
-                      >
-                        {user.email_verified_at ? (
-                          <MailWarning className="h-3 w-3" />
-                        ) : (
-                          <MailCheck className="h-3 w-3" />
-                        )}
-                        {user.email_verified_at ? "Unverify" : "Verify"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => openEditUserModal(user)}
                         className="flex items-center gap-1"
                       >
@@ -388,6 +371,58 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Email</Label>
+              <div className="col-span-3 flex items-center justify-between gap-3">
+                {editingUser?.email_verified_at ? (
+                  <Badge
+                    variant="outline"
+                    className="border-emerald-200 bg-emerald-50 text-emerald-700 gap-1"
+                  >
+                    <MailCheck className="h-3 w-3" />
+                    Verified
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-200 bg-amber-50 text-amber-700 gap-1"
+                  >
+                    <MailWarning className="h-3 w-3" />
+                    Unverified
+                  </Badge>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editingUser && handleToggleVerify(editingUser)}
+                  disabled={
+                    !editingUser || verifyingUserId === editingUser?.id
+                  }
+                  className={`flex items-center gap-1 ${
+                    editingUser?.email_verified_at
+                      ? "text-amber-600 hover:text-amber-700"
+                      : "text-emerald-600 hover:text-emerald-700"
+                  }`}
+                >
+                  {editingUser?.email_verified_at ? (
+                    <>
+                      <MailWarning className="h-3 w-3" />
+                      {verifyingUserId === editingUser?.id
+                        ? "Updating..."
+                        : "Mark unverified"}
+                    </>
+                  ) : (
+                    <>
+                      <MailCheck className="h-3 w-3" />
+                      {verifyingUserId === editingUser?.id
+                        ? "Updating..."
+                        : "Mark verified"}
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter>
