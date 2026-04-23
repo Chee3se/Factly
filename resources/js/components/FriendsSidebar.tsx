@@ -295,7 +295,7 @@ export default function FriendsSidebar({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 px-3"
+                                    className="h-8 w-8 p-0 shrink-0"
                                     onClick={() =>
                                       onInviteFriend?.(friend.id)
                                     }
@@ -303,16 +303,20 @@ export default function FriendsSidebar({
                                       loading ||
                                       excludedFromInvite.includes(friend.id)
                                     }
+                                    title={
+                                      excludedFromInvite.includes(friend.id)
+                                        ? "Already invited"
+                                        : "Invite to lobby"
+                                    }
                                   >
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Invite
+                                    <Send className="h-4 w-4" />
                                   </Button>
                                 )}
                                 {lobbyInviteEnabled && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-8 px-3"
+                                    className="h-8 w-8 p-0 shrink-0"
                                     onClick={() =>
                                       hook.inviteFriendToLobby(
                                         friend.id,
@@ -328,8 +332,7 @@ export default function FriendsSidebar({
                                         : "Invite to your lobby"
                                     }
                                   >
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Invite
+                                    <Send className="h-4 w-4" />
                                   </Button>
                                 )}
                                 {!showInviteOptions && (

@@ -1,15 +1,11 @@
-import React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, X, Check } from "lucide-react";
+import { Gamepad2, X, Check } from "lucide-react";
 
 interface Props {
   lobbyInvitation: {
@@ -51,70 +47,70 @@ export default function LobbyInvitationModal({
   return (
     <Dialog open={!!lobbyInvitation} onOpenChange={() => {}}>
       <DialogContent
-        className="sm:max-w-md"
+        className="sm:max-w-md p-0 overflow-hidden border-border/60"
         onPointerDownOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-500" />
-            <DialogTitle>Lobby Invitation</DialogTitle>
-          </div>
-        </DialogHeader>
+        <DialogTitle className="sr-only">Lobby invitation</DialogTitle>
 
-        <div className="flex items-center space-x-4 py-4">
-          <Avatar className="h-12 w-12">
-            <AvatarImage
-              src={getAvatarUrl(lobbyInvitation.inviter.avatar)}
-              alt={lobbyInvitation.inviter.name}
-            />
-            <AvatarFallback className="bg-primary text-primary-foreground">
-              {getInitials(lobbyInvitation.inviter.name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="font-medium">
-              <span className="font-bold text-foreground">
+        <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-transparent px-6 pt-6 pb-5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            <Gamepad2 className="h-4 w-4" />
+            Lobby invite
+          </div>
+
+          <div className="mt-4 flex items-center gap-4">
+            <Avatar className="h-14 w-14 ring-2 ring-primary/30 shadow-md">
+              <AvatarImage
+                src={getAvatarUrl(lobbyInvitation.inviter.avatar)}
+                alt={lobbyInvitation.inviter.name}
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {getInitials(lobbyInvitation.inviter.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="font-semibold text-base truncate">
                 {lobbyInvitation.inviter.name}
-              </span>{" "}
-              invited you to join their lobby
-            </p>
-            <div className="space-y-1 mt-2">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium">Game:</span>{" "}
-                {lobbyInvitation.game_name}
               </p>
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium">Lobby Code:</span>{" "}
-                {lobbyInvitation.lobby_code}
+                wants you to join their game
               </p>
             </div>
           </div>
         </div>
 
-        <DialogDescription>
-          Would you like to join this lobby? You'll be taken to the lobby page
-          if you accept.
-        </DialogDescription>
+        <div className="px-6 py-4 space-y-2 border-t border-border/60">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Game</span>
+            <span className="font-medium">{lobbyInvitation.game_name}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Lobby code</span>
+            <span className="font-mono font-semibold tracking-widest">
+              {lobbyInvitation.lobby_code}
+            </span>
+          </div>
+        </div>
 
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+        <div className="flex gap-2 px-6 pb-6 pt-1">
           <Button
             variant="outline"
             onClick={onDecline}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex-1"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 mr-1.5" />
             Decline
           </Button>
           <Button
             onClick={() => onAccept(lobbyInvitation.lobby_code)}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex-1"
           >
-            <Check className="h-4 w-4" />
-            {loading ? "Joining..." : "Join Lobby"}
+            <Check className="h-4 w-4 mr-1.5" />
+            {loading ? "Joining..." : "Join"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
