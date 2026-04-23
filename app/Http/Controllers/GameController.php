@@ -251,6 +251,8 @@ class GameController extends Controller
             'messages.*.role' => 'required|string|in:user,assistant,system',
             'messages.*.content' => 'required|string',
             'artwork_subject' => 'required|string',
+            'artwork_data' => 'nullable|string',
+            'mode' => 'nullable|string|in:defend,mystery,critic',
         ]);
 
         try {
@@ -259,20 +261,28 @@ class GameController extends Controller
                 $openAiUrl = rtrim($openAiUrl, '/') . '/chat/completions';
             }
             $openAiKey = config('services.openai.key');
-            $modelId = config('services.openai.model');
+            $useVision = !empty($validated['artwork_data']);
+            $modelId = $useVision
+                ? config('services.openai.vision_model')
+                : config('services.openai.model');
 
             if (!$openAiKey) {
                 Log::error('OpenAI API key not configured');
                 return response()->json(['error' => 'OpenAI API key not configured'], 500);
             }
 
+            $messages = $this->prepareCuratorMessages(
+                $validated['messages'],
+                $validated['artwork_data'] ?? null
+            );
+
             $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Authorization' => 'Bearer ' . $openAiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(30)->post($openAiUrl, [
+            ])->timeout(45)->post($openAiUrl, [
                 'model' => $modelId,
-                'messages' => $validated['messages'],
-                'temperature' => 0.8,
+                'messages' => $messages,
+                'temperature' => 0.7,
                 'max_tokens' => 500,
             ]);
 
@@ -283,7 +293,6 @@ class GameController extends Controller
 
             $data = $response->json();
 
-            // Handle different API response formats
             $message = $data['choices'][0]['message']['content']
                 ?? $data['content']
                 ?? $data['message']
@@ -302,6 +311,43 @@ class GameController extends Controller
             Log::error('Curator chat error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'An error occurred while processing your request'], 500);
         }
+    }
+
+    private function prepareCuratorMessages(array $messages, ?string $artworkData): array
+    {
+        if (!$artworkData) {
+            return $messages;
+        }
+
+        $injected = false;
+        $prepared = [];
+
+        foreach ($messages as $msg) {
+            if (!$injected && $msg['role'] === 'user') {
+                $prepared[] = [
+                    'role' => 'user',
+                    'content' => [
+                        ['type' => 'text', 'text' => $msg['content']],
+                        ['type' => 'image_url', 'image_url' => ['url' => $artworkData]],
+                    ],
+                ];
+                $injected = true;
+                continue;
+            }
+            $prepared[] = $msg;
+        }
+
+        if (!$injected) {
+            $prepared[] = [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => 'Here is the artwork I submitted.'],
+                    ['type' => 'image_url', 'image_url' => ['url' => $artworkData]],
+                ],
+            ];
+        }
+
+        return $prepared;
     }
 
     public function saveCuratorsTestArtwork(Request $request)
