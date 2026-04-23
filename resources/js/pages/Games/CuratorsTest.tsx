@@ -6,13 +6,50 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { route } from "ziggy-js";
-import { Loader2, Sparkles, Pencil, Eraser, Trash2, Send } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Pencil,
+  Eraser,
+  Trash2,
+  Send,
+  Shield,
+  HelpCircle,
+  Gavel,
+} from "lucide-react";
 import axios from "axios";
+
+type GameMode = "defend" | "mystery" | "critic";
+
+const MODE_META: Record<
+  GameMode,
+  { title: string; blurb: string; Icon: typeof Shield }
+> = {
+  defend: {
+    title: "Defend",
+    blurb:
+      "Convince the skeptical curator your drawing belongs in the museum. They see it, you argue for it.",
+    Icon: Shield,
+  },
+  mystery: {
+    title: "Mystery",
+    blurb:
+      "You know the subject, the curator doesn't. They have to guess what you drew — hint if you want.",
+    Icon: HelpCircle,
+  },
+  critic: {
+    title: "Critic",
+    blurb:
+      "Get an honest, one-shot critique. The curator rates your drawing 0–100 with no small talk.",
+    Icon: Gavel,
+  },
+};
 
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
   created_at?: string;
+  hidden?: boolean;
 }
 
 interface Props {
@@ -24,6 +61,7 @@ interface Props {
 
 type GamePhase =
   | "instructions"
+  | "mode_select"
   | "drawing"
   | "conversation"
   | "result"
@@ -36,6 +74,7 @@ export default function CuratorsTest({
   bestScore: initialBestScore,
 }: Props) {
   const [phase, setPhase] = useState<GamePhase>("instructions");
+  const [mode, setMode] = useState<GameMode>("defend");
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushColor, setBrushColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(3);
@@ -46,7 +85,10 @@ export default function CuratorsTest({
   const [verdict, setVerdict] = useState<"accepted" | "rejected" | null>(null);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(initialBestScore);
+  const [resultSummary, setResultSummary] = useState<string>("");
   const [messageCount, setMessageCount] = useState(0);
+  const [guessCount, setGuessCount] = useState(0);
+  const scoreSavedRef = useRef(false);
   const [artworkData, setArtworkData] = useState<string | null>(null);
   const [savedArtworks, setSavedArtworks] = useState<any[]>([]);
   const [isSavingArtwork, setIsSavingArtwork] = useState(false);
@@ -154,6 +196,16 @@ export default function CuratorsTest({
   }, []);
 
   useEffect(() => {
+    if (phase !== "drawing") return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [phase]);
+
+  useEffect(() => {
     if (phase === "save_artwork") {
       loadSavedArtworks(word)
         .then((artworks) => {
@@ -221,55 +273,187 @@ export default function CuratorsTest({
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
+  const handleAssistantMessage = (
+    content: string,
+    userMessagesSoFar: number,
+  ): boolean => {
+    if (mode === "critic") {
+      const scoreMatch = content.match(/SCORE:\s*(\d+)(?:\s*\/\s*100)?/i);
+      const raw = scoreMatch ? parseInt(scoreMatch[1], 10) : 0;
+      const finalScore = Math.max(0, Math.min(100, isNaN(raw) ? 0 : raw));
+      setScore(finalScore);
+      setVerdict(finalScore >= 50 ? "accepted" : "rejected");
+      setResultSummary(content.replace(/SCORE:\s*\d+(?:\s*\/\s*100)?/i, "").trim());
+      saveScoreOnce(finalScore);
+      setConversationOver(true);
+      setTimeout(() => setPhase("result"), 2000);
+      return true;
+    }
+
+    if (mode === "mystery") {
+      const guessMatch = content.match(/GUESS:\s*(.+?)(?:\n|$)/i);
+      if (!guessMatch) return false;
+
+      const guess = guessMatch[1].trim();
+      const nextGuessCount = guessCount + 1;
+      setGuessCount(nextGuessCount);
+
+      if (/i\s*give\s*up/i.test(guess)) {
+        setVerdict("rejected");
+        setScore(0);
+        saveScoreOnce(0);
+        setConversationOver(true);
+        setResultSummary("The curator gave up.");
+        setTimeout(() => setPhase("result"), 2000);
+        return true;
+      }
+
+      const norm = (s: string) =>
+        s
+          .toLowerCase()
+          .replace(/[^a-z0-9 ]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+      const g = norm(guess);
+      const w = norm(word);
+      const correct = g === w || g.includes(w) || w.includes(g);
+
+      if (correct) {
+        const finalScore = Math.max(20, 100 - (nextGuessCount - 1) * 20);
+        setVerdict("accepted");
+        setScore(finalScore);
+        saveScoreOnce(finalScore);
+        setConversationOver(true);
+        setResultSummary(
+          `The curator guessed "${guess}" on attempt ${nextGuessCount}.`,
+        );
+        setTimeout(() => setPhase("result"), 2000);
+        return true;
+      }
+
+      if (nextGuessCount >= 5) {
+        setVerdict("rejected");
+        setScore(0);
+        saveScoreOnce(0);
+        setConversationOver(true);
+        setResultSummary(`The curator ran out of guesses. Last: "${guess}".`);
+        setTimeout(() => setPhase("result"), 2000);
+        return true;
+      }
+
+      return false;
+    }
+
+    // defend
+    if (
+      content.includes("VERDICT: ACCEPT") ||
+      content.includes("VERDICT: REJECT")
+    ) {
+      const accepted = content.includes("VERDICT: ACCEPT");
+      setVerdict(accepted ? "accepted" : "rejected");
+      if (accepted) {
+        const bonus = Math.max(0, 50 - userMessagesSoFar * 5);
+        const finalScore = 50 + bonus;
+        setScore(finalScore);
+        saveScoreOnce(finalScore);
+      } else {
+        setScore(0);
+        saveScoreOnce(0);
+      }
+      setConversationOver(true);
+      setTimeout(() => setPhase("result"), 2000);
+      return true;
+    }
+
+    return false;
+  };
+
   const startConversation = async () => {
     const canvas = canvasRef.current;
+    let captured: string | null = null;
     if (canvas) {
-      const dataURL = canvas.toDataURL();
-      setArtworkData(dataURL);
+      const composite = document.createElement("canvas");
+      composite.width = canvas.width;
+      composite.height = canvas.height;
+      const cctx = composite.getContext("2d");
+      if (cctx) {
+        cctx.fillStyle = "#FFFFFF";
+        cctx.fillRect(0, 0, composite.width, composite.height);
+        cctx.drawImage(canvas, 0, 0);
+        captured = composite.toDataURL("image/jpeg", 0.9);
+      } else {
+        captured = canvas.toDataURL();
+      }
+      setArtworkData(captured);
     }
 
     setPhase("conversation");
 
-    const systemPrompt = `You are the AI Curator of the "Museum of Human Genius." Someone has submitted artwork claiming to be human-made. Your job is to evaluate if it shows real human creativity, emotion, and authenticity.
-
-The artwork is supposed to be: "${word}"
-
-Guidelines:
-- Ask about their creative process, inspiration, and intentions
-- Look for evidence of human emotion, imperfection, and genuine thought
-- Be skeptical but fair - authenticity over perfection
-- Ask 1-2 meaningful questions at a time before deciding
-- After questions, give a final verdict: either ACCEPT or REJECT the artwork
-- Start your verdict message with "VERDICT: ACCEPT" or "VERDICT: REJECT"
-
-IMPORTANT: Keep ALL responses very short and conversational. Never write more than 3-4 sentences. Be brief and direct. Ask one question at a time. Make it easy for the artist to respond and negotiate. Focus on genuine human qualities.`;
-
-    setMessages([
+    const systemPrompt = buildSystemPrompt(mode, word);
+    const seedText = buildSeedText(mode);
+    const seedMessages: Message[] = [
+      { role: "system", content: systemPrompt, hidden: true },
       {
-        role: "system",
-        content: systemPrompt,
-      },
-      {
-        role: "assistant",
-        content: `Hi there! I'm the curator at the Museum of Human Genius. You've submitted a piece about "${word}".
-
-To see if this really captures human creativity, tell me what inspired you to draw "${word}" this way. What were you feeling while you created it?`,
+        role: "user",
+        content: seedText,
+        hidden: true,
         created_at: new Date().toISOString(),
       },
-    ]);
+    ];
+
+    setMessages(seedMessages);
+    setIsLoading(true);
+
+    try {
+      const response = await (window as any).axios.post(
+        route("games.curators-test.chat"),
+        {
+          messages: seedMessages,
+          artwork_subject: word,
+          artwork_data: captured,
+          mode,
+        },
+      );
+
+      const assistantMessage = response.data.message;
+      const updated: Message[] = [
+        ...seedMessages,
+        {
+          role: "assistant",
+          content: assistantMessage,
+          created_at: new Date().toISOString(),
+        },
+      ];
+      setMessages(updated);
+      handleAssistantMessage(assistantMessage, 0);
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+      setMessages([
+        ...seedMessages,
+        {
+          role: "assistant",
+          content:
+            "I'm having trouble viewing your artwork right now. Try reloading the page.",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || conversationOver) return;
 
     const userMessage = inputMessage.trim();
     setInputMessage("");
-    setMessageCount(messageCount + 1);
+    const nextUserCount = messageCount + 1;
+    setMessageCount(nextUserCount);
 
-    const newMessages = [
+    const newMessages: Message[] = [
       ...messages,
       {
-        role: "user" as const,
+        role: "user",
         content: userMessage,
         created_at: new Date().toISOString(),
       },
@@ -285,6 +469,7 @@ To see if this really captures human creativity, tell me what inspired you to dr
           messages: newMessages,
           artwork_subject: word,
           artwork_data: artworkData,
+          mode,
         },
       );
 
@@ -297,31 +482,7 @@ To see if this really captures human creativity, tell me what inspired you to dr
           created_at: new Date().toISOString(),
         },
       ]);
-
-      // Check for verdict
-      if (
-        assistantMessage.includes("VERDICT: ACCEPT") ||
-        assistantMessage.includes("VERDICT: REJECT")
-      ) {
-        setConversationOver(true);
-        const accepted = assistantMessage.includes("VERDICT: ACCEPT");
-        setVerdict(accepted ? "accepted" : "rejected");
-
-        // Calculate score: base 50 for acceptance, bonus for fewer messages (more convincing)
-        if (accepted) {
-          const bonusPoints = Math.max(0, 50 - messageCount * 5);
-          const finalScore = 50 + bonusPoints;
-          setScore(finalScore);
-          saveScore(finalScore);
-        } else {
-          setScore(0);
-          saveScore(0);
-        }
-
-        setTimeout(() => {
-          setPhase("result");
-        }, 2000);
-      }
+      handleAssistantMessage(assistantMessage, nextUserCount);
     } catch (error) {
       console.error("Failed to send message:", error);
       setMessages([
@@ -336,6 +497,12 @@ To see if this really captures human creativity, tell me what inspired you to dr
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const saveScoreOnce = (finalScore: number) => {
+    if (scoreSavedRef.current) return;
+    scoreSavedRef.current = true;
+    saveScore(finalScore);
   };
 
   const saveScore = async (finalScore: number) => {
@@ -409,8 +576,62 @@ To see if this really captures human creativity, tell me what inspired you to dr
               </div>
 
               <div className="flex justify-center pt-4">
-                <Button onClick={() => setPhase("drawing")} size="lg">
+                <Button onClick={() => setPhase("mode_select")} size="lg">
                   Begin the Test
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </App>
+    );
+  }
+
+  if (phase === "mode_select") {
+    return (
+      <App auth={auth} title="The Curator's Test">
+        <div className="max-w-5xl mx-auto p-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-2xl">
+                Pick a Mode
+              </CardTitle>
+              <p className="text-center text-sm text-muted-foreground">
+                Each mode changes how the curator sees and judges your work.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(Object.keys(MODE_META) as GameMode[]).map((m) => {
+                  const meta = MODE_META[m];
+                  const Icon = meta.Icon;
+                  const selected = mode === m;
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className={`text-left p-5 rounded-lg border-2 transition-all cursor-pointer ${
+                        selected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="w-5 h-5" />
+                        <span className="font-semibold text-lg">
+                          {meta.title}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {meta.blurb}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex justify-center pt-6">
+                <Button onClick={() => setPhase("drawing")} size="lg">
+                  Continue with {MODE_META[mode].title}
                 </Button>
               </div>
             </CardContent>
@@ -430,7 +651,12 @@ To see if this really captures human creativity, tell me what inspired you to dr
                 Draw: <span className="text-primary">{word}</span>
               </CardTitle>
               <p className="text-center text-sm text-muted-foreground">
-                Create your artwork. Express your humanity through your drawing.
+                {mode === "defend" &&
+                  "The curator will see this and judge whether it belongs in the museum."}
+                {mode === "mystery" &&
+                  "The curator will try to guess what you drew. You know the word, they don't."}
+                {mode === "critic" &&
+                  "The curator will critique your drawing once and give it a score."}
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -489,7 +715,11 @@ To see if this really captures human creativity, tell me what inspired you to dr
 
               <div className="flex justify-center gap-4 pt-4">
                 <Button onClick={startConversation} size="lg">
-                  Submit to the Curator
+                  {mode === "critic"
+                    ? "Submit for Critique"
+                    : mode === "mystery"
+                      ? "Let the Curator See It"
+                      : "Submit to the Curator"}
                 </Button>
               </div>
             </CardContent>
@@ -554,11 +784,7 @@ To see if this really captures human creativity, tell me what inspired you to dr
                         </div>
                       ) : (
                         messages
-                          .filter(
-                            (m) =>
-                              m.role !== "system" &&
-                              !m.content.includes("VERDICT:"),
-                          )
+                          .filter((m) => m.role !== "system" && !m.hidden)
                           .map((message, index) => (
                             <div
                               key={index}
@@ -693,7 +919,13 @@ To see if this really captures human creativity, tell me what inspired you to dr
                             sendMessage();
                           }
                         }}
-                        placeholder="Defend your humanity..."
+                        placeholder={
+                          mode === "defend"
+                            ? "Defend your humanity..."
+                            : mode === "mystery"
+                              ? "Give a hint (or say 'no' to their guess)..."
+                              : "The critic has spoken."
+                        }
                         disabled={isLoading}
                         className="flex-1"
                         maxLength={500}
@@ -723,6 +955,43 @@ To see if this really captures human creativity, tell me what inspired you to dr
   }
 
   if (phase === "result") {
+    const title =
+      mode === "critic"
+        ? verdict === "accepted"
+          ? "Critic Approved"
+          : "Critic Unimpressed"
+        : mode === "mystery"
+          ? verdict === "accepted"
+            ? "They Got It"
+            : "They Didn't Get It"
+          : verdict === "accepted"
+            ? "Accepted!"
+            : "Rejected";
+
+    const bodyPrimary =
+      mode === "critic"
+        ? verdict === "accepted"
+          ? "The critic found something worth praising."
+          : "The critic was not impressed with this one."
+        : mode === "mystery"
+          ? verdict === "accepted"
+            ? `The curator figured out it was "${word}".`
+            : `The curator never figured out it was "${word}".`
+          : verdict === "accepted"
+            ? "Your artwork has been accepted into the Museum of Human Genius."
+            : "The curator was not convinced of your artwork's human authenticity.";
+
+    const bodyDetail =
+      mode === "critic"
+        ? resultSummary ||
+          "See the conversation above for the full critique."
+        : mode === "mystery"
+          ? resultSummary ||
+            `Guesses used: ${guessCount}/5.`
+          : verdict === "accepted"
+            ? `The curator was convinced by your passion and authenticity. You proved your humanity through ${messageCount} exchanges.`
+            : "Don't give up. Try again and speak more honestly about your process.";
+
     return (
       <App auth={auth} title="The Curator's Test">
         <div className="max-w-3xl mx-auto p-8">
@@ -733,7 +1002,7 @@ To see if this really captures human creativity, tell me what inspired you to dr
                   verdict === "accepted" ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {verdict === "accepted" ? "🎨 Accepted!" : "❌ Rejected"}
+                {title}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 text-center">
@@ -742,29 +1011,10 @@ To see if this really captures human creativity, tell me what inspired you to dr
                 <p className="text-muted-foreground">points</p>
               </div>
 
-              {verdict === "accepted" ? (
-                <div className="space-y-2">
-                  <p className="text-lg">
-                    Congratulations! Your artwork has been accepted into the
-                    Museum of Human Genius.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    The Curator was convinced by your passion and authenticity.
-                    You proved your humanity through {messageCount} exchanges.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-lg">
-                    The Curator was not convinced of your artwork's human
-                    authenticity.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Don't give up! Try again and speak more passionately about
-                    your creative process.
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-lg">{bodyPrimary}</p>
+                <p className="text-sm text-muted-foreground">{bodyDetail}</p>
+              </div>
 
               <p className="text-lg">
                 Best Score: <span className="font-bold">{bestScore}</span>
@@ -884,6 +1134,47 @@ To see if this really captures human creativity, tell me what inspired you to dr
   }
 
   return null;
+}
+
+function buildSystemPrompt(mode: GameMode, word: string): string {
+  if (mode === "defend") {
+    return `You are the AI Curator of the "Museum of Human Genius." The artist has submitted a drawing they claim depicts "${word}" and is made by a human. You CAN SEE the drawing.
+
+Evaluate based on what you actually observe plus what the artist tells you. Decide whether this belongs in the museum as genuine human expression.
+
+Rules:
+- Briefly comment on what you see in the drawing (colors, shapes, composition, whether it resembles "${word}").
+- Ask 1-2 thoughtful questions about the artist's process, emotion, or intent.
+- Don't be a pushover. If the drawing is careless or the explanation is hollow, reject it. If it shows genuine human character, accept it.
+- After at most 3-4 exchanges, render a final verdict. Start that message with exactly "VERDICT: ACCEPT" or "VERDICT: REJECT" followed by a one-sentence reason.
+- Keep every message under 3 sentences. No lectures.`;
+  }
+  if (mode === "mystery") {
+    return `You are a curator playing a guessing game. You CAN SEE the artist's drawing, but you do NOT know what they intended it to be. Never assume; only guess from visual evidence and their hints.
+
+Rules:
+- In your first reply: describe briefly what you see (1 sentence), then take your first guess.
+- Every message MUST end with a line formatted exactly: GUESS: <one word or short phrase>
+- The artist will either confirm or drop a hint. Refine your guess based on hints + visuals.
+- You have at most 5 guesses total. On your 5th guess, if you're not sure, you may give up with: GUESS: I give up
+- Keep every message under 3 sentences before the GUESS line.
+- Never ask the artist to reveal the answer outright.`;
+  }
+  return `You are a ruthless but fair art critic reviewing a drawing. You CAN SEE the drawing. The artist says the subject is "${word}".
+
+You speak ONCE, then the conversation ends. In that single message:
+- 2 sentences of honest critique: what works visually, what doesn't, and whether it reads as "${word}".
+- End with a final line formatted EXACTLY: SCORE: <0-100>/100
+- Scoring: 0-20 = unrecognizable mess. 21-40 = weak attempt. 41-60 = passable. 61-80 = strong. 81-100 = museum-grade. Be stingy with high scores.
+- Do not ask questions. Do not invite further conversation.`;
+}
+
+function buildSeedText(mode: GameMode): string {
+  if (mode === "defend")
+    return "Here's the artwork I'm submitting for the museum. Take a look and tell me what you think.";
+  if (mode === "mystery")
+    return "Take a look at this drawing. What do you think I drew?";
+  return "Here's my drawing. Please critique it and give it a score.";
 }
 
 async function saveArtwork(

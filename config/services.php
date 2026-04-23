@@ -44,6 +44,7 @@ return [
         'url' => env('OPEN_AI_URL', 'https://api.openai.com/v1/chat/completions'),
         'key' => env('OPEN_AI_KEY'),
         'model' => env('OPEN_AI_MODEL_ID', 'gpt-3.5-turbo'),
+        'vision_model' => env('OPEN_AI_VISION_MODEL_ID', 'meta/llama-3.2-90b-vision-instruct'),
     ],
 
 ];
