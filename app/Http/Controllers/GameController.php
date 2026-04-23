@@ -97,12 +97,9 @@ class GameController extends Controller
         // Take at least 10 items, or all available items if less than 10
         $items = $items->take(max(10, $items->count()));
 
-        $bestScore = 0;
-        if (auth()->check()) {
-            $bestScore = Score::where('user_id', auth()->id())
-                ->where('game_id', $game->id)
-                ->max('score') ?? 0;
-        }
+        $bestScore = Score::where('user_id', auth()->id())
+            ->where('game_id', $game->id)
+            ->max('score') ?? 0;
 
         return Inertia::render('Games/HigherOrLower', [
             'items' => $items,
@@ -131,18 +128,15 @@ class GameController extends Controller
             ];
         })->values();
 
-        $bestScore = 0;
-        if (auth()->check()) {
-            $bestScore = Score::where('user_id', auth()->id())
-                ->where('game_id', $game->id)
-                ->max('score') ?? 0;
-        }
+        $bestScore = Score::where('user_id', auth()->id())
+            ->where('game_id', $game->id)
+            ->max('score') ?? 0;
 
         // Check if user is coming from a lobby (via URL parameter)
         $lobbyCode = request()->get('lobby');
         $lobby = null;
 
-        if ($lobbyCode && auth()->check()) {
+        if ($lobbyCode) {
             $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)
                 ->with(['game', 'host', 'players'])
                 ->whereHas('players', function ($query) {
@@ -175,18 +169,15 @@ class GameController extends Controller
         // Shuffle items for randomness in multiplayer
         $items = $items->shuffle()->values();
 
-        $bestScore = 0;
-        if (auth()->check()) {
-            $bestScore = Score::where('user_id', auth()->id())
-                ->where('game_id', $game->id)
-                ->max('score') ?? 0;
-        }
+        $bestScore = Score::where('user_id', auth()->id())
+            ->where('game_id', $game->id)
+            ->max('score') ?? 0;
 
         // Check if user is coming from a lobby
         $lobbyCode = request()->get('lobby');
         $lobby = null;
 
-        if ($lobbyCode && auth()->check()) {
+        if ($lobbyCode) {
             $lobby = \App\Models\Lobby::where('lobby_code', $lobbyCode)
                 ->with(['game', 'host', 'players'])
                 ->whereHas('players', function ($query) {
@@ -219,12 +210,9 @@ class GameController extends Controller
 
         $items = $items->take(max(10, $items->count()));
 
-        $bestScore = 0;
-        if (auth()->check()) {
-            $bestScore = Score::where('user_id', auth()->id())
-                ->where('game_id', $game->id)
-                ->max('score') ?? 0;
-        }
+        $bestScore = Score::where('user_id', auth()->id())
+            ->where('game_id', $game->id)
+            ->max('score') ?? 0;
 
         return Inertia::render('Games/Factually', [
             'items' => $items,
@@ -245,12 +233,9 @@ class GameController extends Controller
 
         $word = $drawingPrompts[array_rand($drawingPrompts)];
 
-        $bestScore = 0;
-        if (auth()->check()) {
-            $bestScore = Score::where('user_id', auth()->id())
-                ->where('game_id', $game->id)
-                ->max('score') ?? 0;
-        }
+        $bestScore = Score::where('user_id', auth()->id())
+            ->where('game_id', $game->id)
+            ->max('score') ?? 0;
 
         return Inertia::render('Games/CuratorsTest', [
             'word' => $word,

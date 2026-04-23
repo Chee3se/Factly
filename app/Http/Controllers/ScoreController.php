@@ -78,11 +78,31 @@ class ScoreController extends Controller
             return response()->json(['error' => 'Game not found'], 404);
         }
 
-        // Get top 5 players
+        return response()->json(['leaderboard' => $this->buildLeaderboard($game)]);
+    }
+
+    public function index()
+    {
+        $games = Game::all();
+
+        $leaderboards = $games->map(fn ($game) => [
+            'game' => $game,
+            'leaderboard' => $this->buildLeaderboard($game),
+        ]);
+
+        return Inertia::render('Leaderboards', [
+            'leaderboards' => $leaderboards
+        ]);
+    }
+
+    private function buildLeaderboard(Game $game)
+    {
+        $withUser = fn ($query) => $query
+            ->select('id', 'name', 'avatar', 'decoration_id')
+            ->with('decoration');
+
         $topPlayers = Score::where('game_id', $game->id)
-            ->with(['user' => function ($query) {
-                $query->select('id', 'name', 'avatar', 'decoration_id')->with('decoration');
-            }])
+            ->with(['user' => $withUser])
             ->selectRaw('user_id, MAX(score) as best_score')
             ->groupBy('user_id')
             ->orderByDesc('best_score')
@@ -91,109 +111,41 @@ class ScoreController extends Controller
 
         $leaderboard = $topPlayers;
 
-        // If user is authenticated, check if they're in top 5
-        if (auth()->check()) {
-            $currentUserId = auth()->id();
-            $userInTop5 = $topPlayers->contains('user_id', $currentUserId);
-
-            if (!$userInTop5) {
-                // Get current user's best score and position
-                $userScore = Score::where('game_id', $game->id)
-                    ->where('user_id', $currentUserId)
-                    ->max('score');
-
-                if ($userScore) {
-                    // Calculate user's position
-                    $userPosition = Score::where('game_id', $game->id)
-                        ->selectRaw('user_id, MAX(score) as best_score')
-                        ->groupBy('user_id')
-                        ->havingRaw('MAX(score) > ?', [$userScore])
-                        ->count() + 1;
-
-                    // Add current user to leaderboard
-                    $currentUserEntry = Score::where('game_id', $game->id)
-                        ->where('user_id', $currentUserId)
-                        ->with(['user' => function ($query) {
-                            $query->select('id', 'name', 'avatar', 'decoration_id')->with('decoration');
-                        }])
-                        ->selectRaw('user_id, MAX(score) as best_score')
-                        ->groupBy('user_id')
-                        ->first();
-
-                    if ($currentUserEntry) {
-                        $currentUserEntry->position = $userPosition;
-                        $leaderboard->push($currentUserEntry);
-                    }
-                }
-            }
+        if (!auth()->check()) {
+            return $leaderboard;
         }
 
-        return response()->json(['leaderboard' => $leaderboard]);
-    }
+        $currentUserId = auth()->id();
+        if ($topPlayers->contains('user_id', $currentUserId)) {
+            return $leaderboard;
+        }
 
-    public function index()
-    {
-        $games = Game::all();
+        $userScore = Score::where('game_id', $game->id)
+            ->where('user_id', $currentUserId)
+            ->max('score');
 
-        $leaderboards = $games->map(function ($game) {
-            // Get top 5 players
-            $topPlayers = Score::where('game_id', $game->id)
-                ->with(['user' => function ($query) {
-                    $query->select('id', 'name', 'avatar', 'decoration_id')->with('decoration');
-                }])
-                ->selectRaw('user_id, MAX(score) as best_score')
-                ->groupBy('user_id')
-                ->orderByDesc('best_score')
-                ->limit(5)
-                ->get();
+        if (!$userScore) {
+            return $leaderboard;
+        }
 
-            $leaderboard = $topPlayers;
+        $userPosition = Score::where('game_id', $game->id)
+            ->selectRaw('user_id, MAX(score) as best_score')
+            ->groupBy('user_id')
+            ->havingRaw('MAX(score) > ?', [$userScore])
+            ->count() + 1;
 
-            // If user is authenticated, check if they're in top 5
-            if (auth()->check()) {
-                $currentUserId = auth()->id();
-                $userInTop5 = $topPlayers->contains('user_id', $currentUserId);
+        $currentUserEntry = Score::where('game_id', $game->id)
+            ->where('user_id', $currentUserId)
+            ->with(['user' => $withUser])
+            ->selectRaw('user_id, MAX(score) as best_score')
+            ->groupBy('user_id')
+            ->first();
 
-                if (!$userInTop5) {
-                    // Get current user's best score and position
-                    $userScore = Score::where('game_id', $game->id)
-                        ->where('user_id', $currentUserId)
-                        ->max('score');
+        if ($currentUserEntry) {
+            $currentUserEntry->position = $userPosition;
+            $leaderboard->push($currentUserEntry);
+        }
 
-                    if ($userScore) {
-                        // Calculate user's position
-                        $userPosition = Score::where('game_id', $game->id)
-                            ->selectRaw('user_id, MAX(score) as best_score')
-                            ->groupBy('user_id')
-                            ->havingRaw('MAX(score) > ?', [$userScore])
-                            ->count() + 1;
-
-                        // Add current user to leaderboard
-                        $currentUserEntry = Score::where('game_id', $game->id)
-                            ->where('user_id', $currentUserId)
-                            ->with(['user' => function ($query) {
-                                $query->select('id', 'name', 'avatar', 'decoration_id')->with('decoration');
-                            }])
-                            ->selectRaw('user_id, MAX(score) as best_score')
-                            ->groupBy('user_id')
-                            ->first();
-
-                        if ($currentUserEntry) {
-                            $currentUserEntry->position = $userPosition;
-                            $leaderboard->push($currentUserEntry);
-                        }
-                    }
-                }
-            }
-
-            return [
-                'game' => $game,
-                'leaderboard' => $leaderboard
-            ];
-        });
-
-        return Inertia::render('Leaderboards', [
-            'leaderboards' => $leaderboards
-        ]);
+        return $leaderboard;
     }
 }
