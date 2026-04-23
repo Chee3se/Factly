@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "@inertiajs/react";
 import App from "@/layouts/App";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,24 +45,6 @@ export default function EmailVerification({ auth, flash }: Props) {
     } finally {
       setIsResending(false);
     }
-  };
-
-  const handleLogout = () => {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/logout";
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]');
-    if (csrfToken) {
-      const csrfInput = document.createElement("input");
-      csrfInput.type = "hidden";
-      csrfInput.name = "_token";
-      csrfInput.value = csrfToken.getAttribute("content") || "";
-      form.appendChild(csrfInput);
-    }
-
-    document.body.appendChild(form);
-    form.submit();
   };
 
   return (
@@ -121,13 +104,11 @@ export default function EmailVerification({ auth, flash }: Props) {
                 )}
               </Button>
 
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Log out
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/logout" method="post" as="button">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Link>
               </Button>
             </div>
 
