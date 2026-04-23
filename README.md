@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/factly-logo-v3-black.png" width="110" alt="Factly">
+  <img src="./public/factly-logo-v3-white.png" width="400" alt="Factly">
 </p>
 
 <h1 align="center">Factly</h1>
