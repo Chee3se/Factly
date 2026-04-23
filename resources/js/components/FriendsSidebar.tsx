@@ -172,7 +172,7 @@ export default function FriendsSidebar({
           <button
             onClick={onToggle}
             aria-label="Toggle friends"
-            className="group relative flex flex-col items-center justify-center gap-1.5 h-24 w-11 rounded-l-xl rounded-r-none border border-r-0 border-border bg-primary text-primary-foreground shadow-lg hover:brightness-110 transition-all"
+            className="group relative flex flex-col items-center justify-center gap-1.5 h-24 w-11 rounded-l-xl rounded-r-none border border-r-0 border-border bg-primary text-primary-foreground shadow-lg hover:brightness-110 transition-all cursor-pointer"
           >
             <Users className="h-4 w-4" />
             <span className="text-[10px] font-semibold tracking-wider uppercase [writing-mode:vertical-rl] rotate-180">

@@ -392,36 +392,45 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
                     Unverified
                   </Badge>
                 )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => editingUser && handleToggleVerify(editingUser)}
-                  disabled={
-                    !editingUser || verifyingUserId === editingUser?.id
-                  }
-                  className={`flex items-center gap-1 ${
-                    editingUser?.email_verified_at
-                      ? "text-amber-600 hover:text-amber-700"
-                      : "text-emerald-600 hover:text-emerald-700"
-                  }`}
-                >
-                  {editingUser?.email_verified_at ? (
-                    <>
-                      <MailWarning className="h-3 w-3" />
-                      {verifyingUserId === editingUser?.id
-                        ? "Updating..."
-                        : "Mark unverified"}
-                    </>
-                  ) : (
-                    <>
-                      <MailCheck className="h-3 w-3" />
-                      {verifyingUserId === editingUser?.id
-                        ? "Updating..."
-                        : "Mark verified"}
-                    </>
-                  )}
-                </Button>
+                {editingUser?.type === "google" &&
+                editingUser?.email_verified_at ? (
+                  <span className="text-xs text-muted-foreground">
+                    Google account
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      editingUser && handleToggleVerify(editingUser)
+                    }
+                    disabled={
+                      !editingUser || verifyingUserId === editingUser?.id
+                    }
+                    className={`flex items-center gap-1 ${
+                      editingUser?.email_verified_at
+                        ? "text-amber-600 hover:text-amber-700"
+                        : "text-emerald-600 hover:text-emerald-700"
+                    }`}
+                  >
+                    {editingUser?.email_verified_at ? (
+                      <>
+                        <MailWarning className="h-3 w-3" />
+                        {verifyingUserId === editingUser?.id
+                          ? "Updating..."
+                          : "Mark unverified"}
+                      </>
+                    ) : (
+                      <>
+                        <MailCheck className="h-3 w-3" />
+                        {verifyingUserId === editingUser?.id
+                          ? "Updating..."
+                          : "Mark verified"}
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
