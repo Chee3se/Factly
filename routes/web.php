@@ -143,6 +143,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
+    Route::post('/users/{user}/verify-email', [AdminController::class, 'verifyUserEmail'])->name('users.verify-email');
     Route::patch('/friends/{friend}/approve', [AdminController::class, 'approveFriendRequest'])->name('friends.approve');
     Route::patch('/suggestions/{suggestion}/status', [AdminController::class, 'updateSuggestionStatus'])->name('suggestions.update-status');
 });

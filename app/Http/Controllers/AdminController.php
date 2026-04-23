@@ -106,6 +106,25 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'User deleted successfully!']);
     }
 
+    public function verifyUserEmail(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'verified' => 'required|boolean',
+        ]);
+
+        $user->forceFill([
+            'email_verified_at' => $validated['verified'] ? now() : null,
+        ])->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $validated['verified']
+                ? "Marked {$user->name}'s email as verified."
+                : "Cleared verification on {$user->name}'s email.",
+            'email_verified_at' => $user->email_verified_at,
+        ]);
+    }
+
 
 
     public function approveFriendRequest(Request $request, Friend $friend)

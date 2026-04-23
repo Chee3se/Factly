@@ -3,119 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Email - {{ config('app.name') }}</title>
+    <title>Verify your email · {{ config('app.name') }}</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f5f8;
+            color: #111827;
+        }
+        .wrapper {
+            width: 100%;
+            padding: 32px 16px;
         }
         .container {
-            max-width: 600px;
-            width: 100%;
-            margin: 20px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 560px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
         }
-        .header {
-            background: #667eea;
-            padding: 30px 30px 20px;
-            text-align: center;
-            color: white;
+        .brand {
+            padding: 28px 32px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
+        .brand-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: #0f1629;
+            display: inline-block;
+        }
+        .brand-name {
+            font-size: 18px;
             font-weight: 600;
+            letter-spacing: -0.01em;
+            color: #0f1629;
         }
         .content {
-            padding: 40px 30px;
-            text-align: center;
+            padding: 24px 32px 8px;
         }
-        .content h2 {
-            color: #333;
-            font-size: 20px;
-            margin-bottom: 16px;
+        .eyebrow {
+            font-size: 12px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+            margin: 0 0 12px;
         }
-        .content p {
-            color: #666;
+        h1 {
+            margin: 0 0 12px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f1629;
+            letter-spacing: -0.015em;
+        }
+        p {
+            color: #4b5563;
+            font-size: 15px;
             line-height: 1.6;
-            margin-bottom: 24px;
-            font-size: 16px;
+            margin: 0 0 16px;
         }
-        .button {
+        .cta-wrap {
+            padding: 12px 32px 24px;
+        }
+        .cta {
             display: inline-block;
-            background: #667eea;
-            color: white;
+            background: #0f1629;
+            color: #ffffff !important;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 16px;
-            transition: background-color 0.2s ease;
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
         }
-        .button:hover {
-            background: #5a67d8;
+        .cta:hover {
+            background: #1f2937;
         }
-        .footer {
-            background: #f8f9fa;
-            padding: 20px 30px;
-            text-align: center;
-            border-top: 1px solid #e9ecef;
+        .fallback {
+            padding: 0 32px 24px;
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+            word-break: break-all;
         }
-        .footer p {
-            color: #666;
-            font-size: 14px;
-            margin: 0;
-            line-height: 1.5;
-        }
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .footer a:hover {
+        .fallback a {
+            color: #0f1629;
             text-decoration: underline;
+        }
+        .meta {
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 32px;
+            font-size: 12px;
+            color: #9ca3af;
+            background: #fafbfc;
+        }
+        .meta strong {
+            color: #6b7280;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>{{ config('app.name') }}</h1>
-        </div>
+    <div class="wrapper">
+        <div class="container">
+            <div class="brand">
+                <span class="brand-dot"></span>
+                <span class="brand-name">{{ config('app.name') }}</span>
+            </div>
 
-        <div class="content">
-            <h2>Verify Your Email Address</h2>
-            <p>Hi there! Thanks for joining {{ config('app.name') }}. To get started, please verify your email address by clicking the button below.</p>
+            <div class="content">
+                <p class="eyebrow">Finish setting up your account</p>
+                <h1>Verify your email</h1>
+                <p>
+                    Thanks for joining {{ config('app.name') }}. Confirm this is your
+                    email and you'll be ready to play.
+                </p>
+            </div>
 
-            <a href="{{ $url }}" class="button">
-                Verify Email Address
-            </a>
+            <div class="cta-wrap">
+                <a href="{{ $url }}" class="cta">Verify email</a>
+            </div>
 
-            <p style="margin-top: 24px; font-size: 14px; color: #888;">
-                This verification link will expire in {{ $count }} minutes.<br>
-                If the button doesn't work, copy and paste this URL into your browser:<br>
-                <span style="word-break: break-all; color: #667eea;">{{ $url }}</span>
-            </p>
-        </div>
+            <div class="fallback">
+                This link expires in {{ $count }} minutes. If the button doesn't
+                work, paste this into your browser:<br>
+                <a href="{{ $url }}">{{ $url }}</a>
+            </div>
 
-        <div class="footer">
-            <p>
-                If you didn't create an account, no further action is required.<br>
-                Need help? <a href="{{ url('/') }}">Visit our website</a> for support.
-            </p>
-            <p style="margin-top: 12px; font-size: 12px; color: #999;">
-                © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-            </p>
+            <div class="meta">
+                <strong>Didn't sign up?</strong> You can ignore this email — no
+                account will be created.
+            </div>
         </div>
     </div>
 </body>

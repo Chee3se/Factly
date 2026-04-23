@@ -45,6 +45,8 @@ import {
   Calendar,
   Edit,
   Trash2,
+  MailCheck,
+  MailWarning,
 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -70,6 +72,7 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
   });
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [verifyingUserId, setVerifyingUserId] = useState<number | null>(null);
 
   // User management functions
   const openEditUserModal = (user: AdminUser) => {
@@ -135,6 +138,35 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
     }
   };
 
+  const handleToggleVerify = async (user: AdminUser) => {
+    const nextVerified = !user.email_verified_at;
+    setVerifyingUserId(user.id);
+    try {
+      const response = await axios.post(
+        `/admin/users/${user.id}/verify-email`,
+        { verified: nextVerified },
+      );
+      if (response.data.success) {
+        onUpdateUsers((prev) => ({
+          ...prev,
+          data: prev.data.map((u) =>
+            u.id === user.id
+              ? { ...u, email_verified_at: response.data.email_verified_at }
+              : u,
+          ),
+        }));
+        toast.success(response.data.message);
+      }
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        `Failed to ${nextVerified ? "verify" : "unverify"} email.`;
+      toast.error(message);
+    } finally {
+      setVerifyingUserId(null);
+    }
+  };
+
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
 
@@ -175,6 +207,7 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Verified</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Friends</TableHead>
                 <TableHead>Scores</TableHead>
@@ -187,6 +220,25 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.email_verified_at ? (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-200 bg-emerald-50 text-emerald-700 gap-1"
+                      >
+                        <MailCheck className="h-3 w-3" />
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="border-amber-200 bg-amber-50 text-amber-700 gap-1"
+                      >
+                        <MailWarning className="h-3 w-3" />
+                        Unverified
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={user.role === "admin" ? "default" : "secondary"}
@@ -222,6 +274,29 @@ export default function UsersTab({ users, onUpdateUsers }: UsersTabProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleVerify(user)}
+                        disabled={verifyingUserId === user.id}
+                        className={`flex items-center gap-1 ${
+                          user.email_verified_at
+                            ? "text-amber-600 hover:text-amber-700"
+                            : "text-emerald-600 hover:text-emerald-700"
+                        }`}
+                        title={
+                          user.email_verified_at
+                            ? "Clear verification"
+                            : "Mark email as verified"
+                        }
+                      >
+                        {user.email_verified_at ? (
+                          <MailWarning className="h-3 w-3" />
+                        ) : (
+                          <MailCheck className="h-3 w-3" />
+                        )}
+                        {user.email_verified_at ? "Unverify" : "Verify"}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

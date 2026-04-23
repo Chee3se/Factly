@@ -1,21 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import App from "@/layouts/App";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Mail,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-  LogOut,
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Mail, CheckCircle2, AlertCircle, RefreshCw, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -33,11 +20,8 @@ export default function EmailVerification({ auth, flash }: Props) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    // Check flash messages from session
     if (flash?.resent) {
-      setMessage(
-        "A fresh verification link has been sent to your email address.",
-      );
+      setMessage("A fresh verification link has been sent to your email.");
       setIsSuccess(true);
     }
   }, [flash]);
@@ -47,12 +31,10 @@ export default function EmailVerification({ auth, flash }: Props) {
     setMessage(null);
 
     try {
-      const response = await axios.post("/email/verification-notification");
-      setMessage(
-        "A fresh verification link has been sent to your email address.",
-      );
+      await axios.post("/email/verification-notification");
+      setMessage("A fresh verification link has been sent to your email.");
       setIsSuccess(true);
-      toast.success("Verification email sent!");
+      toast.success("Verification email sent");
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || "Failed to send verification email.";
@@ -83,135 +65,78 @@ export default function EmailVerification({ auth, flash }: Props) {
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes move-bg-diagonal {
-          0% { transform: rotate(45deg) scale(150%) translateX(0); }
-          100% { transform: rotate(45deg) scale(150%) translateX(15%); }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-      `}</style>
-
-      <App title="Email Verification" auth={auth}>
-        {/* Full Screen Animated Background - Same as Home page */}
-        <div className="fixed inset-0 z-0 overflow-hidden">
-          <div
-            className="absolute inset-0"
-            style={{ animation: "move-bg-diagonal 10s linear infinite" }}
-          >
-            {/* Grid pattern overlay */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.15)_1px,transparent_1px)] bg-[size:2rem_2rem]" />
-          </div>
-        </div>
-
-        {/* Email Verification Overlay - Positioned like HeroScreen */}
-        <div className="fixed inset-0 z-40 pointer-events-none">
-          {/* Account for header (h-14 = 56px) and footer (~60px) */}
-          <div className="absolute top-14 bottom-16 left-0 right-0 pointer-events-auto flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-              {/* Main Verification Card */}
-              <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
-                <CardHeader className="text-center pb-2">
-                  <div
-                    className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg"
-                    style={{ animation: "float 3s ease-in-out infinite" }}
-                  >
-                    <Mail className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold text-gray-900">
-                    Verify Your Email
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Check your email for a verification link
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  {/* Status Message */}
-                  {message && (
-                    <Alert
-                      className={`${
-                        isSuccess
-                          ? "bg-green-500/10 border-green-500/20 text-green-400"
-                          : "bg-red-500/10 border-red-500/20 text-red-400"
-                      }`}
-                    >
-                      {isSuccess ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4" />
-                      )}
-                      <AlertDescription>{message}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  {/* Instructions */}
-                  <div className="text-center space-y-3">
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      We've sent a verification link to{" "}
-                      <strong className="text-gray-900">
-                        {auth.user?.email}
-                      </strong>
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Click the link in the email to activate your account and
-                      start playing!
-                    </p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    <Button
-                      onClick={handleResendEmail}
-                      disabled={isResending}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-3 shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      {isResending ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          <Mail className="w-4 h-4 mr-2" />
-                          Resend Verification Email
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      onClick={handleLogout}
-                      variant="outline"
-                      className="w-full border-white/20 text-white/80 hover:bg-white/10 hover:text-white"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Log Out
-                    </Button>
-                  </div>
-
-                  {/* Help Text */}
-                  <div className="text-center">
-                    <p className="text-gray-500 text-xs">
-                      Didn't receive the email? Check your spam folder or click
-                      "Resend" above.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Footer */}
-              <div className="text-center mt-6">
-                <p className="text-gray-400 text-xs">
-                  Need help? Contact our support team.
-                </p>
+    <App title="Email Verification" auth={auth}>
+      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)] px-4">
+        <Card className="w-full max-w-md border-border/60 bg-background/80 backdrop-blur shadow-xl">
+          <CardContent className="p-8 space-y-6">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center ring-1 ring-primary/20">
+                <Mail className="h-6 w-6" />
               </div>
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+                Verify your email
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                We sent a link to{" "}
+                <span className="font-medium text-foreground">
+                  {auth.user?.email}
+                </span>
+                . Click it to finish setting up your account.
+              </p>
             </div>
-          </div>
-        </div>
-      </App>
-    </>
+
+            {message && (
+              <div
+                className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+                  isSuccess
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-destructive/30 bg-destructive/5 text-destructive"
+                }`}
+              >
+                {isSuccess ? (
+                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                )}
+                <span>{message}</span>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Button
+                onClick={handleResendEmail}
+                disabled={isResending}
+                className="w-full"
+              >
+                {isResending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Resend verification email
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Log out
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Didn't get it? Check your spam folder, or hit resend.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </App>
   );
 }

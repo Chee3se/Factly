@@ -4,6 +4,8 @@ export interface AdminUser {
   name: string;
   email: string;
   role: "user" | "admin";
+  type?: "normal" | "google";
+  email_verified_at: string | null;
   created_at: string;
   friends_count: number;
   scores_count: number;
