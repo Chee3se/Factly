@@ -112,6 +112,12 @@ class AdminController extends Controller
             'verified' => 'required|boolean',
         ]);
 
+        if (!$validated['verified'] && $user->type === 'google') {
+            return response()->json([
+                'message' => "Can't unverify a Google-authenticated user.",
+            ], 422);
+        }
+
         $user->forceFill([
             'email_verified_at' => $validated['verified'] ? now() : null,
         ])->save();
