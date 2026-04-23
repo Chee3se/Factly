@@ -24,7 +24,7 @@ export default function Auth({ canResetPassword, status }: Props) {
           <div className="text-center space-y-2">
             <div className="flex justify-center">
               <img
-                src="/factly-logo-v3.png"
+                src="/factly-logo-v3-black.png"
                 alt={appName}
                 className="h-12 w-auto"
               />

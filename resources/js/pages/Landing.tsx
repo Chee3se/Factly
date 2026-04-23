@@ -45,7 +45,7 @@ export default function Landing() {
             <div className="flex justify-between items-center h-14">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/factly-logo-v3.png"
+                  src="/factly-logo-v3-black.png"
                   alt={appName}
                   className="h-8 w-auto"
                 />
@@ -187,7 +187,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3">
                 <img
-                  src="/factly-logo-v3.png"
+                  src="/factly-logo-v3-black.png"
                   alt={appName}
                   className="h-6 w-auto"
                 />
