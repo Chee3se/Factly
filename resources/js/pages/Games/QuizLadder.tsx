@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import axios from "axios";
 import App from "@/layouts/App";
 import { useLobby } from "@/hooks/useLobby";
 import { toast } from "sonner";
@@ -78,6 +79,7 @@ export default function QuizLadder({ auth, game, items }: Props) {
   const authUserIdRef = useRef(auth.user?.id);
   const currentLobbyRef = useRef(currentLobby);
   const questionSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scoreSavedRef = useRef(false);
 
   useEffect(() => {
     gameStateRef.current = gameState;
@@ -90,6 +92,24 @@ export default function QuizLadder({ auth, game, items }: Props) {
   useEffect(() => {
     currentLobbyRef.current = currentLobby;
   }, [currentLobby]);
+
+  useEffect(() => {
+    if (gameState.phase !== "finished" || scoreSavedRef.current) return;
+    const userId = authUserIdRef.current;
+    if (!userId) return;
+    const myState = gameState.playerStates[userId];
+    if (!myState) return;
+    scoreSavedRef.current = true;
+    axios
+      .post(route("games.save-score"), {
+        game: game.slug,
+        score: myState.cubes,
+      })
+      .catch((error) => {
+        scoreSavedRef.current = false;
+        console.error("Failed to save quiz ladder score:", error);
+      });
+  }, [gameState.phase, gameState.playerStates, game.slug]);
 
   const cleanupWhisperListeners = useCallback(() => {
     whisperListenersRef.current.forEach((event) => {
