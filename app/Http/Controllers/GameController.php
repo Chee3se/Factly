@@ -13,6 +13,9 @@ use Inertia\Response;
 
 class GameController extends Controller
 {
+    /**
+     * Store a new game suggestion from a user.
+     */
     public function storeSuggestion(Request $request)
     {
         $validated = $request->validate([
@@ -50,6 +53,9 @@ class GameController extends Controller
         }
     }
 
+    /**
+     * Render the home page (or the landing page for guests) with the list of games.
+     */
     public function index()
     {
         if (!auth()->check()) {
@@ -70,6 +76,9 @@ class GameController extends Controller
 
 
 
+    /**
+     * Dispatch to the right game method based on the game's slug.
+     */
     public function show(Game $game)
     {
         $methodName = str_replace('-', '_', $game->slug);
@@ -81,6 +90,9 @@ class GameController extends Controller
         return redirect('/');
     }
 
+    /**
+     * Render the Higher or Lower game page with shuffled items.
+     */
     public function higher_or_lower(Game $game)
     {
         $gameItems = GameItem::where('game_id', $game->id)
@@ -108,6 +120,9 @@ class GameController extends Controller
         ]);
     }
 
+    /**
+     * Render the Quiz Ladder game page with a random set of questions.
+     */
     public function quiz_ladder(Game $game)
     {
         $gameItems = GameItem::where('game_id', $game->id)
@@ -155,6 +170,9 @@ class GameController extends Controller
         ]);
     }
 
+    /**
+     * Render the Impact Auction game page with shuffled auction items.
+     */
     public function impact_auction(Game $game): Response
     {
         $gameItems = GameItem::where('game_id', $game->id)
@@ -196,6 +214,9 @@ class GameController extends Controller
         ]);
     }
 
+    /**
+     * Render the Factually game page with its statement pool.
+     */
     public function factually(Game $game)
     {
         $gameItems = GameItem::where('game_id', $game->id)
@@ -221,6 +242,9 @@ class GameController extends Controller
         ]);
     }
 
+    /**
+     * Render the Curator's Test game page with a random word to draw.
+     */
     public function curators_test(Game $game)
     {
         // List of simple drawing prompts
@@ -244,6 +268,9 @@ class GameController extends Controller
         ]);
     }
 
+    /**
+     * Handle a chat turn with the AI curator. Routes the drawing through a vision model when provided.
+     */
     public function curatorsTestChat(Request $request)
     {
         $validated = $request->validate([
@@ -313,6 +340,9 @@ class GameController extends Controller
         }
     }
 
+    /**
+     * Inject the artwork image into the first user message so the vision model sees it.
+     */
     private function prepareCuratorMessages(array $messages, ?string $artworkData): array
     {
         if (!$artworkData) {
@@ -350,6 +380,9 @@ class GameController extends Controller
         return $prepared;
     }
 
+    /**
+     * Save a user's Curator's Test drawing to the gallery.
+     */
     public function saveCuratorsTestArtwork(Request $request)
     {
         $validated = $request->validate([
@@ -396,6 +429,9 @@ class GameController extends Controller
         }
     }
 
+    /**
+     * Return saved Curator's Test artworks, optionally filtered by subject word.
+     */
     public function getCuratorsTestArtworks(Request $request)
     {
         try {
@@ -441,6 +477,9 @@ class GameController extends Controller
         }
     }
 
+    /**
+     * Render the public gallery of saved Curator's Test artworks.
+     */
     public function curatorsTestGallery(Request $request)
     {
         // Get the Curator's Test game

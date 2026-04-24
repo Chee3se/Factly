@@ -71,7 +71,7 @@ class AuthController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', 'unique:users'],
-            'email' => 'required|string|lowercase|email|max:100|unique:users',
+            'email' => 'required|string|lowercase|email:rfc,dns|max:100|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
             'name.required' => 'Username is required.',
@@ -114,6 +114,9 @@ class AuthController extends Controller
         return redirect('/');
     }
 
+    /**
+     * Show the profile page with decorations, scores and active sessions.
+     */
     public function profile(): Response
     {
         $decorations = \App\Models\Decoration::all()->map(function ($decoration) {
@@ -127,6 +130,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Check if a user has unlocked a decoration based on its unlock rule.
+     */
     private function isDecorationUnlocked($decoration, $user)
     {
         if (!$decoration->unlock_type) {
@@ -234,7 +240,7 @@ class AuthController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', Rule::unique('users')->ignore($user->id)],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:100', Rule::unique('users')->ignore($user->id)],
         ], [
             'name.regex' => 'The username may only contain letters, numbers, spaces, hyphens, and underscores.',
             'name.min' => 'The username must be at least 3 characters.',

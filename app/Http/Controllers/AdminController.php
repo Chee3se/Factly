@@ -13,6 +13,9 @@ use Inertia\Inertia;
 
 class AdminController extends Controller
 {
+    /**
+     * Show the admin dashboard with stats, users, friends and suggestions.
+     */
     public function dashboard()
     {
         $stats = [
@@ -74,6 +77,9 @@ class AdminController extends Controller
 
 
 
+    /**
+     * Update a user's name, email and role from the admin panel.
+     */
     public function updateUser(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -91,6 +97,9 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'User updated successfully!']);
     }
 
+    /**
+     * Delete a user. Can't delete yourself or the last admin.
+     */
     public function deleteUser(User $user)
     {
         if ($user->id == auth()->id()) {
@@ -106,6 +115,9 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'User deleted successfully!']);
     }
 
+    /**
+     * Manually mark a user's email as verified or clear the verification.
+     */
     public function verifyUserEmail(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -133,6 +145,9 @@ class AdminController extends Controller
 
 
 
+    /**
+     * Approve or decline a pending friend request as admin.
+     */
     public function approveFriendRequest(Request $request, Friend $friend)
     {
         $validated = $request->validate([
@@ -152,6 +167,9 @@ class AdminController extends Controller
 
 
 
+    /**
+     * Set the status of a user suggestion (pending/approved/rejected/implemented).
+     */
     public function updateSuggestionStatus(Request $request, Suggestion $suggestion)
     {
         $validated = $request->validate([

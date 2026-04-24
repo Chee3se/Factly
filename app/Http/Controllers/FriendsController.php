@@ -16,6 +16,9 @@ use Illuminate\Validation\ValidationException;
 
 class FriendsController extends Controller
 {
+    /**
+     * Return the user's friends, incoming requests and sent requests.
+     */
     public function index()
     {
         $user = Auth::user();
@@ -50,6 +53,9 @@ class FriendsController extends Controller
         ]);
     }
 
+    /**
+     * Search users by name, excluding yourself and anyone you're already linked to.
+     */
     public function search(Request $request)
     {
         $request->validate([
@@ -81,6 +87,9 @@ class FriendsController extends Controller
         return response()->json(['users' => $users]);
     }
 
+    /**
+     * Send a friend request to another user.
+     */
     public function sendRequest(Request $request)
     {
         $request->validate([
@@ -128,6 +137,9 @@ class FriendsController extends Controller
         ]);
     }
 
+    /**
+     * Accept an incoming friend request and create the mirror friendship row.
+     */
     public function acceptRequest(Request $request)
     {
         $request->validate([
@@ -163,6 +175,9 @@ class FriendsController extends Controller
         ]);
     }
 
+    /**
+     * Decline an incoming friend request.
+     */
     public function declineRequest(Request $request)
     {
         $request->validate([
@@ -189,6 +204,9 @@ class FriendsController extends Controller
         return response()->json(['message' => 'Friend request declined']);
     }
 
+    /**
+     * Remove an existing friend. Deletes both sides of the friendship.
+     */
     public function removeFriend(Request $request)
     {
         $request->validate([
@@ -212,6 +230,9 @@ class FriendsController extends Controller
         return response()->json(['message' => 'Friend removed successfully']);
     }
 
+    /**
+     * Cancel a friend request you sent before the other side accepted.
+     */
     public function cancelRequest(Request $request)
     {
         $request->validate([
@@ -235,6 +256,9 @@ class FriendsController extends Controller
         return response()->json(['message' => 'Friend request cancelled']);
     }
 
+    /**
+     * Invite a friend to a lobby you're currently in.
+     */
     public function inviteToLobby(Request $request)
     {
         $request->validate([
