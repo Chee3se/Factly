@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Head } from "@inertiajs/react";
 import Login from "../components/Auth/Login";
 import Register from "../components/Auth/Register";
-import space from "../../images/space_background.png";
+import space from "../../images/space_background.jpg";
 import character from "../../images/cartoon_figure.png";
 import blue_portal from "../../images/portal_blue.png";
 import orange_portal from "../../images/portal_orange.png";
