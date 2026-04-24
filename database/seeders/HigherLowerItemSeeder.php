@@ -50,7 +50,7 @@ class HigherLowerItemSeeder extends Seeder
             ],
             [
                 'name' => 'Dishwasher',
-                'image_url' => 'https://www.shutterstock.com/image-photo/dishwasher-modern-kitchen-perfectly-washing-600nw-2463623269.jpg',
+                'image_url' => 'https://images.unsplash.com/photo-1581622558663-b2e33377dfb2?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 'value' => 200,
                 'description' => 'Dishwashers consume electricity for both water heating and motorized washing cycles. Energy-efficient models and eco settings can significantly reduce consumption.'
             ],
@@ -104,7 +104,7 @@ class HigherLowerItemSeeder extends Seeder
             ],
             [
                 'name' => 'Finnish person',
-                'image_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRm2gneoa7TS44tRy-rFOxMiP_4ac7MOKSSHw&s',
+                'image_url' => 'https://images.unsplash.com/photo-1752525098494-c449902d73d1?q=80&w=2952&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 'value' => 14747,
                 'description' => "Finland's per capita consumption is high, reflecting heating needs in cold winters and an advanced industrial economy."
             ],
@@ -116,7 +116,7 @@ class HigherLowerItemSeeder extends Seeder
             ],
             [
                 'name' => 'Kettle',
-                'image_url' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcScnvHWrLHhewJxr1BQloLhBJy9f0AySQzh1g&s',
+                'image_url' => 'https://images.unsplash.com/photo-1594213114663-d94db9b17125?q=80&w=2938&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 'value' => 150,
                 'description' => 'Electric kettles are powerful but used for short durations. Frequent daily boiling adds up to ~150 kWh/year in households.'
             ],

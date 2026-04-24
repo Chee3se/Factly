@@ -11,6 +11,9 @@ use Inertia\Inertia;
 
 class ScoreController extends Controller
 {
+    /**
+     * Save a score for the current user and return their new best.
+     */
     public function saveScore(Request $request)
     {
         $validated = $request->validate([
@@ -57,6 +60,9 @@ class ScoreController extends Controller
         }
     }
 
+    /**
+     * Get the current user's best score for a single game.
+     */
     public function getUserBestScore(Request $request, $gameSlug)
     {
         $game = Game::where('slug', $gameSlug)->first();
@@ -71,6 +77,9 @@ class ScoreController extends Controller
         return response()->json(['best_score' => $bestScore]);
     }
 
+    /**
+     * Get the leaderboard for a single game as JSON.
+     */
     public function getLeaderboard(Request $request, $gameSlug)
     {
         $game = Game::where('slug', $gameSlug)->first();
@@ -81,6 +90,9 @@ class ScoreController extends Controller
         return response()->json(['leaderboard' => $this->buildLeaderboard($game)]);
     }
 
+    /**
+     * Render the Leaderboards page with top scores for every game.
+     */
     public function index()
     {
         $games = Game::all();
@@ -95,6 +107,9 @@ class ScoreController extends Controller
         ]);
     }
 
+    /**
+     * Build the top 5 for a game, and append the current user's row if they're below that.
+     */
     private function buildLeaderboard(Game $game)
     {
         $withUser = fn ($query) => $query

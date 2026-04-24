@@ -76,6 +76,9 @@ class LobbyController extends Controller
         ]);
     }
 
+    /**
+     * Create a new lobby and auto-join the host.
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -120,6 +123,9 @@ class LobbyController extends Controller
         return response()->json($lobby->load(['game', 'host', 'players']));
     }
 
+    /**
+     * Return lobby details by its code as JSON.
+     */
     public function show($lobbyCode)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -151,6 +157,9 @@ class LobbyController extends Controller
         return response()->json($lobby->load(['game', 'host', 'players']));
     }
 
+    /**
+     * Join a lobby by its code. Validates password and capacity.
+     */
     public function join(Request $request)
     {
         $user = Auth::user();
@@ -203,6 +212,9 @@ class LobbyController extends Controller
         return response()->json($lobby->load(['game', 'host', 'players']));
     }
 
+    /**
+     * Leave a lobby. Transfers host if needed, or deletes the lobby when empty.
+     */
     public function leave($lobbyCode)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -236,6 +248,9 @@ class LobbyController extends Controller
         return response()->json(['message' => 'Left lobby successfully.']);
     }
 
+    /**
+     * Toggle the current player's ready state in a lobby.
+     */
     public function toggleReady($lobbyCode)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -259,6 +274,9 @@ class LobbyController extends Controller
         return response()->json(['ready' => $newReadyStatus]);
     }
 
+    /**
+     * Start the game. Host-only, requires everyone ready and min players met.
+     */
     public function start($lobbyCode)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -289,6 +307,9 @@ class LobbyController extends Controller
         ]);
     }
 
+    /**
+     * Kick a player from the lobby. Host only.
+     */
     public function kick($lobbyCode, Request $request)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -324,6 +345,9 @@ class LobbyController extends Controller
         return response()->json(['message' => 'Player kicked successfully.']);
     }
 
+    /**
+     * Post a chat message into the lobby and broadcast it to players.
+     */
     public function sendMessage($lobbyCode, Request $request)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -356,6 +380,9 @@ class LobbyController extends Controller
         return response()->json($messageData);
     }
 
+    /**
+     * Get the last 50 chat messages for a lobby.
+     */
     public function getMessages($lobbyCode)
     {
         $lobby = Lobby::where('lobby_code', $lobbyCode)->first();
@@ -380,7 +407,9 @@ class LobbyController extends Controller
         return response()->json($messages);
     }
 
-    // Updated to include started lobbies for users already in them
+    /**
+     * Look up a lobby by its code. Works for started lobbies too if the user is in it.
+     */
     public function findByCode(Request $request)
     {
         $request->validate([
