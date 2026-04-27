@@ -1,5 +1,6 @@
 import App from "@/layouts/App";
 import { useState, useRef, useEffect } from "react";
+import { router } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -92,6 +93,7 @@ export default function CuratorsTest({
   const [artworkData, setArtworkData] = useState<string | null>(null);
   const [savedArtworks, setSavedArtworks] = useState<any[]>([]);
   const [isSavingArtwork, setIsSavingArtwork] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -1033,25 +1035,26 @@ export default function CuratorsTest({
   if (phase === "save_artwork") {
     return (
       <App auth={auth} title="The Curator's Test">
-        <div className="max-w-4xl mx-auto p-8">
+        <div className="max-w-2xl mx-auto p-8">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-center text-2xl">
-                Save Your Artwork?
-              </CardTitle>
-              <p className="text-center text-sm text-muted-foreground">
-                Would you like to save your artwork for others to see? Your
-                score: {score}
+            <CardHeader className="text-center space-y-2">
+              <CardTitle className="text-2xl">Save Your Artwork?</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Add it to the gallery for others to see
               </p>
+              <div className="inline-flex items-center justify-center gap-2 text-sm">
+                <span className="text-muted-foreground">Your score:</span>
+                <span className="font-bold text-primary">{score}</span>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-center">
-                <div className="border-2 border-gray-300 rounded-lg w-full max-w-md h-64 flex items-center justify-center bg-gray-50">
+                <div className="border-2 border-gray-200 rounded-lg w-full max-w-md aspect-square flex items-center justify-center bg-gray-50 overflow-hidden">
                   {artworkData ? (
                     <img
                       src={artworkData}
                       alt="Your artwork"
-                      className="w-full h-full object-contain rounded-lg"
+                      className="w-full h-full object-contain"
                     />
                   ) : (
                     <p className="text-muted-foreground">No artwork to save</p>
@@ -1059,9 +1062,19 @@ export default function CuratorsTest({
                 </div>
               </div>
 
-              <div className="flex justify-center gap-4">
+              {saveError && (
+                <p className="text-center text-sm text-destructive">
+                  {saveError}
+                </p>
+              )}
+
+              <div className="flex justify-center gap-3">
+                <Button onClick={restart} variant="outline" size="lg">
+                  Don't Save
+                </Button>
                 <Button
                   onClick={async () => {
+                    setSaveError(null);
                     setIsSavingArtwork(true);
                     try {
                       await saveArtwork(
@@ -1070,10 +1083,9 @@ export default function CuratorsTest({
                         score,
                         auth.user!.id,
                       );
-                      alert("Artwork saved successfully!");
+                      router.visit("/games/curators-test/gallery");
                     } catch (error) {
-                      alert("Failed to save artwork");
-                    } finally {
+                      setSaveError("Failed to save artwork. Try again.");
                       setIsSavingArtwork(false);
                     }
                   }}
@@ -1085,47 +1097,7 @@ export default function CuratorsTest({
                   ) : null}
                   Save Artwork
                 </Button>
-                <Button onClick={restart} variant="outline" size="lg">
-                  Don't Save
-                </Button>
               </div>
-
-              {savedArtworks.length > 0 && (
-                <div className="mt-8">
-                  <div className="flex justify-center mb-4">
-                    <a
-                      href="/games/curators-test/gallery"
-                      className="text-primary hover:text-primary/80 underline text-sm"
-                    >
-                      View Full Gallery →
-                    </a>
-                  </div>
-                  <h3 className="text-lg font-semibold text-center mb-4">
-                    Other Artworks for "{word}"
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {savedArtworks.map((artwork, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4">
-                          <div className="aspect-square bg-gray-50 rounded-lg mb-2 flex items-center justify-center">
-                            <img
-                              src={artwork.artwork_data}
-                              alt={`Artwork by ${artwork.user_name}`}
-                              className="w-full h-full object-contain rounded-lg"
-                            />
-                          </div>
-                          <div className="text-center">
-                            <p className="font-medium">{artwork.user_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Score: {artwork.score}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

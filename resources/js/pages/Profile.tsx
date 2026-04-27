@@ -101,7 +101,7 @@ export default function Profile({
       next.name = "Username must be at least 3 characters.";
     else if (name.length > 20)
       next.name = "Username may not be longer than 20 characters.";
-    else if (!/^[a-zA-Z0-9_\- ]+$/.test(name))
+    else if (!/^[\p{L}\p{N}_\- ]+$/u.test(name))
       next.name =
         "Username may only contain letters, numbers, spaces, hyphens, and underscores.";
 

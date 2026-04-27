@@ -70,7 +70,7 @@ class AuthController extends Controller
         RateLimiter::hit($key, 3600); // 1 hour window
 
         $request->validate([
-            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', 'unique:users'],
+            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[\p{L}\p{N}_\- ]+$/u', 'unique:users'],
             'email' => 'required|string|lowercase|email:rfc,dns|max:100|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
@@ -239,7 +239,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[a-zA-Z0-9_\- ]+$/', Rule::unique('users')->ignore($user->id)],
+            'name' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[\p{L}\p{N}_\- ]+$/u', Rule::unique('users')->ignore($user->id)],
             'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:100', Rule::unique('users')->ignore($user->id)],
         ], [
             'name.regex' => 'The username may only contain letters, numbers, spaces, hyphens, and underscores.',
