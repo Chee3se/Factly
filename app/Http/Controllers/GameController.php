@@ -314,7 +314,12 @@ class GameController extends Controller
             ]);
 
             if (!$response->successful()) {
-                Log::error('OpenAI API error', ['status' => $response->status()]);
+                Log::error('OpenAI API error', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'model' => $modelId,
+                    'vision' => $useVision,
+                ]);
                 return response()->json(['error' => 'Failed to get response from AI'], 500);
             }
 
