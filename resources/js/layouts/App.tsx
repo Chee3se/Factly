@@ -270,7 +270,7 @@ export default function App({
                   className="h-6 w-auto"
                 />
                 <span className="text-sm text-muted-foreground">
-                  © 2025 {appName}. All rights reserved.
+                  © 2026 {appName}. All rights reserved.
                 </span>
               </div>
             </div>
